@@ -5,6 +5,7 @@
   "scripts": {
     "start": "node backend/server.js",
     "test:e2e": "node scripts/e2e-smoke.js",
+    "payment:check": "node scripts/payment-check.js",
     "production:check": "node scripts/production-check.js",
     "production:env": "node scripts/production-env-check.js",
     "release:check": "node scripts/release-check.js",
