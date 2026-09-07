@@ -5,4 +5,9 @@ const html=fs.readFileSync(path.join(root,'index.html'),'utf8'),server=fs.readFi
 for(const token of ['deleteAccount()','privacy.html','terms.html','support.html'])if(!html.includes(token)){console.error('Missing trust control:',token);bad=true}
 if(!server.includes("req.method==='DELETE'&&url.pathname==='/api/me'")){console.error('Account deletion API missing');bad=true}
 if(!server.includes('GET,POST,PATCH,DELETE,OPTIONS')){console.error('DELETE missing from CORS methods');bad=true}
+const pkg=JSON.parse(fs.readFileSync(path.join(root,'package.json'),'utf8'));
+if(pkg.dependencies?.['@onesignal/capacitor-plugin']!=='1.1.9'){console.error('Official OneSignal Capacitor SDK is not pinned');bad=true}
+const pushClient=fs.readFileSync(path.join(root,'push-client.js'),'utf8'),prepare=fs.readFileSync(path.join(root,'scripts/prepare-mobile.js'),'utf8');
+for(const token of ['OneSignalCapacitor','login({externalId:userId})','requestPermission({fallbackToSettings:false})'])if(!pushClient.includes(token)){console.error('Native push client missing:',token);bad=true}
+if(!prepare.includes("'push-client.js'")){console.error('Native push client is not bundled');bad=true}
 if(bad)process.exit(1);console.log('ZOVRO store-readiness check passed.');
