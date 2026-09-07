@@ -8,6 +8,10 @@ const publishableKey=()=>{
   const key=String(process.env.STRIPE_PUBLISHABLE_KEY||'').trim();
   return /^pk_(?:live|test)_[A-Za-z0-9]+$/.test(key)?key:null;
 };
+const applePayMerchantId=()=>{
+  const id=String(process.env.ZOVRO_APPLE_PAY_MERCHANT_ID||'').trim();
+  return /^merchant\.[A-Za-z0-9.-]+$/.test(id)?id:null;
+};
 const json=(res,code,obj)=>{
   res.writeHead(code,{
     'content-type':'application/json; charset=utf-8',
@@ -22,13 +26,15 @@ function mobilePaymentConfig(req,res,next){
   let url;
   try{url=new URL(req.url,'http://localhost')}catch{return next(req,res)}
   if(req.method==='GET'&&url.pathname==='/api/payments/config'){
+    const merchantId=applePayMerchantId();
     return json(res,200,{
       stripeConfigured:payments.configured(),
       webhookConfigured:payments.webhookConfigured(),
       publishableKey:publishableKey(),
       currency:payments.currency,
       platformFeeBps:payments.feeBps(),
-      applePayEnabled:flag('ZOVRO_APPLE_PAY_ENABLED'),
+      applePayEnabled:flag('ZOVRO_APPLE_PAY_ENABLED')&&Boolean(merchantId),
+      applePayMerchantId:merchantId,
       googlePayEnabled:flag('ZOVRO_GOOGLE_PAY_ENABLED'),
       googlePayTestEnv:flag('ZOVRO_GOOGLE_PAY_TEST_ENV')
     });
