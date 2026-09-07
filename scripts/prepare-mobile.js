@@ -14,8 +14,8 @@ html=html.replace('boot();setInterval(()=>{if(me)loadJobs()},10000);',"ZOVRO_SEC
 const state='<div id="state" class="state">Checking API…</div>';
 const chooser='<div style="display:flex;align-items:center;gap:8px"><select id="zovroLanguage" class="state" aria-label="Language" onchange="ZOVRO_I18N.setLanguage(this.value)"><option value="en">English</option><option value="es">Español</option></select><div id="state" class="state">Checking API…</div></div>';
 if(html.includes(state))html=html.replace(state,chooser);
-if(!html.includes('<script src="i18n.js"></script>'))html=html.replace('</body>','<script src="secure-session.js"></script>\n<script src="i18n.js"></script>\n<script src="payment-client.js"></script>\n<script src="push-client.js"></script>\n</body>');
+if(!html.includes('<script src="i18n.js"></script>'))html=html.replace('</body>','<script src="secure-session.js"></script>\n<script src="i18n.js"></script>\n<script src="payment-client.js"></script>\n<script src="push-client.js"></script>\n<script src="payment-ui.js"></script>\n</body>');
 fs.writeFileSync(path.join(out,'index.html'),html);
-for(const name of ['manifest.webmanifest','service-worker.js','privacy.html','terms.html','support.html','secure-session.js','i18n.js','payment-client.js','push-client.js'])fs.copyFileSync(path.join(root,name),path.join(out,name));
+for(const name of ['manifest.webmanifest','service-worker.js','privacy.html','terms.html','support.html','secure-session.js','i18n.js','payment-client.js','push-client.js','payment-ui.js'])fs.copyFileSync(path.join(root,name),path.join(out,name));
 fs.cpSync(path.join(root,'assets'),path.join(out,'assets'),{recursive:true});
-console.log('Prepared ZOVRO mobile bundle',JSON.stringify({api,version:pkg.version,channel,webDir:'www',secureSession:true}));
+console.log('Prepared ZOVRO mobile bundle',JSON.stringify({api,version:pkg.version,channel,webDir:'www',secureSession:true,paymentUi:true}));
