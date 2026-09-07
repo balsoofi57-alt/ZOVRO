@@ -1,0 +1,25 @@
+'use strict';
+const originalFetch=global.fetch;
+(async()=>{
+  delete require.cache[require.resolve('../backend/push')];
+  delete process.env.ONESIGNAL_APP_ID;delete process.env.ONESIGNAL_REST_API_KEY;
+  let push=require('../backend/push');
+  if(push.configured())throw new Error('Push should be disabled without credentials');
+  const skipped=await push.deliver({id:'n0',userId:'u0',title:'x',text:'y'});if(!skipped.skipped)throw new Error('Push did not fail safe when unconfigured');
+  process.env.ONESIGNAL_APP_ID='7992b022-6c11-4a66-bad4-8cbd114266d0';
+  process.env.ONESIGNAL_REST_API_KEY='test_rest_key_123456789';
+  delete require.cache[require.resolve('../backend/push')];
+  let captured=null;
+  global.fetch=async(url,options)=>{captured={url,options};return {ok:true,json:async()=>({id:'msg_test'})}};
+  push=require('../backend/push');
+  if(!push.configured())throw new Error('Push should be configured in test');
+  const n={id:'11111111-1111-4111-8111-111111111111',userId:'user_test',title:'Provider accepted',text:'Your provider accepted the request.',meta:{requestId:'req_1',type:'provider_accepted'}};
+  const out=await push.deliver(n);if(!out.ok||out.id!=='msg_test')throw new Error('Push delivery mock failed');
+  const body=JSON.parse(captured.options.body);
+  if(captured.url!=='https://api.onesignal.com/notifications')throw new Error('Wrong OneSignal endpoint');
+  if(body.include_aliases?.external_id?.[0]!=='user_test'||body.target_channel!=='push')throw new Error('Push targeting is unsafe');
+  if(body.idempotency_key!==n.id)throw new Error('Push idempotency key missing');
+  if(!String(captured.options.headers.authorization||'').startsWith('Key '))throw new Error('OneSignal auth header missing');
+  if(JSON.stringify(body).includes(process.env.ONESIGNAL_REST_API_KEY))throw new Error('OneSignal REST key leaked into payload');
+  console.log('ZOVRO OneSignal push safety check passed.');
+})().finally(()=>{global.fetch=originalFetch}).catch(e=>{console.error(e.stack||e);process.exitCode=1});
