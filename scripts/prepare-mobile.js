@@ -1,0 +1,17 @@
+'use strict';
+const fs=require('fs'),path=require('path');
+const root=path.resolve(__dirname,'..'),out=path.join(root,'www');
+fs.rmSync(out,{recursive:true,force:true});fs.mkdirSync(out,{recursive:true});
+let html=fs.readFileSync(path.join(root,'index.html'),'utf8');
+const api=(process.env.ZOVRO_API_URL||'https://zovro-api-final.onrender.com').replace(/\/$/,'');
+const pkg=JSON.parse(fs.readFileSync(path.join(root,'package.json'),'utf8'));
+const channel=process.env.ZOVRO_BUILD_CHANNEL||'release';
+html=html.replace('<head>','<head><script>window.ZOVRO_CONFIG={apiBase:'+JSON.stringify(api)+',appVersion:'+JSON.stringify(pkg.version)+',buildChannel:'+JSON.stringify(channel)+'};<\/script>');
+const state='<div id="state" class="state">Checking API…</div>';
+const chooser='<div style="display:flex;align-items:center;gap:8px"><select id="zovroLanguage" class="state" aria-label="Language" onchange="ZOVRO_I18N.setLanguage(this.value)"><option value="en">English</option><option value="es">Español</option></select><div id="state" class="state">Checking API…</div></div>';
+if(html.includes(state))html=html.replace(state,chooser);
+if(!html.includes('<script src="i18n.js"></script>'))html=html.replace('</body>','<script src="i18n.js"></script>\n</body>');
+fs.writeFileSync(path.join(out,'index.html'),html);
+for(const name of ['manifest.webmanifest','service-worker.js','privacy.html','terms.html','support.html','i18n.js'])fs.copyFileSync(path.join(root,name),path.join(out,name));
+fs.cpSync(path.join(root,'assets'),path.join(out,'assets'),{recursive:true});
+console.log('Prepared ZOVRO mobile bundle',JSON.stringify({api,version:pkg.version,channel,webDir:'www'}));
