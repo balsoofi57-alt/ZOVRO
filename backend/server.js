@@ -1,3 +1,3 @@
 'use strict';
 require('./startup-preflight');
-require('./server-payments');
+require('./server-mobile-payments');
