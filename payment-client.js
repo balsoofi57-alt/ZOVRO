@@ -2,7 +2,7 @@
   'use strict';
   const cfg=()=>window.ZOVRO_CONFIG||{};
   const apiBase=()=>String(cfg().apiBase||'https://zovro-api-final.onrender.com').replace(/\/$/,'');
-  const token=()=>localStorage.getItem('zovroToken')||localStorage.getItem('zovro_token')||localStorage.getItem('token')||'';
+  const token=()=>window.ZOVRO_SESSION_TOKEN||localStorage.getItem('zovroToken')||localStorage.getItem('zovro_token')||localStorage.getItem('token')||'';
   const stripePlugin=()=>window.Capacitor?.Plugins?.Stripe||window.Capacitor?.Plugins?.StripePlugin||null;
 
   async function api(path,options={}){
