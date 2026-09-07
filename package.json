@@ -11,7 +11,10 @@
     "release:check": "node scripts/release-check.js",
     "security:check": "node scripts/security-check.js",
     "store:check": "node scripts/store-readiness.js",
-    "final:check": "node scripts/final-check.js"
+    "final:check": "node scripts/final-check.js",
+    "mobile:prepare": "node scripts/prepare-mobile.js",
+    "mobile:init": "node scripts/init-mobile.js",
+    "qa:all": "npm run final:check && npm run production:check && npm run payment:check && npm run security:check && npm run store:check && npm run release:check && npm run test:e2e"
   },
   "dependencies": {
     "@capacitor/core": "^7.0.0"
