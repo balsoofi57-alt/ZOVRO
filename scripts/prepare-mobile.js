@@ -7,11 +7,12 @@ const api=(process.env.ZOVRO_API_URL||'https://zovro-api-final.onrender.com').re
 const pkg=JSON.parse(fs.readFileSync(path.join(root,'package.json'),'utf8'));
 const channel=process.env.ZOVRO_BUILD_CHANNEL||'release';
 html=html.replace('<head>','<head><script>window.ZOVRO_CONFIG={apiBase:'+JSON.stringify(api)+',appVersion:'+JSON.stringify(pkg.version)+',buildChannel:'+JSON.stringify(channel)+'};<\/script>');
+html=html.replace("const API='https://zovro-api.onrender.com'","const API=(window.ZOVRO_CONFIG?.apiBase||'https://zovro-api-final.onrender.com')");
 const state='<div id="state" class="state">Checking API…</div>';
 const chooser='<div style="display:flex;align-items:center;gap:8px"><select id="zovroLanguage" class="state" aria-label="Language" onchange="ZOVRO_I18N.setLanguage(this.value)"><option value="en">English</option><option value="es">Español</option></select><div id="state" class="state">Checking API…</div></div>';
 if(html.includes(state))html=html.replace(state,chooser);
-if(!html.includes('<script src="i18n.js"></script>'))html=html.replace('</body>','<script src="i18n.js"></script>\n<script src="payment-client.js"></script>\n<script src="push-client.js"></script>\n</body>');
+if(!html.includes('<script src="i18n.js"></script>'))html=html.replace('</body>','<script src="i18n.js"></script>\n<script src="payment-client.js"></script>\n<script src="push-client.js"></script>\n<script src="payment-ui.js"></script>\n</body>');
 fs.writeFileSync(path.join(out,'index.html'),html);
-for(const name of ['manifest.webmanifest','service-worker.js','privacy.html','terms.html','support.html','i18n.js','payment-client.js','push-client.js'])fs.copyFileSync(path.join(root,name),path.join(out,name));
+for(const name of ['manifest.webmanifest','service-worker.js','privacy.html','terms.html','support.html','i18n.js','payment-client.js','push-client.js','payment-ui.js'])fs.copyFileSync(path.join(root,name),path.join(out,name));
 fs.cpSync(path.join(root,'assets'),path.join(out,'assets'),{recursive:true});
 console.log('Prepared ZOVRO mobile bundle',JSON.stringify({api,version:pkg.version,channel,webDir:'www'}));
