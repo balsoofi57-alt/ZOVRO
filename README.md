@@ -1,2 +1,3 @@
 # ZOVRO
-ZOVRO Michigan – On-demand home, auto, and roadside services marketplace.
+
+Final verified ZOVRO 1.0 deployment branch.
