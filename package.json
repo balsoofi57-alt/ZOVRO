@@ -1,16 +1,19 @@
 {
-  "name": "zovro-android-release",
+  "name": "zovro-mobile-release",
   "version": "1.0.0",
   "private": true,
   "scripts": {
     "android:add": "npx cap add android",
-    "android:sync": "npx cap sync android"
+    "android:sync": "npx cap sync android",
+    "ios:add": "npx cap add ios",
+    "ios:sync": "npx cap sync ios"
   },
   "dependencies": {
     "@capacitor/core": "^7.0.0"
   },
   "devDependencies": {
     "@capacitor/cli": "^7.0.0",
-    "@capacitor/android": "^7.0.0"
+    "@capacitor/android": "^7.0.0",
+    "@capacitor/ios": "^7.0.0"
   }
 }
