@@ -37,6 +37,10 @@
       returnURL:'zovro://stripe-redirect',
       countryCode:'US'
     };
+    if(intent.customerId&&intent.customerEphemeralKeySecret){
+      opts.customerId=intent.customerId;
+      opts.customerEphemeralKeySecret=intent.customerEphemeralKeySecret;
+    }
     if(config.applePayEnabled&&config.applePayMerchantId){
       opts.enableApplePay=true;
       opts.applePayMerchantId=config.applePayMerchantId;
@@ -58,7 +62,7 @@
       configured:!!c.stripeConfigured,
       applePay:!!(c.applePayEnabled&&c.applePayMerchantId),
       googlePay:!!c.googlePayEnabled,
-      savedCards:false,
+      savedCards:!!c.savedCardsEnabled,
       cardScan:'native-when-supported'
     };
   }
