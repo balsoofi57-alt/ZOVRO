@@ -1,0 +1,13 @@
+node_modules
+.git
+.gitignore
+*.zip
+*.log
+backend/data/*.sqlite
+backend/data/*.sqlite-*
+backend/data/*.json
+backend/data/*.backup
+**/*.stage*.backup*
+ios/App/Pods
+android/.gradle
+android/app/build

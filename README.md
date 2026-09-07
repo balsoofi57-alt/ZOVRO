@@ -1,3 +1,2 @@
 # ZOVRO
-
-Final verified ZOVRO 1.0 deployment branch.
+ZOVRO Michigan – On-demand home, auto, and roadside services marketplace.

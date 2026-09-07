@@ -1,0 +1,23 @@
+services:
+  - type: web
+    name: zovro-api
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /api/ready
+    maxShutdownDelaySeconds: 30
+    numInstances: 1
+    disk:
+      name: zovro-data
+      mountPath: /app/backend/data
+      sizeGB: 1
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: ZOVRO_APP_VERSION
+        value: 1.0.0
+      - key: ZOVRO_SECRET
+        generateValue: true
+      - key: ZOVRO_OPS_TOKEN
+        generateValue: true
+      - key: ZOVRO_ALLOWED_ORIGINS
+        sync: false
