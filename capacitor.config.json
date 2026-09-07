@@ -1,0 +1,6 @@
+{
+  "appId": "com.zovro.app",
+  "appName": "ZOVRO",
+  "webDir": "www",
+  "server": { "androidScheme": "https", "cleartext": false }
+}

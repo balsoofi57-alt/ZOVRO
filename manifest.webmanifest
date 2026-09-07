@@ -1,0 +1,12 @@
+{
+  "name": "ZOVRO — Local Services Marketplace",
+  "short_name": "ZOVRO",
+  "description": "On-demand roadside, auto, home and urgent local services.",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#08111f",
+  "theme_color": "#08111f",
+  "icons": [
+    {"src":"assets/zovro-icon.svg","sizes":"any","type":"image/svg+xml","purpose":"any maskable"}
+  ]
+}
