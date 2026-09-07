@@ -1,4 +1,5 @@
 'use strict';
+require('./startup-preflight');
 const database=require('./database');
 (async()=>{
   await database.initDurable();
