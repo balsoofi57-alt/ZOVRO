@@ -31,6 +31,12 @@ local services, roadside assistance, handyman, mechanic, plumbing, electrical, H
 - Account deletion is supported in-app.
 - SOS/urgent service requests are marketplace requests and are not a replacement for emergency services.
 
+## Submission preparation documents
+- APP_PRIVACY_DATA_SAFETY.md — Apple App Privacy / Google Data Safety worksheet
+- RELEASE_CONFIGURATION.md — final production configuration and secret-handling gates
+- FINAL_QA_MATRIX.md — final web/backend/Android/iOS/payment/database QA checklist
+- STORE_ASSET_CHECKLIST.md — screenshot, icon, listing-asset and reviewer-claim checklist
+
 ## Assets / credentials still required at submission time
 - Final public support email/contact details
 - Final store screenshots and promotional graphics
