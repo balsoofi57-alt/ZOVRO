@@ -34,10 +34,17 @@
     const opts={
       paymentIntentClientSecret:intent.clientSecret,
       merchantDisplayName:'ZOVRO',
-      returnURL:'zovro://stripe-redirect'
+      returnURL:'zovro://stripe-redirect',
+      countryCode:'US'
     };
-    if(config.applePayEnabled) opts.applePay={merchantCountryCode:'US'};
-    if(config.googlePayEnabled) opts.googlePay={merchantCountryCode:'US',testEnv:!!config.googlePayTestEnv};
+    if(config.applePayEnabled&&config.applePayMerchantId){
+      opts.enableApplePay=true;
+      opts.applePayMerchantId=config.applePayMerchantId;
+    }
+    if(config.googlePayEnabled){
+      opts.enableGooglePay=true;
+      opts.GooglePayIsTesting=!!config.googlePayTestEnv;
+    }
     await plugin.createPaymentSheet(opts);
     const result=await plugin.presentPaymentSheet();
     if(result?.paymentResult&&String(result.paymentResult).toLowerCase().includes('cancel')) throw new Error('Payment cancelled');
@@ -49,10 +56,10 @@
     return {
       native:!!stripePlugin(),
       configured:!!c.stripeConfigured,
-      applePay:!!c.applePayEnabled,
+      applePay:!!(c.applePayEnabled&&c.applePayMerchantId),
       googlePay:!!c.googlePayEnabled,
-      savedCards:true,
-      cardScan:'handled-by-native-payment-sheet-when-supported'
+      savedCards:false,
+      cardScan:'native-when-supported'
     };
   }
 
