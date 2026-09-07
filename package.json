@@ -18,7 +18,7 @@
   },
   "dependencies": {
     "@capacitor/core": "^7.0.0",
-    "@capgo/capacitor-stripe-pay": "^7.0.0"
+    "@capacitor-community/stripe": "7.2.0"
   },
   "devDependencies": {
     "@capacitor/cli": "^7.0.0",
