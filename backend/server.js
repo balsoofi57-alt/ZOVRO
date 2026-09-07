@@ -1,2 +1,2 @@
 'use strict';
-require('./server-payments');
+require('./server-mobile-payments');
