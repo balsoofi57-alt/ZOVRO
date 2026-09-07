@@ -1,0 +1,84 @@
+name: ZOVRO iOS Release Candidate
+
+on:
+  push:
+    branches: [ios-release]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-ios:
+    runs-on: macos-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout ZOVRO
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Prepare production mobile web bundle
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf www
+          mkdir -p www
+          cp index.html privacy.html terms.html support.html manifest.webmanifest service-worker.js i18n.js www/
+          cp -R assets www/assets
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('www/index.html')
+          s=p.read_text(encoding='utf-8')
+          old='<div id="state" class="state">Checking API…</div>'
+          chooser='<div style="display:flex;align-items:center;gap:8px"><select id="zovroLanguage" class="state" aria-label="Language" onchange="ZOVRO_I18N.setLanguage(this.value)"><option value="en">English</option><option value="es">Español</option></select><div id="state" class="state">Checking API…</div></div>'
+          if old in s:
+              s=s.replace(old,chooser,1)
+          if '<script src="i18n.js"></script>' not in s:
+              s=s.replace('</body>','<script src="i18n.js"></script>\n</body>',1)
+          p.write_text(s,encoding='utf-8')
+          PY
+
+      - name: Create iOS project
+        run: npx cap add ios
+
+      - name: Sync iOS project
+        run: npx cap sync ios
+
+      - name: Build unsigned simulator app
+        shell: bash
+        run: |
+          set -euo pipefail
+          xcodebuild \
+            -workspace ios/App/App.xcworkspace \
+            -scheme App \
+            -configuration Release \
+            -sdk iphonesimulator \
+            -derivedDataPath build/DerivedData \
+            CODE_SIGNING_ALLOWED=NO \
+            build
+          APP_PATH=$(find build/DerivedData/Build/Products -type d -name 'App.app' | head -n 1)
+          test -n "$APP_PATH"
+          ditto -c -k --sequesterRsrc --keepParent "$APP_PATH" ZOVRO-iOS-Simulator-Release.zip
+
+      - name: Upload iOS build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: zovro-ios-release-candidate
+          if-no-files-found: error
+          retention-days: 14
+          path: ZOVRO-iOS-Simulator-Release.zip
+
+      - name: Write build summary
+        run: |
+          echo '## ZOVRO iOS Release Candidate' >> "$GITHUB_STEP_SUMMARY"
+          echo '- Bundle ID target: com.zovro.app' >> "$GITHUB_STEP_SUMMARY"
+          echo '- Languages: English + Español' >> "$GITHUB_STEP_SUMMARY"
+          echo '- Unsigned simulator build: generated for CI verification' >> "$GITHUB_STEP_SUMMARY"
+          echo '- Apple Developer signing + archive + TestFlight remain the release gate' >> "$GITHUB_STEP_SUMMARY"
