@@ -1,211 +1,24 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>ZOVRO</title>
-
-  <style>
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
-
-    body {
-      font-family: Arial, sans-serif;
-      background: #f7f9fc;
-      color: #1f2937;
-    }
-
-    header {
-      background: #0f172a;
-      color: white;
-      padding: 18px 24px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .logo {
-      font-size: 28px;
-      font-weight: 800;
-      letter-spacing: 1px;
-    }
-
-    .hero {
-      min-height: 75vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      text-align: center;
-      padding: 40px 20px;
-      background: linear-gradient(135deg, #eef4ff, #ffffff);
-    }
-
-    .hero-content {
-      max-width: 800px;
-    }
-
-    .hero h1 {
-      font-size: 52px;
-      margin-bottom: 18px;
-      color: #0f172a;
-    }
-
-    .hero p {
-      font-size: 21px;
-      line-height: 1.7;
-      color: #475569;
-      margin-bottom: 28px;
-    }
-
-    .button {
-      display: inline-block;
-      background: #2563eb;
-      color: white;
-      text-decoration: none;
-      padding: 14px 26px;
-      border-radius: 10px;
-      font-size: 18px;
-      font-weight: 700;
-    }
-
-    .services {
-      padding: 60px 20px;
-      max-width: 1100px;
-      margin: auto;
-    }
-
-    .services h2 {
-      text-align: center;
-      font-size: 34px;
-      margin-bottom: 35px;
-    }
-
-    .cards {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: 20px;
-    }
-
-    .card {
-      background: white;
-      padding: 26px;
-      border-radius: 14px;
-      box-shadow: 0 8px 25px rgba(0,0,0,0.07);
-    }
-
-    .card h3 {
-      margin-bottom: 10px;
-      font-size: 21px;
-    }
-
-    .card p {
-      color: #64748b;
-      line-height: 1.6;
-    }
-
-    footer {
-      background: #0f172a;
-      color: white;
-      text-align: center;
-      padding: 25px;
-      margin-top: 40px;
-    }
-
-    @media (max-width: 600px) {
-      .hero h1 {
-        font-size: 38px;
-      }
-
-      .hero p {
-        font-size: 18px;
-      }
-    }
-  </style>
-</head>
-
-<body>
-
-  <header>
-    <div class="logo">ZOVRO</div>
-    <div>Local Services. Fast.</div>
-  </header>
-
-  <section class="hero">
-    <div class="hero-content">
-      <h1>Help is closer than you think.</h1>
-
-      <p>
-        ZOVRO connects customers with nearby professionals for
-        home services, auto repair, roadside assistance, plumbing,
-        electrical work, HVAC, moving, and more.
-      </p>
-
-      <a class="button" href="#services">Explore Services</a>
-    </div>
-  </section>
-
-  <section class="services" id="services">
-    <h2>ZOVRO Services</h2>
-
-    <div class="cards">
-
-      <div class="card">
-        <h3>🚗 Roadside Assistance</h3>
-        <p>
-          Jump starts, tire changes, lockouts, towing assistance,
-          and emergency roadside help.
-        </p>
-      </div>
-
-      <div class="card">
-        <h3>🔧 Mobile Mechanic</h3>
-        <p>
-          Find nearby mechanics for diagnostics, repairs,
-          and vehicle services.
-        </p>
-      </div>
-
-      <div class="card">
-        <h3>🚿 Plumbing</h3>
-        <p>
-          Connect with local plumbers for leaks, repairs,
-          installations, and emergencies.
-        </p>
-      </div>
-
-      <div class="card">
-        <h3>⚡ Electrical</h3>
-        <p>
-          Find electricians for residential and commercial
-          electrical services.
-        </p>
-      </div>
-
-      <div class="card">
-        <h3>❄️ HVAC</h3>
-        <p>
-          Heating, cooling, furnace, and air-conditioning
-          repair services.
-        </p>
-      </div>
-
-      <div class="card">
-        <h3>🏠 Home Services</h3>
-        <p>
-          Roofing, painting, flooring, appliance repair,
-          lawn care, snow removal, and more.
-        </p>
-      </div>
-
-    </div>
-  </section>
-
-  <footer>
-    © 2026 ZOVRO — Local Services Marketplace
-  </footer>
-
-</body>
-</html>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#08111f"><title>ZOVRO — Local Pros Fast</title><style>
+:root{--n:#08111f;--b:#1769ff;--g:#15b86b;--r:#ef4444;--m:#64748b;--l:#e5e7eb;--bg:#f6f8fc}*{box-sizing:border-box}body{margin:0;background:var(--bg);font:15px system-ui,-apple-system,Segoe UI,Roboto;color:var(--n)}button,input,select,textarea{font:inherit}.app{max-width:760px;margin:auto;min-height:100vh;padding:0 14px 94px}.top{position:sticky;top:0;z-index:5;background:#f6f8fcf2;backdrop-filter:blur(12px);display:flex;justify-content:space-between;align-items:center;padding:14px 2px;border-bottom:1px solid #e8edf5}.logo{font-weight:950;font-size:25px;letter-spacing:1px}.logo i{color:var(--g);font-style:normal}.state{font-size:12px;font-weight:800;padding:7px 10px;border-radius:99px;background:#fff;border:1px solid var(--l)}.hero{margin-top:12px;padding:22px;border-radius:24px;background:linear-gradient(135deg,#08111f,#113c8d 70%,#15b86b);color:#fff}.hero h1{font-size:30px;line-height:1.08;margin:0 0 8px}.hero p{margin:0;color:#dbeafe;line-height:1.5}.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:14px}.svc,.card{border:1px solid #e7ebf2;background:#fff;border-radius:17px;padding:14px;box-shadow:0 8px 20px #0f172a0a}.svc{text-align:left}.svc b{display:block;margin:7px 0 3px}.svc small,.muted{color:var(--m)}h2{font-size:19px;margin:22px 2px 10px}.bar{display:flex;gap:8px;flex-wrap:wrap}.btn{border:0;border-radius:13px;padding:11px 13px;font-weight:850}.primary{background:var(--b);color:#fff}.dark{background:var(--n);color:#fff}.ghost{background:#eef2f7}.danger{background:var(--r);color:#fff}.ok{background:var(--g);color:#fff}.field{margin:9px 0}.field label{display:block;font-size:12px;font-weight:800;margin-bottom:5px}.field input,.field select,.field textarea{width:100%;border:1px solid var(--l);border-radius:13px;padding:12px;background:#fff}.field textarea{min-height:88px}.tabs{display:flex;gap:8px;margin:14px 0}.tabs button{flex:1}.hidden{display:none!important}.row{display:flex;gap:10px;align-items:center}.grow{flex:1}.job{margin:10px 0}.tag{display:inline-block;border-radius:99px;padding:5px 8px;font-size:11px;font-weight:850;background:#eaf1ff;color:#174ea6}.urgent{background:#fee2e2;color:#991b1b}.msg{padding:8px 10px;border-radius:12px;background:#eef2f7;margin:6px 0}.msg.me{background:#dbeafe}.bottom{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:min(760px,100%);display:grid;grid-template-columns:repeat(4,1fr);gap:4px;padding:8px 10px calc(8px + env(safe-area-inset-bottom));background:#fff;border-top:1px solid var(--l)}.bottom button{border:0;background:transparent;padding:8px 2px;font-size:12px;font-weight:800}.bottom button.active{color:var(--b)}.modal{position:fixed;inset:0;z-index:20;background:#0008;display:none;align-items:flex-end;justify-content:center}.modal.open{display:flex}.sheet{width:min(760px,100%);max-height:90vh;overflow:auto;background:#fff;border-radius:24px 24px 0 0;padding:19px 17px 28px}.sheet h2{margin:0 0 10px}.toast{position:fixed;z-index:30;left:50%;bottom:90px;transform:translateX(-50%);background:#111827;color:#fff;border-radius:12px;padding:10px 13px;opacity:0;pointer-events:none}.toast.show{opacity:1}@media(min-width:620px){.grid{grid-template-columns:repeat(4,1fr)}}
+</style></head><body><div class="app"><div class="top"><div class="logo">Z<i>O</i>VRO</div><div id="state" class="state">Checking API…</div></div><section id="home"><div class="hero"><h1>Find local help. Fast.</h1><p>Roadside, auto, home repairs, moving and urgent services — connected to real ZOVRO providers.</p><div class="bar" style="margin-top:14px"><button class="btn primary" onclick="openAuth()">Get started</button><button class="btn danger" onclick="quickSOS()">SOS Roadside</button></div></div><h2>Services</h2><div class="grid" id="services"></div><h2>Account</h2><div class="card" id="accountBox"></div></section><section id="jobs" class="hidden"><h2>Requests</h2><div class="bar"><button class="btn primary" onclick="newRequest()">New request</button><button class="btn ghost" onclick="loadJobs()">Refresh</button><button id="availabilityBtn" class="btn ok hidden" onclick="toggleAvailability()">Available</button><button id="locationBtn" class="btn ghost hidden" onclick="shareProviderLocation()">Share location</button></div><div id="jobList"></div></section><section id="nearby" class="hidden"><h2>Nearby providers</h2><div class="card"><div class="field"><label>Service</label><select id="nearbyService"></select></div><button class="btn primary" onclick="findNearby()">Use my location</button></div><div id="nearbyList"></div></section><section id="profile" class="hidden"><h2>Profile & Security</h2><div id="profileBox" class="card"></div><div class="bar" style="margin-top:10px"><button class="btn ghost" onclick="logout()">Sign out</button><button class="btn danger" onclick="deleteAccount()">Delete account</button></div><h2>Legal</h2><div class="card"><a href="privacy.html">Privacy Policy</a> · <a href="terms.html">Terms</a> · <a href="support.html">Support</a></div></section></div>
+<nav class="bottom"><button class="active" onclick="nav('home',this)">Home</button><button onclick="nav('jobs',this)">Jobs</button><button onclick="nav('nearby',this)">Nearby</button><button onclick="nav('profile',this)">Profile</button></nav>
+<div id="authModal" class="modal"><div class="sheet"><h2 id="authTitle">Sign in</h2><div class="tabs"><button class="btn dark" onclick="authMode='login';renderAuth()">Sign in</button><button class="btn ghost" onclick="authMode='register';renderAuth()">Create account</button></div><div id="registerFields"></div><div class="field"><label>Phone</label><input id="phone" autocomplete="tel" placeholder="+13135551234"></div><div class="field"><label>Password</label><input id="password" type="password" autocomplete="current-password" placeholder="10+ characters, letters and numbers"></div><div class="bar"><button class="btn primary" onclick="submitAuth()">Continue</button><button class="btn ghost" onclick="closeModal('authModal')">Cancel</button></div></div></div>
+<div id="requestModal" class="modal"><div class="sheet"><h2>Request a service</h2><div class="field"><label>Service</label><select id="reqService"></select></div><div class="field"><label>Details</label><textarea id="reqDetails" placeholder="Describe what you need"></textarea></div><div class="field"><label>Address / landmark</label><input id="reqAddress" placeholder="Optional"></div><label class="row" style="margin:10px 0"><input id="reqUrgent" type="checkbox"> <b>Urgent request</b></label><div class="bar"><button class="btn primary" onclick="createRequest()">Send request</button><button class="btn ghost" onclick="closeModal('requestModal')">Cancel</button></div></div></div>
+<div id="chatModal" class="modal"><div class="sheet"><h2>Job chat</h2><div id="chatList"></div><div class="row"><input id="chatText" style="flex:1;border:1px solid var(--l);border-radius:13px;padding:12px" placeholder="Message"><button class="btn primary" onclick="sendMessage()">Send</button></div><button class="btn ghost" style="margin-top:10px" onclick="closeModal('chatModal')">Close</button></div></div><div id="toast" class="toast"></div>
+<script>
+const API='https://zovro-api.onrender.com',services=['Roadside Assistance','Mobile Mechanic','Plumbing','Electrical','HVAC','Appliance Repair','Moving','Lawn & Snow'];let token=localStorage.zovroToken||'',me=null,jobs=[],activeJob=null,authMode='login';
+function $(id){return document.getElementById(id)}function toast(x){$('toast').textContent=x;$('toast').classList.add('show');setTimeout(()=>$('toast').classList.remove('show'),2200)}function openModal(id){$(id).classList.add('open')}function closeModal(id){$(id).classList.remove('open')}function esc(s=''){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+async function api(path,opt={}){const h={'content-type':'application/json',...(opt.headers||{})};if(token)h.authorization='Bearer '+token;const r=await fetch(API+'/api'+path,{...opt,headers:h});const d=await r.json().catch(()=>({}));if(!r.ok)throw Error(d.error||('Request failed '+r.status));return d}
+async function boot(){services.forEach((s,i)=>$('services').insertAdjacentHTML('beforeend',`<button class="svc" onclick="startService('${s.replaceAll("'","\\'")}')"><span>${['🚗','🔧','🚿','⚡','❄️','🧰','📦','🌿'][i]}</span><b>${s}</b><small>Nearby pros</small></button>`));for(const id of ['reqService','nearbyService'])$(id).innerHTML=services.map(s=>`<option>${s}</option>`).join('');try{const h=await api('/health');$('state').textContent=h.ok?'API Live · '+h.version:'API issue';$('state').style.color='#166534'}catch(e){$('state').textContent='API offline';$('state').style.color='#b91c1c'}if(token)try{me=(await api('/me')).user}catch{token='';localStorage.removeItem('zovroToken')}renderAccount();if(me)loadJobs()}
+function renderAccount(){if(!me){$('accountBox').innerHTML='<b>Sign in or create an account</b><p class="muted">Customers can request help. Providers can accept nearby jobs.</p><button class="btn primary" onclick="openAuth()">Continue</button>';$('profileBox').innerHTML='<span class="muted">Not signed in.</span>';return}$('accountBox').innerHTML=`<b>${esc(me.name)}</b><p class="muted">${esc(me.role)} · ${esc(me.phone)}</p><span class="tag">${me.providerVerified?'Verified provider':'Account active'}</span>`;$('profileBox').innerHTML=`<b>${esc(me.name)}</b><p>${esc(me.phone)}<br>${esc(me.email||'')}</p><p class="muted">Role: ${esc(me.role)}${me.service?' · '+esc(me.service):''}</p>`;$('availabilityBtn').classList.toggle('hidden',me.role!=='provider');$('locationBtn').classList.toggle('hidden',me.role!=='provider')}
+function openAuth(){renderAuth();openModal('authModal')}function renderAuth(){$('authTitle').textContent=authMode==='login'?'Sign in':'Create account';$('registerFields').innerHTML=authMode==='register'?`<div class="field"><label>Name</label><input id="name" placeholder="Your name"></div><div class="field"><label>Email</label><input id="email" type="email" placeholder="Optional email"></div><div class="field"><label>Role</label><select id="role" onchange="renderProviderField()"><option value="customer">Customer</option><option value="provider">Service provider</option></select></div><div id="providerField"></div>`:''}function renderProviderField(){const p=$('providerField');if(p)p.innerHTML=$('role').value==='provider'?`<div class="field"><label>Primary service</label><select id="service">${services.map(s=>`<option>${s}</option>`).join('')}</select></div>`:''}
+async function submitAuth(){try{let d;if(authMode==='login')d=await api('/auth/login',{method:'POST',body:JSON.stringify({phone:$('phone').value,password:$('password').value})});else d=await api('/auth/register',{method:'POST',body:JSON.stringify({name:$('name').value,email:$('email').value,phone:$('phone').value,password:$('password').value,role:$('role').value,service:$('service')?.value||null})});token=d.token;me=d.user;localStorage.zovroToken=token;closeModal('authModal');renderAccount();loadJobs();toast('Welcome to ZOVRO')}catch(e){toast(e.message)}}
+function nav(id,b){for(const x of ['home','jobs','nearby','profile'])$(x).classList.toggle('hidden',x!==id);document.querySelectorAll('.bottom button').forEach(x=>x.classList.remove('active'));b.classList.add('active');if(id==='jobs')loadJobs()}function startService(s){if(!me)return openAuth();if(me.role!=='customer')return toast('Customer account required');$('reqService').value=s;newRequest()}function quickSOS(){if(!me)return openAuth();$('reqService').value='Roadside Assistance';$('reqUrgent').checked=true;newRequest()}function newRequest(){if(!me)return openAuth();if(me.role!=='customer')return toast('Only customers create requests');openModal('requestModal')}
+function geo(){return new Promise((resolve,reject)=>navigator.geolocation?navigator.geolocation.getCurrentPosition(p=>resolve({lat:p.coords.latitude,lng:p.coords.longitude,accuracy:p.coords.accuracy}),reject,{enableHighAccuracy:true,timeout:10000}):reject(Error('Location unavailable')))}
+async function createRequest(){try{let loc=null;try{loc=await geo()}catch{}const out=await api('/requests',{method:'POST',body:JSON.stringify({service:$('reqService').value,details:$('reqDetails').value,address:$('reqAddress').value,time:'As soon as possible',urgent:$('reqUrgent').checked,location:loc})});closeModal('requestModal');toast(`Request sent · ${out.dispatch?.notifiedProviders||0} providers notified`);loadJobs()}catch(e){toast(e.message)}}
+async function loadJobs(){if(!me){$('jobList').innerHTML='<div class="card">Sign in to see jobs.</div>';return}try{jobs=(await api('/requests')).requests||[];$('jobList').innerHTML=jobs.length?jobs.map(jobHtml).join(''):'<div class="card" style="margin-top:10px">No requests yet.</div>'}catch(e){toast(e.message)}}function jobHtml(j){const mine=me.role==='provider'&&j.providerId===me.id,open=me.role==='provider'&&!j.providerId&&!['Completed','Cancelled'].includes(j.status);return `<div class="card job"><div class="row"><div class="grow"><b>${esc(j.service)}</b><div class="muted">${esc(j.details)}</div></div><span class="tag ${j.urgent?'urgent':''}">${esc(j.status)}</span></div><p class="muted">${esc(j.address||'Location shared in app')}</p><div class="bar">${open?`<button class="btn ok" onclick="acceptJob('${j.id}')">Accept</button>`:''}${mine?nextButton(j):''}${!['Completed','Cancelled'].includes(j.status)&&(me.role==='customer'||mine)?`<button class="btn ghost" onclick="cancelJob('${j.id}')">Cancel</button>`:''}${j.providerId?`<button class="btn ghost" onclick="openChat('${j.id}')">Chat</button>`:''}${me.role==='customer'&&j.status==='Completed'&&!j.rating?`<button class="btn primary" onclick="rateJob('${j.id}')">Rate</button>`:''}</div></div>`}function nextButton(j){const s=['Accepted','On the way','Arrived','In progress','Completed'],i=s.indexOf(j.status);return i>=0&&i<4?`<button class="btn primary" onclick="advance('${j.id}','${s[i+1]}')">${s[i+1]}</button>`:''}
+async function acceptJob(id){try{await api('/requests/'+id+'/accept',{method:'POST',body:'{}'});toast('Job accepted');loadJobs()}catch(e){toast(e.message)}}async function advance(id,status){try{await api('/requests/'+id+'/status',{method:'POST',body:JSON.stringify({status})});toast(status);loadJobs()}catch(e){toast(e.message)}}async function cancelJob(id){const reason=prompt('Cancellation reason','Cancelled in ZOVRO');if(reason===null)return;try{await api('/requests/'+id+'/cancel',{method:'POST',body:JSON.stringify({reason})});toast('Cancelled');loadJobs()}catch(e){toast(e.message)}}async function rateJob(id){const stars=Number(prompt('Rate provider 1–5','5'));if(!stars)return;try{await api('/requests/'+id+'/rating',{method:'POST',body:JSON.stringify({stars})});toast('Thank you');loadJobs()}catch(e){toast(e.message)}}
+async function openChat(id){activeJob=id;openModal('chatModal');await loadChat()}async function loadChat(){try{const m=(await api('/requests/'+activeJob+'/messages')).messages||[];$('chatList').innerHTML=m.map(x=>`<div class="msg ${x.userId===me.id?'me':''}"><b>${esc(x.from)}</b><br>${esc(x.text)}</div>`).join('')||'<p class="muted">No messages yet.</p>'}catch(e){toast(e.message)}}async function sendMessage(){const text=$('chatText').value.trim();if(!text)return;try{await api('/requests/'+activeJob+'/messages',{method:'POST',body:JSON.stringify({text})});$('chatText').value='';loadChat()}catch(e){toast(e.message)}}
+async function toggleAvailability(){try{me=(await api('/provider/availability',{method:'PATCH',body:JSON.stringify({available:!me.availability})})).user;renderAccount();$('availabilityBtn').textContent=me.availability?'Available':'Unavailable';toast('Availability updated')}catch(e){toast(e.message)}}async function shareProviderLocation(){try{const p=await geo();await api('/provider/location',{method:'POST',body:JSON.stringify(p)});toast('Provider location updated')}catch(e){toast(e.message)}}async function findNearby(){try{const p=await geo(),out=await api(`/providers/nearby?lat=${p.lat}&lng=${p.lng}&service=${encodeURIComponent($('nearbyService').value)}&radius=25`);$('nearbyList').innerHTML=(out.providers||[]).map(x=>`<div class="card job"><b>${esc(x.provider.name)}</b><p class="muted">${esc(x.provider.service||'Local Pro')} · ${x.distanceMiles} mi · ETA ${x.etaMinutes} min</p><span class="tag">⭐ ${x.provider.stats.rating??'New'} · ${x.provider.stats.completedJobs} jobs</span></div>`).join('')||'<div class="card job">No active nearby providers found yet.</div>'}catch(e){toast(e.message)}}
+async function logout(){try{if(token)await api('/auth/logout',{method:'POST',body:'{}'})}catch{}token='';me=null;localStorage.removeItem('zovroToken');renderAccount();toast('Signed out')}async function deleteAccount(){if(!confirm('Permanently delete your ZOVRO account?'))return;try{await api('/me',{method:'DELETE',body:JSON.stringify({confirm:'DELETE'})});token='';me=null;localStorage.removeItem('zovroToken');renderAccount();toast('Account deleted')}catch(e){toast(e.message)}}boot();setInterval(()=>{if(me)loadJobs()},10000);
+</script></body></html>
