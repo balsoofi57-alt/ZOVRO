@@ -1,0 +1,23 @@
+{
+  "name": "zovro-mobile",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "start": "node backend/server.js",
+    "test:e2e": "node scripts/e2e-smoke.js",
+    "production:check": "node scripts/production-check.js",
+    "production:env": "node scripts/production-env-check.js",
+    "release:check": "node scripts/release-check.js",
+    "security:check": "node scripts/security-check.js",
+    "store:check": "node scripts/store-readiness.js",
+    "final:check": "node scripts/final-check.js"
+  },
+  "dependencies": {
+    "@capacitor/core": "^7.0.0"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^7.0.0",
+    "@capacitor/ios": "^7.0.0",
+    "@capacitor/android": "^7.0.0"
+  }
+}
