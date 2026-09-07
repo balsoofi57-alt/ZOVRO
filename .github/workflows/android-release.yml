@@ -1,0 +1,87 @@
+name: ZOVRO Android Release Candidate
+
+on:
+  push:
+    branches: [android-release]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-android:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout ZOVRO
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Install Capacitor
+        run: npm install --no-audit --no-fund
+
+      - name: Prepare production mobile web bundle
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf www
+          mkdir -p www
+          cp index.html privacy.html terms.html support.html manifest.webmanifest service-worker.js i18n.js www/
+          cp -R assets www/assets
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('www/index.html')
+          s=p.read_text(encoding='utf-8')
+          old='<div id="state" class="state">Checking API…</div>'
+          chooser='<div style="display:flex;align-items:center;gap:8px"><select id="zovroLanguage" class="state" aria-label="Language" onchange="ZOVRO_I18N.setLanguage(this.value)"><option value="en">English</option><option value="es">Español</option></select><div id="state" class="state">Checking API…</div></div>'
+          if old not in s:
+              raise SystemExit('Expected API status marker not found in index.html')
+          s=s.replace(old,chooser,1)
+          if '<script src="i18n.js"></script>' not in s:
+              s=s.replace('</body>','<script src="i18n.js"></script>\n</body>',1)
+          p.write_text(s,encoding='utf-8')
+          PY
+          grep -q 'zovroLanguage' www/index.html
+          grep -q 'i18n.js' www/index.html
+
+      - name: Create Android project
+        run: npx cap add android
+
+      - name: Sync Android project
+        run: npx cap sync android
+
+      - name: Build debug APK and release AAB
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd android
+          chmod +x gradlew
+          ./gradlew assembleDebug bundleRelease --stacktrace
+
+      - name: Upload Android build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: zovro-android-release-candidate
+          if-no-files-found: error
+          retention-days: 14
+          path: |
+            android/app/build/outputs/apk/debug/app-debug.apk
+            android/app/build/outputs/bundle/release/app-release.aab
+
+      - name: Write build summary
+        run: |
+          echo '## ZOVRO Android Release Candidate' >> "$GITHUB_STEP_SUMMARY"
+          echo '- App ID: com.zovro.app' >> "$GITHUB_STEP_SUMMARY"
+          echo '- Languages: English + Español' >> "$GITHUB_STEP_SUMMARY"
+          echo '- Debug APK: built for device testing' >> "$GITHUB_STEP_SUMMARY"
+          echo '- Release AAB: built unsigned; Play upload signing is the next gate' >> "$GITHUB_STEP_SUMMARY"
