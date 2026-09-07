@@ -33,6 +33,7 @@ function mobilePaymentConfig(req,res,next){
       publishableKey:publishableKey(),
       currency:payments.currency,
       platformFeeBps:payments.feeBps(),
+      savedCardsEnabled:payments.configured(),
       applePayEnabled:flag('ZOVRO_APPLE_PAY_ENABLED')&&Boolean(merchantId),
       applePayMerchantId:merchantId,
       googlePayEnabled:flag('ZOVRO_GOOGLE_PAY_ENABLED'),
