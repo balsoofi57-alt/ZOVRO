@@ -8,6 +8,7 @@
     "payment:check": "node scripts/payment-check.js",
     "payment:saved-card-check": "node scripts/saved-card-check.js",
     "push:check": "node scripts/push-check.js",
+    "cors:check": "node scripts/cors-security-check.js",
     "production:check": "node scripts/production-check.js",
     "production:env": "node scripts/production-env-check.js",
     "release:check": "node scripts/release-check.js",
@@ -16,7 +17,7 @@
     "final:check": "node scripts/final-check.js",
     "mobile:prepare": "node scripts/prepare-mobile.js",
     "mobile:init": "node scripts/init-mobile.js",
-    "qa:all": "npm run final:check && npm run production:check && npm run payment:check && npm run payment:saved-card-check && npm run push:check && npm run security:check && npm run store:check && npm run release:check && npm run test:e2e"
+    "qa:all": "npm run final:check && npm run production:check && npm run payment:check && npm run payment:saved-card-check && npm run push:check && npm run cors:check && npm run security:check && npm run store:check && npm run release:check && npm run test:e2e"
   },
   "dependencies": {
     "@capacitor/core": "^7.0.0",
