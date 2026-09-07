@@ -1,0 +1,15 @@
+'use strict';
+const crypto=require('crypto');
+process.env.ZOVRO_PLATFORM_FEE_BPS='1500';
+process.env.STRIPE_WEBHOOK_SECRET='whsec_test_zovro';
+delete process.env.STRIPE_SECRET_KEY;
+const payments=require('../backend/payments');
+const split=payments.moneySplit(10000);
+if(split.amountCents!==10000||split.platformFeeCents!==1500||split.providerAmountCents!==8500)throw new Error('Fee split calculation failed');
+if(payments.configured())throw new Error('Stripe should remain disabled without a secret key');
+const event={id:'evt_test',type:'payment_intent.succeeded',data:{object:{id:'pi_test',metadata:{zovro_request_id:'req_test'}}}};
+const raw=JSON.stringify(event),t=Math.floor(Date.now()/1000),sig=crypto.createHmac('sha256',process.env.STRIPE_WEBHOOK_SECRET).update(`${t}.${raw}`).digest('hex');
+const parsed=payments.verifyWebhook(raw,`t=${t},v1=${sig}`);
+if(parsed.id!=='evt_test')throw new Error('Webhook verification failed');
+let rejected=false;try{payments.verifyWebhook(raw,`t=${t},v1=${'0'.repeat(64)}`)}catch{rejected=true}if(!rejected)throw new Error('Invalid webhook signature was accepted');
+console.log('ZOVRO Stripe payment safety check passed.');
