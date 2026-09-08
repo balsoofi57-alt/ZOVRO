@@ -3,7 +3,7 @@ name: ZOVRO Full QA
 on:
   workflow_dispatch:
   push:
-    branches: [main, feature/zovro-product-expansion]
+    branches: [main, zovro-final-deploy, feature/zovro-product-expansion]
     paths:
       - 'backend/**'
       - 'src/**'
