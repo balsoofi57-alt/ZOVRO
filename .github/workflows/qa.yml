@@ -17,6 +17,21 @@ on:
       - 'capacitor.config.json'
       - 'package.json'
       - '.github/workflows/qa.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'backend/**'
+      - 'src/**'
+      - 'scripts/**'
+      - 'index.html'
+      - 'privacy.html'
+      - 'terms.html'
+      - 'support.html'
+      - 'manifest.webmanifest'
+      - 'service-worker.js'
+      - 'capacitor.config.json'
+      - 'package.json'
+      - '.github/workflows/qa.yml'
 
 permissions:
   contents: read
