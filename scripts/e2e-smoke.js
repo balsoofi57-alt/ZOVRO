@@ -1,16 +1,13 @@
 'use strict';
 const {spawn}=require('child_process');
-const fs=require('fs'),path=require('path');
-const root=path.resolve(__dirname,'..'), backend=path.join(root,'backend'), data=path.join(backend,'data');
+const fs=require('fs'),os=require('os'),path=require('path');
+const root=path.resolve(__dirname,'..'), backend=path.join(root,'backend'), data=fs.mkdtempSync(path.join(os.tmpdir(),'zovro-e2e-'));
 const port=Number(process.env.ZOVRO_TEST_PORT||18919), base=`http://127.0.0.1:${port}`;
-const files=['zovro.sqlite','zovro.sqlite-wal','zovro.sqlite-shm'];
-const backups=[];
 function sleep(ms){return new Promise(r=>setTimeout(r,ms))}
 async function call(method,url,body,token){const r=await fetch(base+url,{method,headers:{'content-type':'application/json',...(token?{authorization:`Bearer ${token}`}:{})},body:body?JSON.stringify(body):undefined});let j={};try{j=await r.json()}catch{};if(!r.ok)throw new Error(`${method} ${url} -> ${r.status} ${JSON.stringify(j)}`);return j}
-function backup(){fs.mkdirSync(data,{recursive:true});for(const f of files){const p=path.join(data,f);if(fs.existsSync(p)){const b=p+'.final-test-backup';fs.copyFileSync(p,b);backups.push([p,b]);fs.rmSync(p,{force:true})}}}
-function restore(){for(const f of files)fs.rmSync(path.join(data,f),{force:true});for(const [p,b] of backups){fs.copyFileSync(b,p);fs.rmSync(b,{force:true})}}
-(async()=>{backup();const child=spawn(process.execPath,['server.js'],{cwd:backend,env:{...process.env,PORT:String(port),ZOVRO_SECRET:'final-e2e-secret-not-production',ZOVRO_APP_VERSION:'1.0.0'},stdio:['ignore','pipe','pipe']});
+(async()=>{const child=spawn(process.execPath,['server.js'],{cwd:backend,env:{...process.env,NODE_ENV:'production',PORT:String(port),ZOVRO_DATA_DIR:data,ZOVRO_SECRET:'final-e2e-secret-not-production-1234567890',ZOVRO_OPS_TOKEN:'final-e2e-ops-token-1234567890',ZOVRO_ALLOWED_ORIGINS:'https://localhost',ZOVRO_DB_MIRROR_MODE:'off',ZOVRO_APP_VERSION:'1.0.0'},stdio:['ignore','pipe','pipe']});
 try{let ready=false;for(let i=0;i<40;i++){try{const h=await call('GET','/api/health');if(h.ok&&h.stage==='FINAL'&&h.version==='1.0.0'){ready=true;break}}catch{}await sleep(100)}if(!ready)throw new Error('Final backend did not become ready with expected version/stage');
+const malformed=await fetch(base+'/api/auth/login',{method:'POST',headers:{'content-type':'application/json'},body:'{bad'});if(malformed.status!==400)throw new Error(`Malformed JSON returned ${malformed.status}, expected 400`);
 const suffix=Date.now();
 const c=await call('POST','/api/auth/register',{name:'ZOVRO Customer',phone:`1313${String(suffix).slice(-7)}`,password:'StrongPass22!',role:'customer'});
 const p=await call('POST','/api/auth/register',{name:'ZOVRO Provider',phone:`2484${String(suffix).slice(-7)}`,password:'StrongPass22!',role:'provider',service:'Roadside Assistance'});
@@ -25,4 +22,8 @@ await call('POST',`/api/requests/${id}/rating`,{stars:5},c.token);
 const reqs=await call('GET','/api/requests',null,c.token);const final=reqs.requests.find(x=>x.id===id);if(!final||final.status!=='Completed'||final.rating!==5)throw new Error('Final request state/rating failed');
 const notes=await call('GET','/api/notifications',null,c.token);if(!notes.notifications.length)throw new Error('Customer notifications failed');
 console.log('ZOVRO 1.0 Final end-to-end smoke test passed.');
-}finally{child.kill('SIGTERM');await sleep(200);restore()}})().catch(e=>{console.error(e.stack||e);process.exitCode=1});
+}finally{child.kill('SIGTERM');await sleep(200);fs.rmSync(data,{recursive:true,force:true})}
+const mirrorData=fs.mkdtempSync(path.join(os.tmpdir(),'zovro-e2e-mirror-')),mirrorPort=port+1;
+const mirrorChild=spawn(process.execPath,['server.js'],{cwd:backend,env:{...process.env,NODE_ENV:'production',PORT:String(mirrorPort),ZOVRO_DATA_DIR:mirrorData,ZOVRO_SECRET:'final-e2e-secret-not-production-1234567890',ZOVRO_OPS_TOKEN:'final-e2e-ops-token-1234567890',ZOVRO_ALLOWED_ORIGINS:'https://localhost',ZOVRO_DB_MIRROR_MODE:'mirror',DATABASE_URL:'postgresql://invalid:invalid@base:5432/invalid',PGSSLMODE:'require',ZOVRO_APP_VERSION:'1.0.0'},stdio:['ignore','pipe','pipe']});
+try{let checked=false;for(let i=0;i<50;i++){try{const r=await fetch(`http://127.0.0.1:${mirrorPort}/api/ready`);if(r.status===503){const j=await r.json();if(j.ready===false&&j.postgresOperational===false){checked=true;break}}}catch{}await sleep(100)}if(!checked)throw new Error('Failed PostgreSQL mirror must make readiness return 503');console.log('ZOVRO failed-mirror readiness guard passed.')}finally{mirrorChild.kill('SIGTERM');await sleep(200);fs.rmSync(mirrorData,{recursive:true,force:true})}
+})().catch(e=>{console.error(e.stack||e);process.exitCode=1});

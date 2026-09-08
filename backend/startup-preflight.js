@@ -28,8 +28,11 @@ const status = {
   allowedOriginsPresent: present('ZOVRO_ALLOWED_ORIGINS')
 };
 status.postgresRuntimeReady=status.databaseUrlPresent&&status.pgModuleAvailable;
-status.mirrorOperational=status.mirrorRequested&&status.postgresRuntimeReady;
-status.durableOperational=status.durableRequested&&status.postgresRuntimeReady;
+status.postgresConnectionVerified=false;
+status.mirrorConfigured=status.mirrorRequested&&status.postgresRuntimeReady;
+status.durableConfigured=status.durableRequested&&status.postgresRuntimeReady;
+status.mirrorOperational=false;
+status.durableOperational=false;
 status.blockers=[];
 if(!status.databaseUrlPresent) status.blockers.push('database_url');
 if(!status.pgModuleAvailable) status.blockers.push('postgres_driver');

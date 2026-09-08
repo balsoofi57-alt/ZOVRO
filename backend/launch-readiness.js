@@ -13,6 +13,7 @@ function snapshot() {
   const dbMirrorMode = String(process.env.ZOVRO_DB_MIRROR_MODE || 'off').toLowerCase();
   const databaseUrlPresent = present('DATABASE_URL');
   const postgresConfigured = Boolean(database.postgresConfigured);
+  const postgresOperational = Boolean(database.postgresOperational);
   const stripeConfigured = payments.configured();
   const stripeWebhookConfigured = payments.webhookConfigured();
   const stripePublishablePresent = present('STRIPE_PUBLISHABLE_KEY');
@@ -30,6 +31,7 @@ function snapshot() {
   const blockers = [];
   if (!databaseUrlPresent) blockers.push('database_url');
   if ((dbMirrorMode === 'mirror' || dbMirrorMode === 'durable') && !postgresConfigured) blockers.push('postgres_runtime');
+  if ((dbMirrorMode === 'mirror' || dbMirrorMode === 'durable') && postgresConfigured && !postgresOperational) blockers.push('postgres_connection');
   if (!stripePublishablePresent) blockers.push('stripe_publishable');
   if (!stripeConfigured) blockers.push('stripe_secret');
   if (!stripeWebhookConfigured) blockers.push('stripe_webhook');
@@ -47,6 +49,7 @@ function snapshot() {
     checks: {
       databaseUrlPresent,
       postgresConfigured,
+      postgresOperational,
       dbMirrorMode,
       stripePublishablePresent,
       stripeConfigured,

@@ -3,8 +3,9 @@ const fs=require('fs'),path=require('path');
 const {DatabaseSync}=require('node:sqlite');
 const push=require('./push');
 const mirror=require('./postgres-mirror');
-const DATA=path.join(__dirname,'data'), SQLITE=path.join(DATA,'zovro.sqlite'), LEGACY=path.join(DATA,'db.json');
+const DATA=process.env.ZOVRO_DATA_DIR?path.resolve(process.env.ZOVRO_DATA_DIR):path.join(__dirname,'data'), SQLITE=path.join(DATA,'zovro.sqlite'), LEGACY=path.join(DATA,'db.json');
 const MIRROR_MODE=/^(mirror|durable)$/.test(String(process.env.ZOVRO_DB_MIRROR_MODE||'').toLowerCase())?String(process.env.ZOVRO_DB_MIRROR_MODE).toLowerCase():'off';
+let postgresOperational=false,postgresError=null;
 fs.mkdirSync(DATA,{recursive:true});
 const db=new DatabaseSync(SQLITE);
 db.exec(`PRAGMA journal_mode=WAL; PRAGMA foreign_keys=ON;
@@ -42,8 +43,8 @@ function writeDb(input,options={}){const d=shape(input),existingNotificationIds=
 }catch(e){try{db.exec('ROLLBACK')}catch{}throw e}}
 function stateCount(d){return ['users','requests','messages','ratings','audit','verificationRequests','providerLocations','deviceSessions','notifications'].reduce((n,k)=>n+(d[k]?.length||0),0)}
 async function initDurable(){
- if(MIRROR_MODE==='off')return {mode:'off',postgres:false};
- if(!mirror.enabled()){console.warn(JSON.stringify({event:'postgres_mirror_unavailable',mode:MIRROR_MODE}));return {mode:MIRROR_MODE,postgres:false}}
+ if(MIRROR_MODE==='off'){postgresOperational=false;postgresError=null;return {mode:'off',postgres:false}}
+ if(!mirror.enabled()){postgresOperational=false;postgresError='PostgreSQL is not configured';console.warn(JSON.stringify({event:'postgres_mirror_unavailable',mode:MIRROR_MODE}));return {mode:MIRROR_MODE,postgres:false,error:postgresError}}
  try{
   await mirror.initialize();
   const remote=await mirror.load(),local=readDb(),localCount=stateCount(local),remoteCount=remote?.total||0;
@@ -51,11 +52,11 @@ async function initDurable(){
    if(remoteCount>0){writeDb(remote.state,{suppressMirror:true,suppressPush:true});console.log(JSON.stringify({event:'postgres_restore_complete',records:remoteCount}))}
    else if(localCount>0){await mirror.persist(local);console.log(JSON.stringify({event:'postgres_seed_complete',records:localCount}))}
   }else console.log(JSON.stringify({event:'postgres_mirror_ready',localRecords:localCount,remoteRecords:remoteCount}));
-  return {mode:MIRROR_MODE,postgres:true,localRecords:localCount,remoteRecords:remoteCount};
- }catch(e){console.error(JSON.stringify({event:'postgres_init_failed',mode:MIRROR_MODE,message:e.message}));return {mode:MIRROR_MODE,postgres:false,error:e.message}}
+  postgresOperational=true;postgresError=null;return {mode:MIRROR_MODE,postgres:true,localRecords:localCount,remoteRecords:remoteCount};
+ }catch(e){postgresOperational=false;postgresError=e.message;console.error(JSON.stringify({event:'postgres_init_failed',mode:MIRROR_MODE,message:e.message}));return {mode:MIRROR_MODE,postgres:false,error:e.message}}
 }
 function migrateLegacy(){const count=db.prepare('SELECT COUNT(*) n FROM users').get().n;if(count===0&&fs.existsSync(LEGACY)){try{const old=JSON.parse(fs.readFileSync(LEGACY,'utf8'));writeDb(old,{suppressMirror:true,suppressPush:true});fs.renameSync(LEGACY,LEGACY+'.stage13.backup');console.log('Migrated legacy JSON data to SQLite.')}catch(e){console.error('Legacy migration skipped:',e.message)}}}
 migrateLegacy();
 function closeDb(){try{db.exec('PRAGMA wal_checkpoint(TRUNCATE)')}catch{}try{db.close()}catch{}}
-function dbInfo(){return {engine:MIRROR_MODE==='off'?'sqlite':'sqlite+postgres-mirror',schemaVersion:5,file:SQLITE,mirrorMode:MIRROR_MODE,postgresConfigured:mirror.enabled()}}
+function dbInfo(){return {engine:MIRROR_MODE==='off'?'sqlite':postgresOperational?'sqlite+postgres-mirror':'sqlite',schemaVersion:5,file:SQLITE,mirrorMode:MIRROR_MODE,postgresConfigured:mirror.enabled(),postgresOperational,postgresError}}
 module.exports={readDb,writeDb,closeDb,dbInfo,initDurable};
