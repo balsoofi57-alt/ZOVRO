@@ -3,6 +3,7 @@ require('./startup-preflight');
 const database=require('./database');
 (async()=>{
   await database.initDurable();
+  require('./launch-readiness');
   require('./response-security');
   require('./product-expansion');
   require('./server-mobile-payments');
