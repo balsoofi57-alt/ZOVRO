@@ -1,7 +1,7 @@
 'use strict';
 const fs=require('fs'),path=require('path');
 const {DatabaseSync}=require('node:sqlite');
-const DATA=path.join(__dirname,'data'), SQLITE=path.join(DATA,'zovro.sqlite'), LEGACY=path.join(DATA,'db.json');
+const DATA=process.env.ZOVRO_DATA_DIR?path.resolve(process.env.ZOVRO_DATA_DIR):path.join(__dirname,'data'), SQLITE=path.join(DATA,'zovro.sqlite'), LEGACY=path.join(DATA,'db.json');
 fs.mkdirSync(DATA,{recursive:true});
 const db=new DatabaseSync(SQLITE);
 db.exec(`PRAGMA journal_mode=WAL; PRAGMA foreign_keys=ON;
