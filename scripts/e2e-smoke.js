@@ -22,4 +22,8 @@ await call('POST',`/api/requests/${id}/rating`,{stars:5},c.token);
 const reqs=await call('GET','/api/requests',null,c.token);const final=reqs.requests.find(x=>x.id===id);if(!final||final.status!=='Completed'||final.rating!==5)throw new Error('Final request state/rating failed');
 const notes=await call('GET','/api/notifications',null,c.token);if(!notes.notifications.length)throw new Error('Customer notifications failed');
 console.log('ZOVRO 1.0 Final end-to-end smoke test passed.');
-}finally{child.kill('SIGTERM');await sleep(200);fs.rmSync(data,{recursive:true,force:true})}})().catch(e=>{console.error(e.stack||e);process.exitCode=1});
+}finally{child.kill('SIGTERM');await sleep(200);fs.rmSync(data,{recursive:true,force:true})}
+const mirrorData=fs.mkdtempSync(path.join(os.tmpdir(),'zovro-e2e-mirror-')),mirrorPort=port+1;
+const mirrorChild=spawn(process.execPath,['server.js'],{cwd:backend,env:{...process.env,NODE_ENV:'production',PORT:String(mirrorPort),ZOVRO_DATA_DIR:mirrorData,ZOVRO_SECRET:'final-e2e-secret-not-production-1234567890',ZOVRO_OPS_TOKEN:'final-e2e-ops-token-1234567890',ZOVRO_ALLOWED_ORIGINS:'https://localhost',ZOVRO_DB_MIRROR_MODE:'mirror',DATABASE_URL:'postgresql://invalid:invalid@base:5432/invalid',PGSSLMODE:'require',ZOVRO_APP_VERSION:'1.0.0'},stdio:['ignore','pipe','pipe']});
+try{let checked=false;for(let i=0;i<50;i++){try{const r=await fetch(`http://127.0.0.1:${mirrorPort}/api/ready`);if(r.status===503){const j=await r.json();if(j.ready===false&&j.postgresOperational===false){checked=true;break}}}catch{}await sleep(100)}if(!checked)throw new Error('Failed PostgreSQL mirror must make readiness return 503');console.log('ZOVRO failed-mirror readiness guard passed.')}finally{mirrorChild.kill('SIGTERM');await sleep(200);fs.rmSync(mirrorData,{recursive:true,force:true})}
+})().catch(e=>{console.error(e.stack||e);process.exitCode=1});
