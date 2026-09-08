@@ -22,13 +22,12 @@ Secondary: Utilities
 local services, roadside assistance, handyman, mechanic, plumbing, electrical, HVAC, moving, home repair, service provider
 
 ## Review notes
-- Production API base: https://zovro-api.onrender.com
-- Health: /api/health
-- Readiness: /api/ready
-- Privacy page is included in the production web package.
-- Terms page is included in the production web package.
-- Support page is included in the production web package.
-- Account deletion is supported in-app.
+- Canonical production API base: https://zovro-api-final.onrender.com
+- Health endpoint: https://zovro-api-final.onrender.com/api/health
+- Readiness endpoint: https://zovro-api-final.onrender.com/api/ready
+- Do not submit these endpoints as verified until both return HTTP 200 and readiness confirms the expected production database mode.
+- Privacy, Terms, and Support pages are included in the production web package, but their final public URLs and content must be verified before submission.
+- Account deletion is supported in-app and must be rechecked in the signed release build.
 - SOS/urgent service requests are marketplace requests and are not a replacement for emergency services.
 
 ## Submission preparation documents
@@ -39,6 +38,7 @@ local services, roadside assistance, handyman, mechanic, plumbing, electrical, H
 
 ## Assets / credentials still required at submission time
 - Final public support email/contact details
+- Final public Privacy, Terms, and Support URLs
 - Final store screenshots and promotional graphics
 - Apple Developer signing credentials and App Store Connect access
 - Google Play Console signing/upload credentials
@@ -48,5 +48,6 @@ local services, roadside assistance, handyman, mechanic, plumbing, electrical, H
 ## Current build status
 - Android release candidate: CI build completed successfully; unsigned release AAB requires Play upload signing.
 - iOS release candidate: CI simulator build completed successfully; App Store/TestFlight archive requires Apple signing.
+- Production PostgreSQL, live payments, real-device push delivery, signing, and store submission remain release gates.
 
 Do not commit production secrets or signing credentials to this repository.
