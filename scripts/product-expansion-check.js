@@ -2,6 +2,7 @@
 const assert=require('assert');
 const catalog=require('../src/service-catalog');
 const features=require('../src/product-features');
+const workflows=require('../src/advanced-workflows');
 assert(Array.isArray(catalog.SERVICE_CATALOG)&&catalog.SERVICE_CATALOG.length>=9,'Expected full category catalog');
 assert(catalog.ALL_SERVICES.length>=80,'Expected expanded service list');
 assert(catalog.smartMatch("my car won't start")[0].service.id==='jump-start','Smart Match should detect jump start');
@@ -9,4 +10,11 @@ assert(catalog.smartMatch('my basement flooded')[0].service.id==='water-damage',
 assert(features.BRAND.slogan==='ANYWHERE. ANYTIME. NEAR YOU.','Approved slogan missing');
 assert(features.BRAND.defaultLanguage==='en'&&features.BRAND.languages.join(',')==='en,es','Language policy mismatch');
 assert(features.PRODUCT_FEATURES.launchCore.sosDispatch,'SOS must stay enabled');
-console.log(JSON.stringify({ok:true,categories:catalog.SERVICE_CATALOG.length,services:catalog.ALL_SERVICES.length,smartMatch:true,brand:features.BRAND.name}));
+const estimate=workflows.createEstimate({requestId:'r1',providerId:'p1',labor:100,parts:25,tax:7.5});
+assert(estimate.total===132.5,'Estimate total mismatch');
+assert(workflows.approveEstimate(estimate).status==='approved','Estimate approval failed');
+const order=workflows.createChangeOrder({requestId:'r1',providerId:'p1',title:'Extra work',amount:40});
+assert(workflows.approveChangeOrder(order).status==='approved','Change-order approval failed');
+const pin=workflows.createJobPin();assert(/^\d{4}$/.test(pin)&&workflows.checkJobPin(pin,pin),'Job PIN failed');
+assert(workflows.serviceQualityScore({rating:5,completedJobs:50,onTimeRate:1,cancellationRate:0,responseRate:1})===100,'Quality score failed');
+console.log(JSON.stringify({ok:true,categories:catalog.SERVICE_CATALOG.length,services:catalog.ALL_SERVICES.length,smartMatch:true,advancedWorkflows:true,brand:features.BRAND.name}));
