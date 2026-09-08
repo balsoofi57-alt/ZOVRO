@@ -41,7 +41,7 @@ Purpose: perform requested marketplace services, maintain job lifecycle and comm
 Purpose: application security, reliability, fraud/abuse prevention, and operational troubleshooting.
 
 ## Current privacy posture
-- ZOVRO does not state that it sells personal information.
+- The current source contains no feature that sells personal information; confirm the final legal disclosure before submission.
 - Location is requested only when a location feature is used.
 - Account deletion is available in-app.
 - Current source does not show advertising or cross-app tracking.
