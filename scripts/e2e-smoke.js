@@ -8,6 +8,7 @@ async function call(method,url,body,token){const r=await fetch(base+url,{method,
 (async()=>{const child=spawn(process.execPath,['server.js'],{cwd:backend,env:{...process.env,NODE_ENV:'production',PORT:String(port),ZOVRO_DATA_DIR:data,ZOVRO_SECRET:'final-e2e-secret-not-production-1234567890',ZOVRO_OPS_TOKEN:'final-e2e-ops-token-1234567890',ZOVRO_ALLOWED_ORIGINS:'https://localhost',ZOVRO_DB_MIRROR_MODE:'off',ZOVRO_APP_VERSION:'1.0.0'},stdio:['ignore','pipe','pipe']});
 try{let ready=false;for(let i=0;i<40;i++){try{const h=await call('GET','/api/health');if(h.ok&&h.stage==='FINAL'&&h.version==='1.0.0'){ready=true;break}}catch{}await sleep(100)}if(!ready)throw new Error('Final backend did not become ready with expected version/stage');
 const malformed=await fetch(base+'/api/auth/login',{method:'POST',headers:{'content-type':'application/json'},body:'{bad'});if(malformed.status!==400)throw new Error(`Malformed JSON returned ${malformed.status}, expected 400`);
+const oversized=await fetch(base+'/api/auth/login',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({value:'x'.repeat(1000001)})});if(oversized.status!==413)throw new Error(`Oversized JSON returned ${oversized.status}, expected 413`);
 const suffix=Date.now();
 const c=await call('POST','/api/auth/register',{name:'ZOVRO Customer',phone:`1313${String(suffix).slice(-7)}`,password:'StrongPass22!',role:'customer'});
 const p=await call('POST','/api/auth/register',{name:'ZOVRO Provider',phone:`2484${String(suffix).slice(-7)}`,password:'StrongPass22!',role:'provider',service:'Roadside Assistance'});
@@ -16,6 +17,8 @@ await call('POST','/api/provider/location',{lat:42.3223,lng:-83.1763,accuracy:10
 const nearby=await call('GET','/api/providers/nearby?lat=42.315&lng=-83.19&service=Roadside%20Assistance',null,c.token);if(!nearby.providers.length)throw new Error('Nearby provider matching failed');
 const created=await call('POST','/api/requests',{service:'Roadside Assistance',details:'ZOVRO 1.0 Final end-to-end smoke test',address:'Dearborn, MI',location:{lat:42.315,lng:-83.19}},c.token);const id=created.request.id;
 await call('POST',`/api/requests/${id}/accept`,{},p.token);
+const malformedQuote=await fetch(base+`/api/requests/${id}/quote`,{method:'POST',headers:{'content-type':'application/json',authorization:`Bearer ${p.token}`},body:'{bad'});if(malformedQuote.status!==400)throw new Error(`Malformed payment JSON returned ${malformedQuote.status}, expected 400`);
+const quote=await call('POST',`/api/requests/${id}/quote`,{amountCents:10000},p.token);if(quote.payment.amountCents!==10000)throw new Error('Payment quote route did not recover after malformed JSON');
 await call('POST',`/api/requests/${id}/messages`,{text:'On my way for ZOVRO 1.0 Final test.'},p.token);
 for(const status of ['On the way','Arrived','In progress','Completed'])await call('POST',`/api/requests/${id}/status`,{status},p.token);
 await call('POST',`/api/requests/${id}/rating`,{stars:5},c.token);
