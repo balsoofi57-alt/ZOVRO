@@ -1,0 +1,22 @@
+'use strict';
+const cryptoObj=typeof require!=='undefined'?require('crypto'):null;
+const uid=()=>cryptoObj?.randomUUID?cryptoObj.randomUUID():(Date.now().toString(36)+Math.random().toString(36).slice(2));
+const now=()=>new Date().toISOString();
+const money=n=>Math.max(0,Math.round(Number(n||0)*100)/100);
+function createEstimate({requestId,providerId,labor=0,parts=0,materials=0,tax=0,notes=''}){const subtotal=money(labor+parts+materials);return{id:uid(),requestId,providerId,status:'pending',labor:money(labor),parts:money(parts),materials:money(materials),tax:money(tax),subtotal,total:money(subtotal+tax),notes:String(notes).slice(0,2000),createdAt:now(),approvedAt:null}}
+function approveEstimate(estimate){if(estimate.status!=='pending')throw Error('Estimate is not pending');return{...estimate,status:'approved',approvedAt:now()}}
+function createChangeOrder({requestId,providerId,title,amount,reason=''}){return{id:uid(),requestId,providerId,title:String(title).slice(0,160),amount:money(amount),reason:String(reason).slice(0,1000),status:'pending',createdAt:now(),approvedAt:null}}
+function approveChangeOrder(order){if(order.status!=='pending')throw Error('Change order is not pending');return{...order,status:'approved',approvedAt:now()}}
+function createJobPin(){return String(Math.floor(1000+Math.random()*9000))}
+function checkJobPin(expected,received){return String(expected)===String(received)}
+function providerPresence(status='offline'){return['online','busy','offline'].includes(status)?status:'offline'}
+function serviceQualityScore({rating=0,completedJobs=0,onTimeRate=1,cancellationRate=0,responseRate=1}){const ratingScore=Math.max(0,Math.min(1,Number(rating)/5)),volume=Math.min(1,Number(completedJobs)/50);return Math.round(100*(ratingScore*.4+Number(onTimeRate)*.2+(1-Number(cancellationRate))*.15+Number(responseRate)*.15+volume*.1))}
+function recurringSchedule({frequency='weekly',interval=1,nextDate=null}){if(!['weekly','biweekly','monthly','seasonal'].includes(frequency))frequency='weekly';return{frequency,interval:Math.max(1,Number(interval)||1),nextDate,active:true}}
+function savedVehicle({year,make,model,vin='',nickname=''}){return{id:uid(),year:Number(year)||null,make:String(make||'').slice(0,60),model:String(model||'').slice(0,60),vin:String(vin||'').slice(0,30),nickname:String(nickname||'').slice(0,60)}}
+function savedProperty({label,address,type='home'}){return{id:uid(),label:String(label||'').slice(0,80),address:String(address||'').slice(0,240),type:['home','business','rental','other'].includes(type)?type:'other'}}
+function commercialAccount({type='business',name,assets=[]}){return{id:uid(),type:['business','property-manager','fleet'].includes(type)?type:'business',name:String(name||'').slice(0,120),assets,createdAt:now()}}
+function verificationBadges(provider){return{identityVerified:provider.identityVerificationStatus==='verified',licensed:provider.licenseVerificationStatus==='verified',insured:provider.insuranceVerificationStatus==='verified'}}
+function canShowGuarantee({eligible=false,estimateApproved=false,paymentInApp=false}){return Boolean(eligible&&estimateApproved&&paymentInApp)}
+const api={createEstimate,approveEstimate,createChangeOrder,approveChangeOrder,createJobPin,checkJobPin,providerPresence,serviceQualityScore,recurringSchedule,savedVehicle,savedProperty,commercialAccount,verificationBadges,canShowGuarantee};
+if(typeof module!=='undefined'&&module.exports)module.exports=api;
+if(typeof window!=='undefined')window.ZOVRO_WORKFLOWS=api;

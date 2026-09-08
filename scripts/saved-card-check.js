@@ -1,0 +1,34 @@
+'use strict';
+process.env.STRIPE_SECRET_KEY='sk_test_ZOVRO_SAVED_CARD_CHECK';
+process.env.ZOVRO_PLATFORM_FEE_BPS='0';
+process.env.ZOVRO_PAYMENT_CURRENCY='usd';
+const calls=[];
+global.fetch=async(url,options={})=>{
+  calls.push({url,method:options.method,headers:options.headers||{},body:String(options.body||'')});
+  let data;
+  if(String(url).endsWith('/customers'))data={id:'cus_zovro_test'};
+  else if(String(url).endsWith('/ephemeral_keys'))data={id:'ephkey_zovro_test',secret:'ek_test_zovro_secret'};
+  else if(String(url).endsWith('/payment_intents'))data={id:'pi_zovro_test',client_secret:'pi_zovro_test_secret_123',status:'requires_payment_method'};
+  else data={};
+  return {ok:true,status:200,json:async()=>data};
+};
+const payments=require('../backend/payments');
+(async()=>{
+  if(!payments.configured())throw new Error('Stripe test configuration did not activate');
+  const customer=await payments.createCustomer({userId:'user_123',name:'Test User',email:'test@example.com',phone:'+13135550123'});
+  if(customer.id!=='cus_zovro_test')throw new Error('Customer creation failed');
+  const ephemeral=await payments.createEphemeralKey(customer.id);
+  if(ephemeral.secret!=='ek_test_zovro_secret')throw new Error('Ephemeral key creation failed');
+  const out=await payments.createPaymentIntent({requestId:'req_123',customerId:'user_123',providerId:'provider_123',amountCents:2500,stripeCustomerId:customer.id});
+  if(out.intent.id!=='pi_zovro_test')throw new Error('PaymentIntent creation failed');
+  const customerCall=calls.find(x=>x.url.endsWith('/customers'));
+  const ephemeralCall=calls.find(x=>x.url.endsWith('/ephemeral_keys'));
+  const paymentCall=calls.find(x=>x.url.endsWith('/payment_intents'));
+  if(!customerCall?.body.includes('metadata%5Bzovro_user_id%5D=user_123'))throw new Error('Customer metadata missing');
+  if(!ephemeralCall?.body.includes('customer=cus_zovro_test'))throw new Error('Ephemeral key customer missing');
+  if(!paymentCall?.body.includes('customer=cus_zovro_test')||!paymentCall.body.includes('setup_future_usage=on_session'))throw new Error('Saved-card PaymentIntent configuration missing');
+  const allBodies=calls.map(x=>x.body.toLowerCase()).join('&');
+  if(/card(_|%5b)?number|\bcvc\b|security.?code/.test(allBodies))throw new Error('Raw card data leaked into ZOVRO Stripe requests');
+  if(customerCall.headers['idempotency-key']!=='zovro-customer-user_123')throw new Error('Customer idempotency key missing');
+  console.log('ZOVRO saved-card safety check passed.');
+})().catch(e=>{console.error(e.stack||e);process.exitCode=1});

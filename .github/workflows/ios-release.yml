@@ -1,0 +1,50 @@
+name: ZOVRO iOS Release Verification
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'index.html'
+      - 'assets/**'
+      - 'scripts/**'
+      - 'capacitor.config.json'
+      - 'package.json'
+      - '.github/workflows/ios-release.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  build-ios:
+    runs-on: macos-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+      - name: Prepare current mobile bundle
+        env:
+          ZOVRO_API_URL: https://zovro-api-final.onrender.com
+          ZOVRO_BUILD_CHANNEL: release
+        run: node scripts/prepare-mobile.js
+      - name: Create and sync iOS
+        run: |
+          npx cap add ios
+          npx cap sync ios
+          node scripts/patch-native.js
+      - name: Build unsigned simulator app
+        run: |
+          xcodebuild -workspace ios/App/App.xcworkspace -scheme App -configuration Release -sdk iphonesimulator -derivedDataPath build/DerivedData CODE_SIGNING_ALLOWED=NO build
+          APP_PATH=$(find build/DerivedData/Build/Products -type d -name 'App.app' | head -n 1)
+          test -n "$APP_PATH"
+          ditto -c -k --sequesterRsrc --keepParent "$APP_PATH" ZOVRO-iOS-Simulator-Release.zip
+      - uses: actions/upload-artifact@v4
+        with:
+          name: zovro-ios-release-candidate
+          retention-days: 14
+          if-no-files-found: error
+          path: ZOVRO-iOS-Simulator-Release.zip

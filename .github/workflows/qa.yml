@@ -1,0 +1,42 @@
+name: ZOVRO Full QA
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main, feature/zovro-product-expansion]
+    paths:
+      - 'backend/**'
+      - 'src/**'
+      - 'scripts/**'
+      - 'index.html'
+      - 'privacy.html'
+      - 'terms.html'
+      - 'support.html'
+      - 'manifest.webmanifest'
+      - 'service-worker.js'
+      - 'capacitor.config.json'
+      - 'package.json'
+      - '.github/workflows/qa.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  qa:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install root dependencies
+        run: npm install --no-audit --no-fund
+      - name: Install backend dependencies
+        run: npm install --no-audit --no-fund
+        working-directory: backend
+      - name: Run complete QA suite
+        env:
+          ZOVRO_API_URL: https://zovro-api-final.onrender.com
+          ZOVRO_BUILD_CHANNEL: ci
+        run: npm run qa:all
