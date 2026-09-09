@@ -4,6 +4,7 @@ require('./log-privacy');
 const database=require('./database');
 (async()=>{
   await database.initDurable();
+  require('./launch-readiness');
   require('./response-security');
   require('./consent-guard');
   require('./request-privacy');
