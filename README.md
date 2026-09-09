@@ -10,8 +10,8 @@ ZOVRO is a local-services marketplace for fast access to roadside assistance, mo
 
 ## Current verified checkpoint
 
-- Release candidate head: `2f1bd621534f23bc414ef4609dd4ab7cda06588e`.
-- ZOVRO Full QA #159: PASS.
+- Release candidate head: `cd8ed3e0edc56eb72595e3233fdf042ed3c353cf`.
+- ZOVRO Full QA #160: PASS.
 - Push repository readiness includes server delivery, mobile registration, permission handling, external user binding, tap routing, native Android notification permission guard, and launch-readiness diagnostics.
 - PostgreSQL must remain in `mirror` mode until representative non-empty persistence, restart, backup/restore, and rollback checks pass.
 - Production payments remain disabled until Stripe onboarding, production keys, webhook validation, and lifecycle evidence are complete.
