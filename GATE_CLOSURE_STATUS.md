@@ -9,7 +9,7 @@ Checkpoint: 2026-09-09
 - ZOVRO Full QA #176 completed successfully on source commit `f74f22478467e881873883d632bfbc039caf31ad` after the support-contact hardening.
 - The current release line preserves SOS validation, request-size/invalid-JSON handling, Stripe webhook idempotency, PostgreSQL readiness, privacy, consent, biometric, Smart Match, and push protections.
 - A strict PostgreSQL cutover verifier is now part of the release path. It rejects empty-state evidence and requires schema version 5, non-empty representative data, equal row counts, and matching SHA-256 content fingerprints for every domain table before any durable cutover can be considered.
-- Current DB-cutover hardening head: `d179ec840e069c0d2fae431845469e8c9e29eac7`; fresh Full QA is required on this head before final sign-off.
+- Current DB-cutover hardening head: `bc83692315f1f2e60dbf8128695d6c61a7d29cdb`; fresh Full QA is required on this head before final sign-off.
 
 ## PostgreSQL — CONNECTION PASS / DURABILITY BLOCKED
 
