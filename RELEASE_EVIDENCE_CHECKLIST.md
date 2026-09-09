@@ -17,7 +17,8 @@ This tracker supplements [FINAL_QA_MATRIX.md](FINAL_QA_MATRIX.md), [RELEASE_CONF
 | Check | Status | Evidence and scope |
 | --- | --- | --- |
 | Full QA after Smart Match expansion | PASS | ZOVRO Full QA #75 succeeded on source commit `7d3d3ee21a7f45c20ede9304f9d641e5e26e1d19`. The complete `qa:all` chain passed, including Smart Match QA. |
-| Biometric-gated mobile boot hardening | PASS | ZOVRO Full QA #81 succeeded on source commit `10c0550c9a3bf223de45515dbefd09f09b8b1235`. Mobile boot now waits for `ZOVRO_SECURE_SESSION.initialize()` and the biometric check rejects raw `get()` boot restoration. |
+| Biometric-gated mobile boot hardening | PASS | ZOVRO Full QA #81 succeeded on source commit `10c0550c9a3bf223de45515dbefd09f09b8b1235`. Mobile boot waits for `ZOVRO_SECURE_SESSION.initialize()` and the biometric check rejects raw `get()` boot restoration. |
+| Request privacy and provider discovery hardening | PASS | Full QA #95 passed after redacting customer pre-acceptance data and public provider contact/license/payment identifiers. Full QA #107 then passed on source commit `13728117b65018f46d3362f92f38eba2cc3efd5b` after adding fresh-location/range acceptance guards and structured-log IP pseudonymization. |
 | PR state | PASS | PR #1 remains open, Draft, mergeable, and unmerged. This is not commercial launch approval. |
 | Final-head QA after future changes | BLOCKED | Re-run and record QA for the final release head after all remaining code changes are complete. |
 
@@ -36,7 +37,7 @@ Observed from connected Render workspace on 2026-09-09.
 
 ## Launch gates and next actions
 
-All gates below remain BLOCKED unless explicitly marked PASS above.
+All gates below remain BLOCKED unless explicitly marked PASS.
 
 | ID | Gate | Repository work | External dependency / proposed owner | Exact next action and PASS evidence |
 | --- | --- | --- | --- | --- |
@@ -50,13 +51,13 @@ All gates below remain BLOCKED unless explicitly marked PASS above.
 | LEGAL-01 | Content and declarations | Repository legal pages exist, but full account/request consent audit is not yet complete and final legal review is still required. | Product/legal owner and store consoles. | Complete owner/legal review, final agreement/consent implementation and store declarations matching actual production behavior. |
 | STORE-01 | Console ownership and submission readiness | Prepare listing metadata, reviewer notes and app-ID/build checklist. | Authorized Apple and Google account holders. | Verify correct app records, sufficient roles, account requirements and ability to upload. Record accepted builds, completed declarations/assets, and no unresolved submission blockers. |
 | DB-01 | PostgreSQL durability | Current mirror startup/readiness path works; mirror remains intentionally active. | Render app/database access; backend operator. | Stay in mirror mode until schema, representative non-empty data, critical row counts, new mirrored writes, restart persistence, backup/restore and rollback checks pass. Only then perform controlled durable cutover and record `durableOperational=true`. |
-| PRIV-01 | Pre-acceptance customer privacy | Privacy hardening is still required in `backend/server-core.js`. | Repository/backend operator. | Redact exact address/location/customer identity/messages from unassigned provider discovery, block pre-acceptance chat/private access, publish a contact-minimized provider view, and add regression tests. |
-| LIVE-01 | Final integrated readiness | Full QA is currently green on the latest biometric hardening commit, but production deployment uses an older production branch commit. | Production backend, signed mobile builds and test accounts; release operator. | Record final deployed SHA/builds and timestamped readiness payloads; verify customer/provider lifecycle, payment, push, privacy, security, support and deletion end to end. |
+| PRIV-01 | Pre-acceptance customer/provider privacy and acceptance safety | PASS in repository. Request discovery redacts customer identity/address/location/messages/retry IDs; public provider discovery removes phone/email/raw license/Stripe identifiers; chat is limited to customer and accepted provider; acceptance requires active/available/service-compatible providers and fresh provider location within 15 miles for SOS/urgent or 25 miles for location-based normal jobs; structured logs pseudonymize raw client IP. | Production deployment still runs an older branch commit. | Preserve these guards in the final deployed SHA and re-run integrated customer/provider privacy tests in production before launch. |
+| LIVE-01 | Final integrated readiness | Repository Full QA #107 is green on commit `13728117b65018f46d3362f92f38eba2cc3efd5b`, but production deployment still uses an older production branch commit. | Production backend, signed mobile builds and test accounts; release operator. | Record final deployed SHA/builds and timestamped readiness payloads; verify customer/provider lifecycle, payment, push, privacy, security, support and deletion end to end. |
 
 ## Execution order
 
 1. Keep PR #1 Draft and PostgreSQL in mirror mode.
-2. Finish repository privacy hardening and agreement/consent evidence, then run final-head QA.
+2. Finish repository agreement/consent evidence and any remaining release-safe code work, then run final-head QA.
 3. In parallel, complete Stripe onboarding/keys/webhook and OneSignal REST/APNs/FCM credentials.
 4. Verify database durability with representative non-empty data, restart persistence, backup/restore and rollback before any durable cutover.
 5. Produce signed Android/iOS builds, complete physical-device QA, screenshots, support/legal evidence and store declarations.
