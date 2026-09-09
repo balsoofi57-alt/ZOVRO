@@ -1,0 +1,17 @@
+'use strict';
+const assert=require('assert');
+const fs=require('fs'),os=require('os'),path=require('path');
+const dir=fs.mkdtempSync(path.join(os.tmpdir(),'zovro-workflow-store-'));
+process.env.ZOVRO_DATA_DIR=dir;
+process.env.ZOVRO_DB_MIRROR_MODE='off';
+const store=require('../backend/workflow-store');
+const created=store.create({type:'favorite-provider',userId:'c1',providerId:'p1',data:{providerId:'p1'}});
+assert(created.kind==='workflow:favorite-provider','Workflow kind missing');
+assert(store.list({type:'favorite-provider',userId:'c1'}).length===1,'Workflow list failed');
+const updated=store.update(created.id,{status:'inactive',data:{note:'paused'}});
+assert(updated.status==='inactive'&&updated.data.note==='paused','Workflow update failed');
+const a=store.upsertUnique({type:'notification-preferences',userId:'c1',key:'default',data:{push:true}});
+const b=store.upsertUnique({type:'notification-preferences',userId:'c1',key:'default',data:{push:false}});
+assert(a.id===b.id&&b.data.push===false,'Workflow upsert failed');
+assert(store.remove(created.id)===true&&store.list({type:'favorite-provider'}).length===0,'Workflow remove failed');
+console.log(JSON.stringify({ok:true,durableWorkflowStore:true}));
