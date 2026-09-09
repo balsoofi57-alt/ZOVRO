@@ -11,7 +11,7 @@ Checkpoint: 2026-09-09
 - Capacitor app ID is `com.zovro.app` and the OneSignal Capacitor plugin is pinned in dependencies.
 - `/api/launch-readiness` reports OneSignal App ID presence, REST key presence, and server-side push configuration without exposing secrets.
 - `push:check`, `mobile-push:check`, and `native-push:check` are included in `qa:all`.
-- ZOVRO Full QA #158 succeeded on source commit `9e657d5650f08ec66a4b1a8cdb4ba82934e7861c`.
+- ZOVRO Full QA #161 succeeded on source commit `5224dbf06e12c55d112e35a6304c2a51e8cf3115`.
 
 ## External readiness
 
