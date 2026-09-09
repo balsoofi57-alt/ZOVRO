@@ -16,7 +16,7 @@ async function runPostgresWriteProbe(){
   if(result.schemaVersion!=='6')throw Error('Expected PostgreSQL schemaVersion 6');
   await c.query('BEGIN');
   const record={id,kind:'workflow:postgres-probe',user:null,requestId:null,providerId:null,status:'probe',at:new Date().toISOString(),updatedAt:new Date().toISOString(),data:{probe:true}};
-  await c.query('INSERT INTO workflow_records(id,user_id,provider_id,request_id,kind,status,created_at,updated_at,data) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9)',[record.id,null,null,null,record.kind,record.status,record.at,record.updatedAt,record]);
+  await c.query('INSERT INTO workflow_records(id,type,user_id,provider_id,request_id,status,created_at,updated_at,data) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9)',[record.id,record.kind,null,null,null,record.status,record.at,record.updatedAt,record]);
   const inside=await c.query('SELECT data FROM workflow_records WHERE id=$1',[id]);
   result.writeRead=inside.rows.length===1&&inside.rows[0].data?.id===id;
   if(!result.writeRead)throw Error('PostgreSQL write/read probe failed');
