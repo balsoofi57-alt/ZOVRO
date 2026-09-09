@@ -24,7 +24,9 @@ assert(launch.includes("postgresOperational"), 'PostgreSQL operational state mus
 assert(launch.includes("stripe_publishable"), 'Stripe publishable-key blocker must be enforced');
 assert(launch.includes("stripe_secret"), 'Stripe secret-key blocker must be enforced');
 assert(launch.includes("stripe_webhook"), 'Stripe webhook blocker must be enforced');
+assert(launch.includes("onesignal_app_id"), 'OneSignal App ID blocker must be enforced');
 assert(launch.includes("onesignal_rest_key"), 'OneSignal REST-key blocker must be enforced');
+assert(launch.includes("oneSignalServerConfigured"), 'OneSignal server configuration state must be reported');
 assert(launch.includes("production_secret"), 'production secret blocker must be enforced');
 assert(launch.includes("allowed_origins"), 'allowed-origins blocker must be enforced');
 
