@@ -3,6 +3,7 @@
 const http = require('http');
 const { dbInfo } = require('./database');
 const payments = require('./payments');
+const push = require('./push');
 
 const originalCreateServer = http.createServer.bind(http);
 const present = name => Boolean(String(process.env[name] || '').trim());
@@ -19,6 +20,7 @@ function snapshot() {
   const stripePublishablePresent = present('STRIPE_PUBLISHABLE_KEY');
   const oneSignalAppIdPresent = present('ONESIGNAL_APP_ID');
   const oneSignalRestKeyPresent = present('ONESIGNAL_REST_API_KEY');
+  const oneSignalServerConfigured = push.configured();
   const productionSecretPresent = Boolean(
     process.env.ZOVRO_SECRET &&
     String(process.env.ZOVRO_SECRET).length >= 32 &&
@@ -35,6 +37,7 @@ function snapshot() {
   if (!stripePublishablePresent) blockers.push('stripe_publishable');
   if (!stripeConfigured) blockers.push('stripe_secret');
   if (!stripeWebhookConfigured) blockers.push('stripe_webhook');
+  if (!oneSignalAppIdPresent) blockers.push('onesignal_app_id');
   if (!oneSignalRestKeyPresent) blockers.push('onesignal_rest_key');
   if (!productionSecretPresent) blockers.push('production_secret');
   if (!allowedOriginsPresent) blockers.push('allowed_origins');
@@ -56,6 +59,7 @@ function snapshot() {
       stripeWebhookConfigured,
       oneSignalAppIdPresent,
       oneSignalRestKeyPresent,
+      oneSignalServerConfigured,
       productionSecretPresent,
       allowedOriginsPresent,
       applePayRequested,
