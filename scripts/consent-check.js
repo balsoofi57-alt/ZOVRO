@@ -8,10 +8,15 @@ const server=read('backend/server.js');
 const prep=read('scripts/prepare-mobile.js');
 const cors=read('backend/response-security.js');
 const inject=read('backend/html-inject.js');
+const terms=read('terms.html');
+const privacy=read('privacy.html');
 
 assert.match(guard,/TERMS_VERSION='2026-09-09'/,'terms version missing');
 assert.match(guard,/PRIVACY_VERSION='2026-09-09'/,'privacy version missing');
 assert.match(guard,/REQUEST_VERSION='service-request-v1'/,'request consent version missing');
+assert.match(terms,/Last updated: September 9, 2026/,'Terms displayed date must match enforced consent version');
+assert.match(privacy,/Last updated: September 9, 2026/,'Privacy displayed date must match enforced consent version');
+assert.match(privacy,/does not expose the customer's exact identity, address, precise location or private messages/,'Privacy policy must describe pre-acceptance request redaction');
 assert.match(guard,/url\.pathname==='\/api\/auth\/register'/,'registration consent guard missing');
 assert.match(guard,/url\.pathname==='\/api\/requests'/,'request consent guard missing');
 assert.match(guard,/status:428|json\(res,428/,'missing consent must be rejected with precondition required');
@@ -30,4 +35,4 @@ assert.match(client,/X-ZOVRO-Request-Consent/,'client request consent header mis
 assert.ok(prep.includes("'consent-client.js'"),'mobile bundle must copy consent client');
 assert.ok(prep.includes('<script src="consent-client.js"></script>'),'mobile bundle must load consent client');
 
-console.log('Legal consent QA passed: account, service-request and SOS consent are explicit, versioned, enforced server-side, audited, CORS-enabled and included in web/mobile delivery.');
+console.log('Legal consent QA passed: displayed legal dates match enforced versions; account, service-request and SOS consent are explicit, versioned, server-enforced, audited, CORS-enabled and included in web/mobile delivery.');
