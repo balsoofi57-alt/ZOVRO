@@ -18,9 +18,10 @@
     "final:check": "node scripts/final-check.js",
     "mobile:prepare": "node scripts/prepare-mobile.js",
     "mobile:init": "node scripts/init-mobile.js",
-    "qa:all": "npm run product:check && npm run final:check && npm run production:check && npm run payment:check && npm run payment:saved-card-check && npm run push:check && npm run cors:check && npm run security:check && npm run store:check && npm run release:check && npm run test:e2e && npm run sos:check && npm run biometric:check",
+    "qa:all": "npm run product:check && npm run final:check && npm run production:check && npm run payment:check && npm run payment:saved-card-check && npm run push:check && npm run cors:check && npm run security:check && npm run store:check && npm run release:check && npm run test:e2e && npm run sos:check && npm run biometric:check && npm run smart-match:check",
     "sos:check": "node scripts/sos-check.js",
-    "biometric:check": "node scripts/biometric-check.js"
+    "biometric:check": "node scripts/biometric-check.js",
+    "smart-match:check": "node scripts/smart-match-check.js"
   },
   "dependencies": {
     "@capacitor/core": "^7.0.0",
