@@ -1,39 +1,17 @@
 # ZOVRO
 
-ZOVRO is an on-demand local-services marketplace for customers and service providers, with priority support for roadside assistance, mobile auto service, home trades, moving, and urgent requests.
+ZOVRO is a location-aware on-demand services marketplace connecting customers with nearby service providers for roadside help, mobile mechanic work, plumbing, electrical, HVAC, appliance repair, moving, lawn and snow services, pest control, and related local jobs.
 
-## Production services
+## Current release status
 
-- Web app: https://zovro-web.onrender.com
-- API: https://zovro-api.onrender.com
-- API health: `/api/health`
-- API readiness: `/api/ready`
+The active release-preparation branch is `store-release-prep`. Automated Full QA covers product behavior, production readiness, payments safety, OneSignal server push delivery, mobile push registration/tap routing, CORS/security, SOS, biometrics, Smart Match, request privacy, log privacy, and legal consent.
 
-## Current production capabilities
+Production launch still requires owner-controlled external credentials and evidence including Stripe activation/webhook, OneSignal REST/APNs/FCM credentials with real device subscriptions, signed iOS/Android builds, PostgreSQL durability verification, support/legal finalization, and store-console submission.
 
-- Customer and provider account registration/login
-- Authenticated sessions and password security
-- Customer service requests and urgent/SOS dispatch
-- Provider availability and GPS location updates
-- Nearby-provider search and ETA estimates
-- First-provider acceptance and job assignment
-- Job lifecycle: Accepted → On the way → Arrived → In progress → Completed
-- Cancellation rules and audit events
-- Customer/provider messaging
-- Notifications
-- Provider ratings, reputation and verification workflow
-- Account deletion
-- Production security headers, rate limiting and operational metrics
-- Responsive web client connected to the live API
+## Push notifications
 
-## Release state
+Server push uses OneSignal aliases keyed to each ZOVRO user ID. Native mobile builds initialize the OneSignal Capacitor plugin, log in with the authenticated ZOVRO user ID as `external_id`, request notification permission once, track push subscription state, and route request-related notification taps to the Jobs view. Production delivery requires `ONESIGNAL_REST_API_KEY` on the backend plus APNs/FCM platform credentials and at least one real subscribed device.
 
-Version: **1.0.0 / FINAL**
+## Safety
 
-The final production-connected package passes the local release, store-readiness, production, security, operations, account-security, UI-security, dispatch, lifecycle, cancellation, reputation, deployment, final, Render-blueprint, and end-to-end smoke checks.
-
-## External launch gates
-
-Before treating the platform as a full public commercial launch, complete persistent production database storage, final Apple/Google signing and store submission, production payments, true push-notification credentials, production maps/routing, and final legal/support contact review.
-
-Do not commit production secrets to this repository.
+Never commit production passwords, private keys, database credentials, Stripe secret keys, OneSignal REST keys, APNs keys, FCM service credentials, or signing certificates to the repository.
