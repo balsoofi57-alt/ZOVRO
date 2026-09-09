@@ -3,6 +3,8 @@ const fs=require('fs'),path=require('path');const root=path.resolve(__dirname,'.
 for(const f of ['privacy.html','terms.html','support.html']){const p=path.join(root,f);if(!fs.existsSync(p)){console.error('MISSING',f);bad=true}else if(fs.readFileSync(p,'utf8').length<500){console.error('TOO SHORT',f);bad=true}else console.log('OK',f)}
 const html=fs.readFileSync(path.join(root,'index.html'),'utf8'),server=fs.readFileSync(path.join(root,'backend/server-core.js'),'utf8');
 for(const token of ['deleteAccount()','privacy.html','terms.html','support.html'])if(!html.includes(token)){console.error('Missing trust control:',token);bad=true}
+const support=fs.readFileSync(path.join(root,'support.html'),'utf8'),privacy=fs.readFileSync(path.join(root,'privacy.html'),'utf8');
+for(const [name,text] of [['support.html',support],['privacy.html',privacy]])if(!text.includes('support@zovro.net')){console.error('Approved support email missing from '+name);bad=true}else console.log('OK approved support email in',name);
 if(!server.includes("req.method==='DELETE'&&url.pathname==='/api/me'")){console.error('Account deletion API missing');bad=true}
 if(!server.includes('GET,POST,PATCH,DELETE,OPTIONS')){console.error('DELETE missing from CORS methods');bad=true}
 const pkg=JSON.parse(fs.readFileSync(path.join(root,'package.json'),'utf8'));
