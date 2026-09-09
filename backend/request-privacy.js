@@ -62,14 +62,39 @@ function canUsePrivateRequest(r,uid){return r.customerId===uid||r.providerId===u
 
 function isCompatibleProvider(user,r){
   if(user.role!=='provider')return false;
+  if((user.accountStatus||'active')!=='active')return false;
   if(user.availability===false)return false;
   if(user.service&&r.service&&user.service!==r.service)return false;
   return true;
 }
 
+function locationFresh(location,maxAgeMs=15*60*1000){
+  if(!location||!Number.isFinite(+location.lat)||!Number.isFinite(+location.lng))return false;
+  const updated=Date.parse(location.updatedAt||0);
+  return Number.isFinite(updated)&&Date.now()-updated<=maxAgeMs&&updated<=Date.now()+30000;
+}
+
+function milesBetween(aLat,aLng,bLat,bLng){
+  const rad=x=>x*Math.PI/180,R=3958.8;
+  const dLat=rad(bLat-aLat),dLng=rad(bLng-aLng);
+  const q=Math.sin(dLat/2)**2+Math.cos(rad(aLat))*Math.cos(rad(bLat))*Math.sin(dLng/2)**2;
+  return 2*R*Math.asin(Math.sqrt(q));
+}
+
+function acceptanceEligibility(db,user,r){
+  if(!isCompatibleProvider(user,r))return {ok:false,reason:'This request is not eligible for your provider account'};
+  if(!r.location)return {ok:true,distanceMiles:null,radiusMiles:null};
+  const providerLocation=(db.providerLocations||[]).find(x=>x.providerId===user.id);
+  if(!locationFresh(providerLocation))return {ok:false,reason:'Update your current location before accepting this request'};
+  const distanceMiles=milesBetween(+r.location.lat,+r.location.lng,+providerLocation.lat,+providerLocation.lng);
+  const radiusMiles=r.source==='sos'||r.urgent===true?15:25;
+  if(distanceMiles>radiusMiles)return {ok:false,reason:'This request is outside your current service range',distanceMiles:+distanceMiles.toFixed(1),radiusMiles};
+  return {ok:true,distanceMiles:+distanceMiles.toFixed(1),radiusMiles};
+}
+
 function rewriteJsonResponse(res,transform){
   const chunks=[];
-  const originalWrite=res.write.bind(res),originalEnd=res.end.bind(res);
+  const originalEnd=res.end.bind(res);
   res.write=(chunk,enc,cb)=>{
     if(chunk)chunks.push(Buffer.isBuffer(chunk)?chunk:Buffer.from(chunk,enc));
     if(typeof cb==='function')cb();
@@ -84,7 +109,6 @@ function rewriteJsonResponse(res,transform){
     }catch{}
     return originalEnd(Buffer.concat(chunks),undefined,cb);
   };
-  return {originalWrite};
 }
 
 http.createServer=function(handler,...args){
@@ -99,7 +123,10 @@ http.createServer=function(handler,...args){
     const accept=url.pathname.match(/^\/api\/requests\/([^/]+)\/accept$/);
     if(accept&&actor){
       const db=readDb(),r=(db.requests||[]).find(x=>x.id===accept[1]);
-      if(r&&!r.providerId&&!isCompatibleProvider(actor.user,r))return json(res,403,{error:'This request is not eligible for your provider account'});
+      if(r&&!r.providerId){
+        const eligibility=acceptanceEligibility(db,actor.user,r);
+        if(!eligibility.ok)return json(res,403,{error:eligibility.reason,distanceMiles:eligibility.distanceMiles??null,radiusMiles:eligibility.radiusMiles??null});
+      }
     }
     if(req.method==='GET'&&url.pathname==='/api/requests'&&actor?.user.role==='provider'){
       rewriteJsonResponse(res,parsed=>{
@@ -127,4 +154,4 @@ http.createServer=function(handler,...args){
   },...args);
 };
 
-module.exports={publicDiscoveryRequest,publicProviderView,canUsePrivateRequest,isCompatibleProvider};
+module.exports={publicDiscoveryRequest,publicProviderView,canUsePrivateRequest,isCompatibleProvider,locationFresh,milesBetween,acceptanceEligibility};
