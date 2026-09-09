@@ -16,50 +16,53 @@ This tracker supplements [FINAL_QA_MATRIX.md](FINAL_QA_MATRIX.md), [RELEASE_CONF
 
 | Check | Status | Evidence and scope |
 | --- | --- | --- |
-| Existing PR source QA | PASS | ZOVRO Full QA #56 succeeded on source commit `9fcf5d083a1041c03c5287c621a3cd637e644098`: https://github.com/balsoofi57-alt/ZOVRO/actions/runs/34252894888 |
-| PR state before this checklist commit | PASS | PR #1 was open, Draft, and mergeable on 2026-09-09. This is not commercial launch approval. |
-| Final-head QA after documentation update | BLOCKED | Record the new head SHA and its completed QA run after this checklist is committed. |
+| Full QA after Smart Match expansion | PASS | ZOVRO Full QA #75 succeeded on source commit `7d3d3ee21a7f45c20ede9304f9d641e5e26e1d19`. The complete `qa:all` chain passed, including Smart Match QA. |
+| Biometric-gated mobile boot hardening | PASS | ZOVRO Full QA #81 succeeded on source commit `10c0550c9a3bf223de45515dbefd09f09b8b1235`. Mobile boot now waits for `ZOVRO_SECURE_SESSION.initialize()` and the biometric check rejects raw `get()` boot restoration. |
+| PR state | PASS | PR #1 remains open, Draft, mergeable, and unmerged. This is not commercial launch approval. |
+| Final-head QA after future changes | BLOCKED | Re-run and record QA for the final release head after all remaining code changes are complete. |
 
-## Last recorded external checkpoint
+## Current live Render checkpoint
 
-Source: [2026-09-08 follow-up verification](https://github.com/balsoofi57-alt/ZOVRO/pull/1#issuecomment-5588554674). These observations were not rerun live when assembling this checklist.
+Observed from connected Render workspace on 2026-09-09.
 
-- Render deploy `dep-dag3g1ghchos73fneik0`, backend commit `3c407235d8320cacd897d3625ee038fbafbc44e5`: PostgreSQL mirror initialized; localRecords=0 and remoteRecords=0; health and readiness returned 200.
-- Mirror mode remained active; durable cutover was not performed. Empty counts do not establish write persistence or backup recovery.
-- Stripe account onboarding was incomplete; payment/transfer capabilities inactive; no live webhook registered.
-- API launch blockers included stripe_publishable, stripe_secret, stripe_webhook, and onesignal_rest_key.
-- Signing, screenshots, support/legal, and console access require evidence beyond API readiness.
-- Earlier comments about the invalid database host are superseded for connection status by this later checkpoint.
+- Service `zovro-api-final` is live on branch `zovro-final-deploy`, not on the Draft release-prep branch.
+- Deployed backend commit: `2eb66a874359abb28d632ad9d2d2f14885626c1c`.
+- Render logs show `GET /api/ready` returned 200 and `GET /api/health` returned 200.
+- Startup preflight reports `dbMirrorMode=mirror`, `databaseUrlPresent=true`, `pgModuleAvailable=true`, and `postgresRuntimeReady=true`.
+- `postgres_mirror_ready` reported localRecords=0 and remoteRecords=0. This is empty-state consistency only and does not prove durable persistence.
+- Production launch blockers currently reported by the backend preflight: `stripe_publishable`, `stripe_secret`, `stripe_webhook`, and `onesignal_rest_key`.
+- `externalLaunchReady=false`; do not treat live service status as commercial launch readiness.
+- OneSignal connection confirms one accessible app: `Zovro llc App` (`7992b022-6c11-4a66-bad4-8cbd114266d0`). Render still lacks the OneSignal REST API key, so production push delivery remains blocked.
 
 ## Launch gates and next actions
 
-All gates below remain BLOCKED pending the complete evidence listed.
+All gates below remain BLOCKED unless explicitly marked PASS above.
 
 | ID | Gate | Repository work | External dependency / proposed owner | Exact next action and PASS evidence |
 | --- | --- | --- | --- | --- |
-| PAY-01 | Stripe account and configuration | Audit required settings, server-only secrets, and configuration checks. | Stripe account owner; Render operator. | Complete account onboarding first; verify payment and required transfer capabilities. Configure production keys in approved stores. Attach redacted capability/configuration evidence and deployed SHA. |
-| PAY-02 | Signed webhook and payment lifecycle | Verify server-side amount calculation, request ownership, signature rejection, replay idempotency, decline and refund handling. | Stripe dashboard, deployed backend, eligible connected provider; payments operator. | Register `https://zovro-api-final.onrender.com/api/payments/webhook`. Record a valid signed event accepted, invalid signature rejected, replay without duplicate transaction, correct request/amount, decline, refund/cancellation, and provider payout readiness. Label test/live environments explicitly; do not treat test-mode success as live proof. Do not attempt live charges before onboarding is complete. |
-| PUSH-01 | OneSignal/APNs/FCM | Audit user/subscription mapping, recipient isolation, permission flows, notification triggers and tap routing. | OneSignal, Apple/APNs, Firebase/FCM, physical iPhone and Android; mobile/push operator. | Configure production credentials securely. For each OS record new-request, provider-accepted, and job-status event IDs, intended account, timestamp, device/build, receipt and correct tap destination. Verify permission-denied behavior and no delivery to the wrong account. |
+| PAY-01 | Stripe account and configuration | Repository payment safety tests pass. Current launch model remains 0% platform fee during launch. | Stripe account owner; Render operator. | Complete live Stripe onboarding and verify payment/transfer capabilities. Add production publishable/secret keys securely in Render. Attach redacted capability/configuration evidence and deployed SHA. |
+| PAY-02 | Signed webhook and payment lifecycle | Server-side signature and payment safety checks are in QA. | Stripe dashboard, deployed backend, eligible connected provider; payments operator. | Register `https://zovro-api-final.onrender.com/api/payments/webhook`. Record a valid signed event accepted, invalid signature rejected, replay without duplicate transaction, correct request/amount, decline, refund/cancellation, and provider transfer readiness. Do not attempt live charges before onboarding is complete. |
+| PUSH-01 | OneSignal/APNs/FCM | Repository push safety checks pass; OneSignal app exists. | OneSignal, Apple/APNs, Firebase/FCM, physical iPhone and Android; mobile/push operator. | Add `ONESIGNAL_REST_API_KEY` securely to Render and complete APNs/FCM credentials. Record real-device new-request, provider-accepted and job-status delivery evidence, correct account isolation, and tap routing. |
 | AND-01 | Android release signing | Prepare versionCode/versionName, `com.zovro.app`, release workflow and production API configuration. | Upload key/secret store, Play Console and Android device; Android release operator. | Produce signed AAB; record SHA-256, source SHA and version. Attach Play validation/test-track evidence and installed-build API, permission, push, resume and navigation QA. |
-| IOS-01 | iOS distribution signing | Prepare `com.zovro.app`, entitlements, version and archive workflow. | Apple Developer, signing resources, App Store Connect, build environment and physical iPhone; iOS release operator. | Produce signed device archive; record source SHA/build and artifact checksum. Attach successful TestFlight processing, installation and device QA. Simulator-only output cannot close this gate. |
-| ASSET-01 | Final screenshots and graphics | Prepare capture script, safe sample data, icons, graphic assets and feature-claim review. | Final signed mobile builds and capture environment; release/design operator. | Capture home, request, discovery, acceptance, status, messaging, reputation and profile/support/deletion from submitted builds. Record build IDs, asset paths and console validation. No mockups, private data or unsupported feature claims. |
-| SUPPORT-01 | Monitored support and public links | Update `support.html`, placeholders, contact links and deletion instructions. | Owner-controlled support inbox, hosting and responsible support person; product owner. | Supply final public contact; publish it; verify a test inquiry is received and answered. Record public Privacy/Terms/Support URLs opening without login and from both signed apps. Verify account deletion end to end. |
-| LEGAL-01 | Content and declarations | Compare privacy worksheet and store claims with actual submitted features and integrations; preserve SOS/911 distinction. | Product/legal owner and store consoles. | Complete required owner/legal review; record approval date/version and final Apple App Privacy, Google Data Safety and rating declarations matching production behavior. |
-| STORE-01 | Console ownership and submission readiness | Prepare listing metadata, reviewer notes and app-ID/build checklist. | Authorized Apple and Google account holders. | Verify correct app records, sufficient roles, account requirements and ability to upload. Record accepted builds, completed declarations/assets, and no unresolved submission blockers. Keep submission status and store approval as separate results. |
-| DB-01 | PostgreSQL durability | Prepare row/write comparison, restart, backup/restore and rollback checks. | Render app/database access; backend operator. | Stay in mirror mode until schema, representative non-empty data, critical row counts, new mirrored writes, restart persistence, backup/restore and rollback checks pass. Then perform controlled durable cutover and record expected database engine and durableOperational=true. |
-| LIVE-01 | Final integrated readiness | Run full QA matrix and verify release configuration/API consistency. | Production backend, signed mobile builds and test accounts; release operator. | Record deployed SHA/builds and timestamped `/api/health`, `/api/ready`, `/api/launch-readiness` responses; verify payloads, not status alone. Complete customer/provider lifecycle, payment, push, security, support and deletion QA with linked results. |
+| IOS-01 | iOS distribution signing | Face ID boot path is code-hardened and QA-passed. Prepare `com.zovro.app`, entitlements, version and archive workflow. | Apple Developer, signing resources, App Store Connect, build environment and physical iPhone; iOS release operator. | Produce signed device archive; verify Face ID unlock on physical iPhone; record source SHA/build and artifact checksum. Attach successful TestFlight processing, installation and device QA. Simulator-only output cannot close this gate. |
+| ASSET-01 | Final screenshots and graphics | Prepare capture script, safe sample data, icons, graphic assets and feature-claim review. | Final signed mobile builds and capture environment; release/design operator. | Capture home, request, Smart Match, discovery, acceptance, status, messaging, reputation and profile/support/deletion from submitted builds. Record build IDs, asset paths and console validation. No mockups, private data or unsupported feature claims. |
+| SUPPORT-01 | Monitored support and public links | `support.html`, Privacy and Terms are present and store-readiness QA passes. | Owner-controlled support inbox, hosting and responsible support person; product owner. | Supply final public contact; verify a test inquiry is received and answered. Record public Privacy/Terms/Support URLs opening without login and from both signed apps. Verify account deletion end to end. |
+| LEGAL-01 | Content and declarations | Repository legal pages exist, but full account/request consent audit is not yet complete and final legal review is still required. | Product/legal owner and store consoles. | Complete owner/legal review, final agreement/consent implementation and store declarations matching actual production behavior. |
+| STORE-01 | Console ownership and submission readiness | Prepare listing metadata, reviewer notes and app-ID/build checklist. | Authorized Apple and Google account holders. | Verify correct app records, sufficient roles, account requirements and ability to upload. Record accepted builds, completed declarations/assets, and no unresolved submission blockers. |
+| DB-01 | PostgreSQL durability | Current mirror startup/readiness path works; mirror remains intentionally active. | Render app/database access; backend operator. | Stay in mirror mode until schema, representative non-empty data, critical row counts, new mirrored writes, restart persistence, backup/restore and rollback checks pass. Only then perform controlled durable cutover and record `durableOperational=true`. |
+| PRIV-01 | Pre-acceptance customer privacy | Privacy hardening is still required in `backend/server-core.js`. | Repository/backend operator. | Redact exact address/location/customer identity/messages from unassigned provider discovery, block pre-acceptance chat/private access, publish a contact-minimized provider view, and add regression tests. |
+| LIVE-01 | Final integrated readiness | Full QA is currently green on the latest biometric hardening commit, but production deployment uses an older production branch commit. | Production backend, signed mobile builds and test accounts; release operator. | Record final deployed SHA/builds and timestamped readiness payloads; verify customer/provider lifecycle, payment, push, privacy, security, support and deletion end to end. |
 
 ## Execution order
 
-1. Confirm external role owners and record final-head repository QA.
-2. In parallel, complete Stripe onboarding, push configuration, signing/console access, and support/legal ownership. Repository test preparation can continue during these dependencies.
-3. Verify database durability and production integrations. Build signed Android/iOS candidates with the canonical API `https://zovro-api-final.onrender.com`.
-4. Complete signed-build QA, capture final screenshots, and finish declarations/listings.
-5. Recheck all core gates and evidence freshness against the actual release artifacts. Keep PR Draft until the release gates pass, following the existing release checkpoint. Record Ready for Review, merge, store submission, store approval and rollout separately.
+1. Keep PR #1 Draft and PostgreSQL in mirror mode.
+2. Finish repository privacy hardening and agreement/consent evidence, then run final-head QA.
+3. In parallel, complete Stripe onboarding/keys/webhook and OneSignal REST/APNs/FCM credentials.
+4. Verify database durability with representative non-empty data, restart persistence, backup/restore and rollback before any durable cutover.
+5. Produce signed Android/iOS builds, complete physical-device QA, screenshots, support/legal evidence and store declarations.
+6. Recheck all gates against the actual deployed backend and submitted builds before Ready for Review, merge, store submission or rollout.
 
 ## Evidence record template
-
-Copy this record for each test or external gate:
 
 - Gate ID:
 - Status: BLOCKED
