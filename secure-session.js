@@ -28,6 +28,10 @@
     let saved=await get();
     if(legacy){await set(legacy);saved=legacy;localStorage.removeItem(KEY)}
     if(saved&&!currentToken()){
+      if(window.ZOVRO_BIOMETRIC?.shouldProtect?.()){
+        const unlocked=await window.ZOVRO_BIOMETRIC.authenticate('Unlock your ZOVRO account');
+        if(!unlocked){setRuntime('');ready=true;return {native:!!native,restored:false,biometricLocked:true}}
+      }
       setRuntime(saved);
       await restoreAccount();
     }else if(currentToken()){
