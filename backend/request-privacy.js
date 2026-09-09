@@ -44,6 +44,20 @@ function publicDiscoveryRequest(r){
   };
 }
 
+function publicProviderView(provider){
+  if(!provider||typeof provider!=='object')return provider;
+  const {
+    phone,
+    email,
+    license,
+    stripeCustomerId,
+    stripeRecipientAccountId,
+    passwordHash,
+    ...safe
+  }=provider;
+  return safe;
+}
+
 function canUsePrivateRequest(r,uid){return r.customerId===uid||r.providerId===uid}
 
 function isCompatibleProvider(user,r){
@@ -51,6 +65,26 @@ function isCompatibleProvider(user,r){
   if(user.availability===false)return false;
   if(user.service&&r.service&&user.service!==r.service)return false;
   return true;
+}
+
+function rewriteJsonResponse(res,transform){
+  const chunks=[];
+  const originalWrite=res.write.bind(res),originalEnd=res.end.bind(res);
+  res.write=(chunk,enc,cb)=>{
+    if(chunk)chunks.push(Buffer.isBuffer(chunk)?chunk:Buffer.from(chunk,enc));
+    if(typeof cb==='function')cb();
+    return true;
+  };
+  res.end=(chunk,enc,cb)=>{
+    if(chunk)chunks.push(Buffer.isBuffer(chunk)?chunk:Buffer.from(chunk,enc));
+    try{
+      const parsed=JSON.parse(Buffer.concat(chunks).toString('utf8'));
+      const transformed=transform(parsed);
+      return originalEnd(Buffer.from(JSON.stringify(transformed)),undefined,cb);
+    }catch{}
+    return originalEnd(Buffer.concat(chunks),undefined,cb);
+  };
+  return {originalWrite};
 }
 
 http.createServer=function(handler,...args){
@@ -68,26 +102,29 @@ http.createServer=function(handler,...args){
       if(r&&!r.providerId&&!isCompatibleProvider(actor.user,r))return json(res,403,{error:'This request is not eligible for your provider account'});
     }
     if(req.method==='GET'&&url.pathname==='/api/requests'&&actor?.user.role==='provider'){
-      const chunks=[];
-      const originalWrite=res.write.bind(res),originalEnd=res.end.bind(res);
-      res.write=(chunk,enc,cb)=>{if(chunk)chunks.push(Buffer.isBuffer(chunk)?chunk:Buffer.from(chunk,enc));if(typeof cb==='function')cb();return true};
-      res.end=(chunk,enc,cb)=>{
-        if(chunk)chunks.push(Buffer.isBuffer(chunk)?chunk:Buffer.from(chunk,enc));
-        try{
-          const body=Buffer.concat(chunks).toString('utf8');
-          const parsed=JSON.parse(body);
-          if(Array.isArray(parsed.requests)){
-            parsed.requests=parsed.requests.map(r=>r.providerId===actor.user.id?r:publicDiscoveryRequest(r));
-            const out=Buffer.from(JSON.stringify(parsed));
-            return originalEnd(out,undefined,cb);
-          }
-        }catch{}
-        return originalEnd(Buffer.concat(chunks),undefined,cb);
-      };
+      rewriteJsonResponse(res,parsed=>{
+        if(Array.isArray(parsed.requests))parsed.requests=parsed.requests.map(r=>r.providerId===actor.user.id?r:publicDiscoveryRequest(r));
+        return parsed;
+      });
+      return handler(req,res);
+    }
+    if(req.method==='GET'&&url.pathname==='/api/providers/nearby'){
+      rewriteJsonResponse(res,parsed=>{
+        if(Array.isArray(parsed.providers))parsed.providers=parsed.providers.map(row=>({...row,provider:publicProviderView(row.provider)}));
+        return parsed;
+      });
+      return handler(req,res);
+    }
+    const publicProfile=url.pathname.match(/^\/api\/providers\/([^/]+)\/profile$/);
+    if(req.method==='GET'&&publicProfile){
+      rewriteJsonResponse(res,parsed=>{
+        if(parsed.provider)parsed.provider=publicProviderView(parsed.provider);
+        return parsed;
+      });
       return handler(req,res);
     }
     return handler(req,res);
   },...args);
 };
 
-module.exports={publicDiscoveryRequest,canUsePrivateRequest,isCompatibleProvider};
+module.exports={publicDiscoveryRequest,publicProviderView,canUsePrivateRequest,isCompatibleProvider};
