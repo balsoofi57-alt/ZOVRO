@@ -1,26 +1,44 @@
 # ZOVRO
 
-ZOVRO is a local-services marketplace for fast access to roadside assistance, mobile mechanics, plumbing, electrical, HVAC, appliance repair, moving, lawn/snow, pest control, and other nearby services.
+ZOVRO is a two-sided local-services marketplace for customers and service providers, covering roadside assistance, mobile auto service, home trades, moving, lawn/snow, pest control, and urgent requests.
 
-## Release branches
+## Release identity
 
-- `store-release-prep` — current release candidate and evidence branch.
-- `zovro-unified-latest` — synchronized safety copy of the latest verified release candidate.
-- `zovro-final-deploy` — current Render production branch. Keep production on this branch until launch gates pass.
+- App name: ZOVRO
+- Version: 1.0.0
+- Bundle/App ID: `com.zovro.app`
+- Canonical production API: `https://zovro-api-final.onrender.com`
+- Public support email: `support@zovro.net`
 
-## Current verified checkpoint
+## QA
 
-- Latest fully tested release candidate before this documentation-only update: `0948beb72d28c6298af37dcf58cd5167a6ad8e0d`.
-- ZOVRO Full QA #162: PASS.
-- Push repository readiness includes server delivery, mobile registration, permission handling, external user binding, tap routing, native Android notification permission guard, and launch-readiness diagnostics.
-- PostgreSQL must remain in `mirror` mode until representative non-empty persistence, restart, backup/restore, and rollback checks pass.
-- Production payments remain disabled until Stripe onboarding, production keys, webhook validation, and lifecycle evidence are complete.
-- Production push remains blocked until the OneSignal server REST credential, APNs/FCM configuration, and real-device subscriptions are available.
+Run the complete repository QA chain from the repository root:
 
-## Safety rules
+```bash
+npm run qa:all
+```
 
-- Never commit production secrets, database passwords, signing keys, certificates, Stripe secret keys, webhook secrets, or OneSignal REST keys.
-- Do not move PostgreSQL from `mirror` to `durable` without persistence evidence.
-- Do not deploy the release candidate to production until the external launch gates in `RELEASE_EVIDENCE_CHECKLIST.md` are satisfied.
+The full suite covers product behavior, production configuration, launch readiness, payment safety, saved cards, server/mobile/native push readiness, CORS/security, store readiness, PostgreSQL cutover guarding, release packaging, end-to-end request flow, SOS/location safety, biometrics, Smart Match, request privacy, log privacy, and legal consent.
 
-See `PUSH_RELEASE_STATUS.md`, `RELEASE_EVIDENCE_CHECKLIST.md`, `FINAL_QA_MATRIX.md`, and `STORE_SUBMISSION.md` for current release evidence and remaining gates.
+## PostgreSQL cutover safety
+
+Production must remain in `ZOVRO_DB_MIRROR_MODE=mirror` until representative non-empty data is proven durable.
+
+The strict pre-cutover command is:
+
+```bash
+cd backend
+DATABASE_URL='***' npm run db:verify:cutover
+```
+
+This check rejects an empty database and requires schema version 5, equal SQLite/PostgreSQL row counts, and matching SHA-256 content fingerprints across every domain table. Restart persistence plus backup/restore/rollback evidence are still required before changing to `durable`.
+
+## Release discipline
+
+- Do not commit production secrets or signing credentials.
+- Keep PR #1 Draft until external launch gates are complete.
+- Do not enable paid production jobs until Stripe live onboarding, capabilities, keys, webhook and lifecycle tests pass.
+- Do not claim production push readiness until OneSignal REST/APNs/FCM credentials and real-device delivery pass.
+- Do not move Render production to the release head until database durability, payments, push, signing/store access, support verification and final legal/store declarations are complete.
+
+See `RELEASE_EVIDENCE_CHECKLIST.md`, `GATE_CLOSURE_STATUS.md`, `POSTGRES_MIGRATION.md`, `RELEASE_CONFIGURATION.md`, and `STORE_SUBMISSION.md` for the current gate status and evidence requirements.
