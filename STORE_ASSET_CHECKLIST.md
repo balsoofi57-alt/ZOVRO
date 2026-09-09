@@ -3,6 +3,7 @@
 App name: ZOVRO
 Version: 1.0.0
 Bundle/App ID: com.zovro.app
+Approved support email: support@zovro.net
 
 ## Apple App Store assets
 Prepare final screenshots from the signed/TestFlight build, not mockups that show features absent from the submitted build.
@@ -33,7 +34,7 @@ Prepare:
 - Short description
 - Full description
 - Privacy Policy URL
-- Support contact email
+- Support contact email: support@zovro.net
 
 Screenshot story should match the Apple sequence where possible for brand consistency.
 
@@ -52,4 +53,4 @@ Screenshot story should match the Apple sequence where possible for brand consis
 - Safety message: ZOVRO urgent/SOS requests are marketplace assistance and do not replace emergency services
 
 ## Final validation
-Before upload, compare every screenshot and store claim against the submitted binary. Remove any asset that promises functionality not enabled in the release build.
+Before upload, compare every screenshot and store claim against the submitted binary. Remove any asset that promises functionality not enabled in the release build. Verify support@zovro.net can receive and respond to a test support inquiry before submission.
