@@ -15,5 +15,7 @@ if(!patch.includes('android.permission.POST_NOTIFICATIONS'))fail('Android notifi
 if(!client.includes('7992b022-6c11-4a66-bad4-8cbd114266d0'))fail('verified OneSignal App ID missing from mobile client');
 if(!client.includes('requestPermission'))fail('notification permission request missing');
 if(!client.includes('externalId')&&!client.includes('externalId:userId'))fail('OneSignal external user identity binding missing');
-if(!client.includes('notificationOpened'))fail('notification-open routing missing');
+if(!client.includes('notificationClick'))fail('notification-click routing missing');
+if(!client.includes('pushSubscriptionChange'))fail('push subscription change listener missing');
+if(!client.includes('permissionChange'))fail('notification permission change listener missing');
 console.log('native-push-readiness-check: PASS');
