@@ -154,4 +154,4 @@ http.createServer=function(handler,...args){
   },...args);
 };
 
-module.exports={publicDiscoveryRequest,publicProviderView,canUsePrivateRequest,isCompatibleProvider,locationFresh,milesBetween,acceptanceEligibility};
+module.exports={currentUser,publicDiscoveryRequest,publicProviderView,canUsePrivateRequest,isCompatibleProvider,locationFresh,milesBetween,acceptanceEligibility};
