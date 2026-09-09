@@ -20,4 +20,13 @@ assert.match(privacy,/actor\?\.user\.role==='provider'/,'provider request-list r
 assert.match(privacy,/r\.providerId===actor\.user\.id\?r:publicDiscoveryRequest\(r\)/,'only accepted provider may receive full request view');
 assert.match(privacy,/function isCompatibleProvider/,'acceptance eligibility guard missing');
 
-console.log('Request privacy QA passed: pre-acceptance identity, address, location, messages and retry IDs are redacted; private chat is limited to the customer and accepted provider.');
+assert.match(privacy,/function publicProviderView\(provider\)/,'public provider serializer missing');
+for(const sensitive of ['phone','email','license','stripeCustomerId','stripeRecipientAccountId','passwordHash']){
+  assert.match(privacy,new RegExp(`\\b${sensitive}\\b`),`provider serializer must explicitly remove ${sensitive}`);
+}
+assert.ok(privacy.includes("url.pathname==='/api/providers/nearby'"),'nearby provider response privacy interception missing');
+assert.ok(privacy.includes("const publicProfile=url.pathname.match(/^\\/api\\/providers\\/([^/]+)\\/profile$/)"),'public provider profile privacy interception missing');
+assert.match(privacy,/provider:publicProviderView\(row\.provider\)/,'nearby provider rows must use the public provider serializer');
+assert.match(privacy,/parsed\.provider=publicProviderView\(parsed\.provider\)/,'public provider profile must use the public provider serializer');
+
+console.log('Request privacy QA passed: customer request details stay private before acceptance, chat is restricted, and public provider discovery excludes contact, raw license, credential and payout identifiers.');
