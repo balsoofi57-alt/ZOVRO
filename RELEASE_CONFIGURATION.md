@@ -3,6 +3,7 @@
 Version: 1.0.0
 App ID / Bundle ID: com.zovro.app
 Canonical production API: https://zovro-api-final.onrender.com
+Public support email: support@zovro.net
 
 This document defines the final configuration gates without storing secrets.
 
@@ -15,7 +16,7 @@ Required production settings:
 - `ZOVRO_SECRET` must be a unique production secret of at least 32 characters.
 - `ZOVRO_OPS_TOKEN` must be a unique operations token of at least 24 characters.
 - `DATABASE_URL` must point to `zovro-production-db` before PostgreSQL mirror validation begins.
-- Keep `ZOVRO_DB_MIRROR_MODE=mirror` until PostgreSQL writes, reads, persistence, and rollback behavior pass verification.
+- Keep `ZOVRO_DB_MIRROR_MODE=mirror` until PostgreSQL writes, reads, content parity, restart persistence, backup/restore and rollback behavior pass verification.
 
 Health gates:
 - `GET https://zovro-api-final.onrender.com/api/health` returns HTTP 200.
@@ -23,27 +24,25 @@ Health gates:
 - Readiness confirms `databaseUrlPresent=true`, `pgModuleAvailable=true`, `postgresRuntimeReady=true`, and `mirrorOperational=true` before any durable cutover.
 - After cutover, health/readiness report the expected durable PostgreSQL engine and `durableOperational=true`.
 
-Do not use `https://zovro-api.onrender.com` in the mobile release or store submission; it is not the canonical ZOVRO 1.0 production API.
-
 ## Database
 Current release state:
 - PostgreSQL service: `zovro-production-db`.
 - SQLite remains the safe source/fallback.
 - Production remains in `ZOVRO_DB_MIRROR_MODE=mirror`.
+- Empty 0/0 row counts are not durability evidence.
 - Do not claim durable PostgreSQL is active until the checks below pass.
 
 Safe production cutover:
-1. Confirm the PostgreSQL service is available and has backup/restore capability.
-2. Set the Render Build Command to `cd backend && npm install`.
-3. Set `DATABASE_URL` through Render's secret environment configuration.
-4. Deploy with `ZOVRO_DB_MIRROR_MODE=mirror`; do not switch directly to durable mode.
-5. Apply the validated PostgreSQL schema and run the prepared migration tooling.
-6. Verify readiness reports PostgreSQL runtime and mirror operation as healthy.
-7. Compare row counts and manually spot-check critical users, requests, messages, ratings, notifications, sessions, locations, verification, and audit records.
-8. Verify new production writes reach both the safe source and PostgreSQL.
-9. Restart/redeploy and confirm records persist.
-10. Test backup and restore, and keep the prior release available for rollback.
-11. Only after every mirror check passes, switch to durable PostgreSQL and rerun the full end-to-end suite.
+1. Confirm the PostgreSQL service is available on a permanent plan with backup/restore capability.
+2. Keep `ZOVRO_DB_MIRROR_MODE=mirror`.
+3. Generate representative non-empty customer/provider/request/message/notification/session/audit data through the application.
+4. Run `cd backend && DATABASE_URL='***' npm run db:verify:postgres`.
+5. Run `cd backend && DATABASE_URL='***' npm run db:verify:cutover`.
+6. Require schema version 5, `nonEmpty=true`, equal SQLite/PostgreSQL row counts, matching SHA-256 content fingerprints for every domain table, and no mismatches.
+7. Restart/redeploy while still in mirror mode and rerun strict verification; the same records must remain present and matched.
+8. Test a PostgreSQL backup and restore into a separate verification database, then rerun schema/content verification against the restored database.
+9. Record the rollback path to the prior verified deployment.
+10. Only after every mirror check passes, switch to durable PostgreSQL and rerun health/readiness, strict persistence checks and the full end-to-end suite.
 
 ## Payments
 Do not enable paid production jobs until all of these exist:
@@ -99,7 +98,7 @@ Current CI already builds an unsigned iOS simulator release candidate. Final pub
 
 ## Support / legal
 Before commercial launch:
-- Publish a monitored public support email/contact method.
+- Activate and monitor `support@zovro.net` and prove send/receive/reply operation.
 - Publish and verify public Privacy, Terms, and Support URLs.
 - Confirm privacy policy and terms match actual production integrations.
 - Complete legal review for launch jurisdictions and provider/payment model.
