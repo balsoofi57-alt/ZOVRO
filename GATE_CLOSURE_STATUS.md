@@ -4,22 +4,35 @@ Checkpoint: 2026-09-09
 
 ## Repository / QA — PASS
 
-- Release PR #1 remains Draft and mergeable.
-- Support contact is approved in source as `support@zovro.net`; inbox delivery/monitoring still requires external verification.
-- ZOVRO Full QA #176 completed successfully on source commit `f74f22478467e881873883d632bfbc039caf31ad` after the support-contact hardening.
-- The current release line preserves SOS validation, request-size/invalid-JSON handling, Stripe webhook idempotency, PostgreSQL readiness, privacy, consent, biometric, Smart Match, and push protections.
-- A strict PostgreSQL cutover verifier is now part of the release path. It rejects empty-state evidence and requires schema version 5, non-empty representative data, equal row counts, and matching SHA-256 content fingerprints for every domain table before any durable cutover can be considered.
-- Current DB-cutover hardening head: `bc83692315f1f2e60dbf8128695d6c61a7d29cdb`; fresh Full QA is required on this head before final sign-off.
+- Release PR #1 remains Draft and mergeable pending owner/external launch gates.
+- Latest unified and production release code includes the workflow UI/API integration, schema v6 workflow storage, PostgreSQL rollback probe guard, SOS/privacy/consent/biometric/Smart Match/payment/push protections, and full release checks.
+- ZOVRO Full QA #283 completed successfully after the PostgreSQL probe correction.
+- Current verified release code head: `4df22b8941bb59d3563a4af52ea3deb74b6c0000`.
+- Production fallback branch was preserved as `backup/zovro-final-deploy-2026-09-09` before the production branch was realigned.
 
-## PostgreSQL — CONNECTION PASS / DURABILITY BLOCKED
+## PostgreSQL — SCHEMA/WRITE/READ PASS / DURABLE CUTOVER STILL BLOCKED
 
 - Render service remains intentionally in `ZOVRO_DB_MIRROR_MODE=mirror`.
-- Application startup has reported `databaseUrlPresent=true`, `pgModuleAvailable=true`, and `postgresRuntimeReady=true`.
-- `postgres_mirror_ready` has completed successfully; last observed state remained `localRecords=0`, `remoteRecords=0`.
-- Zero/zero is no longer acceptable cutover evidence. `backend/scripts/verify-cutover-readiness.js` now fails unless representative records are present in both SQLite and PostgreSQL and every domain-table count/content fingerprint matches.
-- `cd backend && DATABASE_URL='***' npm run db:verify:cutover` is the required strict pre-cutover command.
-- Direct read-only SQL through the Render connector previously failed because that connector path did not negotiate required SSL/TLS correctly. Do not weaken TLS.
-- Durability remains BLOCKED until representative non-empty records are mirrored, strict cutover verification passes, restart persistence is proven, and backup/restore/rollback evidence exists. Do not switch to `durable` yet.
+- Application startup reports `databaseUrlPresent=true`, `pgModuleAvailable=true`, `postgresRuntimeReady=true`, and `mirrorOperational=true`.
+- Production schema has been upgraded to schema version 6 with dedicated `workflow_records` storage.
+- A live production rollback probe completed successfully on Render with:
+  - `schemaVersion=6`
+  - `writeRead=true`
+  - `rollbackClean=true`
+  - event `postgres_write_probe_pass`
+- The probe was disabled immediately after verification with `ZOVRO_POSTGRES_STARTUP_PROBE=false`.
+- Latest normal startup remains `postgres_mirror_ready` and service startup succeeds.
+- Current representative-data counts remain `localRecords=0`, `remoteRecords=0`, so strict cutover evidence is still incomplete.
+- Do not switch to `durable` until representative non-empty traffic exists, strict count/hash parity passes, restart persistence is proven, and backup/restore/rollback evidence is captured.
+- Do not weaken PostgreSQL TLS.
+
+## Production deployment — PASS FOR CURRENT MIRROR-MODE BUILD
+
+- Render service: `zovro-api-final`.
+- Production branch: `zovro-final-deploy`.
+- Current production code: `4df22b8941bb59d3563a4af52ea3deb74b6c0000`.
+- Render reported successful startup and public `HEAD /` returned HTTP 200 from the platform health request.
+- The service is live in production while external launch gates remain intentionally blocked.
 
 ## Stripe live — BLOCKED BY OWNER-CONTROLLED ONBOARDING
 
@@ -33,30 +46,35 @@ Verified current state:
 - `transfers=inactive`
 - live webhook endpoint count: `0`
 
-Stripe still requires owner/business identity/contact fields and Stripe Terms acceptance. These fields must not be fabricated or accepted by automation. Production publishable/secret/webhook secrets are not exposed by the connected Stripe tools.
+Stripe currently requires owner/business-controlled information including business profile classification/description/support phone, business type, representative identity details, and Stripe Terms acceptance. These values must not be fabricated or accepted by automation. Production publishable/secret/webhook secrets are not exposed by the connected tools, and the current Stripe connector does not expose a create-webhook operation.
 
 ## OneSignal / push — CODE PASS / REAL DELIVERY BLOCKED
 
 - OneSignal app ID: `7992b022-6c11-4a66-bad4-8cbd114266d0`.
 - Server push, mobile registration, external-user binding, permission/subscription state, tap routing, and native push readiness checks are implemented and included in `qa:all`.
 - Active Subscriptions remain `0`.
-- Render still lacks `ONESIGNAL_REST_API_KEY`.
-- APNs credentials/capability, FCM credentials, and real signed iOS/Android installs are required before end-to-end delivery can be marked PASS.
+- Render still lacks the OneSignal REST API key required by the backend launch gate.
+- The connected OneSignal tool does not expose that secret key.
+- APNs credentials/capability, FCM credentials, and a real signed iOS/Android install are required before end-to-end delivery can be marked PASS.
 
-## Production deployment — HOLD
+## Support / signing / stores — OWNER OR EXTERNAL ACTION REQUIRED
 
-- Current Render production branch: `zovro-final-deploy`.
-- Current deployed production commit remains `2eb66a874359abb28d632ad9d2d2f14885626c1c`.
-- Do not move production to the release head or change DB mode to durable until Stripe, push credentials/real-device delivery, database durability, signing/store access, support inbox verification, and final legal/store declarations are complete.
+- Source support contact remains `support@zovro.net`; inbox delivery/monitoring still requires external verification.
+- Signed iOS/Android release artifacts require Apple/Google signing credentials and store-console access.
+- Real-device biometric, notification, and store-release tests remain external evidence gates.
+- Final human legal review and store privacy/data-safety declarations remain owner-controlled.
 
-## Remaining gates that require owner/external access
+## Remaining launch gates
 
-1. Complete Stripe owner identity/business profile/ToS and activate card payments + transfers.
-2. Create Stripe production webhook and securely add production Stripe keys/secrets to Render.
-3. Add OneSignal REST key to Render; configure APNs and FCM.
-4. Install signed builds on real iPhone/Android devices and verify push + biometric behavior.
-5. Produce signed Android AAB and signed iOS archive; upload to Play Console/TestFlight.
-6. Activate and monitor `support@zovro.net`, then verify public support/privacy/terms URLs.
-7. Complete final human legal review and store privacy/data-safety declarations.
-8. Generate representative non-empty database traffic while still in mirror mode; run strict count/hash verification, restart persistence, backup/restore and rollback; only then perform controlled durable cutover.
-9. After all gates are PASS, deploy the final release SHA, run integrated customer/provider/SOS/payment/push lifecycle QA, mark PR ready, and proceed to store submission.
+1. Complete Stripe owner/business verification and Stripe Terms acceptance so card payments/transfers become active.
+2. Obtain production Stripe publishable/secret keys and webhook signing secret; create the production webhook endpoint and add the secrets to Render.
+3. Obtain the OneSignal REST API key and add it to Render; configure APNs and FCM.
+4. Install signed builds on real iPhone/Android devices and verify push, biometric, location, SOS, and payment lifecycle behavior.
+5. Produce signed Android AAB and iOS archive; upload to Play Console/TestFlight/App Store Connect.
+6. Activate and monitor `support@zovro.net` and verify public support/privacy/terms URLs.
+7. Generate representative non-empty database traffic in mirror mode, run strict count/hash parity, verify restart persistence, backup/restore and rollback; only then perform controlled durable cutover.
+8. Complete final legal/store declarations, mark PR #1 ready, and proceed to store submission.
+
+## Current completion position
+
+The executable repository/backend/production-mirror work is substantially complete. Remaining work is dominated by owner identity, production secrets, real devices, signing, store consoles, and final non-empty durability evidence.
