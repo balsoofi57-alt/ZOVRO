@@ -13,8 +13,11 @@ assert.match(bio,/allowDeviceCredential:true/,'Device credential fallback must r
 assert.match(bio,/setEnabled\(true\)/,'Biometric enable flow missing');
 assert.match(session,/ZOVRO_BIOMETRIC\?\.shouldProtect/,'Saved-session biometric gate missing');
 assert.ok(session.indexOf("ZOVRO_BIOMETRIC.authenticate('Unlock your ZOVRO account')")<session.indexOf('setRuntime(saved)'),'Saved session must not enter runtime before biometric authentication');
+assert.match(session,/initPromise/,'Secure-session initialization must be idempotent');
 assert.match(prep,/biometric-client\.js/,'Biometric client must be included in mobile bundle');
 assert.ok(prep.indexOf('<script src="biometric-client.js"></script>')<prep.indexOf('<script src="secure-session.js"></script>'),'Biometric client must load before secure session restoration');
+assert.doesNotMatch(prep,/ZOVRO_SECURE_SESSION\.get\(\)\.then\(t=>\{token=t\|\|'';boot/,'Mobile boot must never restore a raw saved token before biometric authorization');
+assert.match(prep,/ZOVRO_SECURE_SESSION\.initialize\(\)\.then\(\(\)=>\{token=window\.ZOVRO_SESSION_TOKEN\|\|'';boot/,'Mobile boot must wait for biometric-gated initialization');
 assert.match(native,/NSFaceIDUsageDescription/,'iOS Face ID usage description missing');
 assert.match(native,/android\.permission\.USE_BIOMETRIC/,'Android biometric permission missing');
-console.log('Biometric security: plugin pin, native permissions, privacy disclosure, device-credential fallback and pre-session authentication gate passed.');
+console.log('Biometric security: plugin pin, native permissions, privacy disclosure, device-credential fallback and biometric-gated mobile boot passed.');
