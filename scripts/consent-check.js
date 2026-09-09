@@ -1,0 +1,33 @@
+'use strict';
+const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path');
+const root=path.resolve(__dirname,'..');
+const read=p=>fs.readFileSync(path.join(root,p),'utf8');
+const guard=read('backend/consent-guard.js');
+const client=read('consent-client.js');
+const server=read('backend/server.js');
+const prep=read('scripts/prepare-mobile.js');
+const cors=read('backend/response-security.js');
+const inject=read('backend/html-inject.js');
+
+assert.match(guard,/TERMS_VERSION='2026-09-09'/,'terms version missing');
+assert.match(guard,/PRIVACY_VERSION='2026-09-09'/,'privacy version missing');
+assert.match(guard,/REQUEST_VERSION='service-request-v1'/,'request consent version missing');
+assert.match(guard,/url\.pathname==='\/api\/auth\/register'/,'registration consent guard missing');
+assert.match(guard,/url\.pathname==='\/api\/requests'/,'request consent guard missing');
+assert.match(guard,/status:428|json\(res,428/,'missing consent must be rejected with precondition required');
+assert.match(guard,/appendConsent\(db/,'durable consent audit record missing');
+assert.match(guard,/action:'legal\.consent'/,'consent audit event missing');
+assert.ok(server.indexOf("require('./consent-guard')")<server.indexOf("require('./server-mobile-payments')"),'consent guard must load before API server');
+assert.ok(server.includes("require('./html-inject')"),'web consent script injection missing');
+assert.match(inject,/consent-client\.js/,'web HTML must load consent client');
+for(const header of ['X-ZOVRO-Terms-Version','X-ZOVRO-Privacy-Version','X-ZOVRO-Request-Consent','X-ZOVRO-Request-Kind'])assert.ok(cors.includes(header),`CORS must allow ${header}`);
+assert.match(client,/legalAccountConsent/,'account consent checkbox missing');
+assert.match(client,/legalRequestConsent/,'service request consent checkbox missing');
+assert.match(client,/window\.confirm\('Before sending SOS roadside assistance/,'SOS explicit legal confirmation missing');
+assert.match(client,/X-ZOVRO-Terms-Version/,'client terms version header missing');
+assert.match(client,/X-ZOVRO-Privacy-Version/,'client privacy version header missing');
+assert.match(client,/X-ZOVRO-Request-Consent/,'client request consent header missing');
+assert.ok(prep.includes("'consent-client.js'"),'mobile bundle must copy consent client');
+assert.ok(prep.includes('<script src="consent-client.js"></script>'),'mobile bundle must load consent client');
+
+console.log('Legal consent QA passed: account, service-request and SOS consent are explicit, versioned, enforced server-side, audited, CORS-enabled and included in web/mobile delivery.');
