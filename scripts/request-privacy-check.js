@@ -14,7 +14,7 @@ for(const forbidden of ['customerId:r.customerId','address:r.address','location:
 }
 assert.match(privacy,/Exact customer identity, address, location and messages are shared only after you accept the job/,'privacy disclosure missing');
 assert.match(privacy,/function canUsePrivateRequest\(r,uid\)\{return r\.customerId===uid\|\|r\.providerId===uid\}/,'private access must be limited to customer or accepted provider');
-assert.match(privacy,/\/messages\$\/,'message-route privacy interception missing');
+assert.ok(privacy.includes("const msg=url.pathname.match(/^\\/api\\/requests\\/([^/]+)\\/messages$/)"),'message-route privacy interception missing');
 assert.match(privacy,/return json\(res,404,\{error:'Request not found'\}\)/,'unauthorized private request access must be hidden');
 assert.match(privacy,/actor\?\.user\.role==='provider'/,'provider request-list redaction missing');
 assert.match(privacy,/r\.providerId===actor\.user\.id\?r:publicDiscoveryRequest\(r\)/,'only accepted provider may receive full request view');
