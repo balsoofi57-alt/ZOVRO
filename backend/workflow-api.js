@@ -36,6 +36,15 @@ async function workflowApi(req,res,next){
       return json(res,201,{record:rec});
     }
 
+    if(req.method==='POST'&&url.pathname==='/api/workflows/upsert'){
+      const b=await body(req),type=safeType(b.type);
+      if(!type)return json(res,400,{error:'workflow type is required'});
+      const providerId=b.providerId?String(b.providerId).slice(0,120):null;
+      if(providerId&&providerId!==actor.user.id&&!isAdmin(actor))return json(res,403,{error:'providerId is not allowed for this account'});
+      const rec=store.upsertUnique({type,userId:isAdmin(actor)&&b.userId?String(b.userId).slice(0,120):actor.user.id,requestId:b.requestId?String(b.requestId).slice(0,120):null,providerId,key:String(b.key||'default').slice(0,120),status:safeStatus(b.status),data:safeData(b.data)});
+      return json(res,200,{record:rec});
+    }
+
     const m=url.pathname.match(/^\/api\/workflows\/([^/]+)$/);
     if(m){
       const recordId=decodeURIComponent(m[1]);
@@ -51,15 +60,6 @@ async function workflowApi(req,res,next){
         store.remove(recordId);
         return json(res,200,{deleted:true,id:recordId});
       }
-    }
-
-    if(req.method==='POST'&&url.pathname==='/api/workflows/upsert'){
-      const b=await body(req),type=safeType(b.type);
-      if(!type)return json(res,400,{error:'workflow type is required'});
-      const providerId=b.providerId?String(b.providerId).slice(0,120):null;
-      if(providerId&&providerId!==actor.user.id&&!isAdmin(actor))return json(res,403,{error:'providerId is not allowed for this account'});
-      const rec=store.upsertUnique({type,userId:isAdmin(actor)&&b.userId?String(b.userId).slice(0,120):actor.user.id,requestId:b.requestId?String(b.requestId).slice(0,120):null,providerId,key:String(b.key||'default').slice(0,120),status:safeStatus(b.status),data:safeData(b.data)});
-      return json(res,200,{record:rec});
     }
 
     return json(res,405,{error:'Method not allowed'});
