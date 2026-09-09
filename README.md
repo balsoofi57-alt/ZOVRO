@@ -1,17 +1,26 @@
 # ZOVRO
 
-ZOVRO is a location-aware on-demand services marketplace connecting customers with nearby service providers for roadside help, mobile mechanic work, plumbing, electrical, HVAC, appliance repair, moving, lawn and snow services, pest control, and related local jobs.
+ZOVRO is a local-services marketplace for fast access to roadside assistance, mobile mechanics, plumbing, electrical, HVAC, appliance repair, moving, lawn/snow, pest control, and other nearby services.
 
-## Current release status
+## Release branches
 
-The active release-preparation branch is `store-release-prep`. Automated Full QA covers product behavior, production readiness, payments safety, OneSignal server push delivery, mobile push registration/tap routing, CORS/security, SOS, biometrics, Smart Match, request privacy, log privacy, and legal consent.
+- `store-release-prep` — current release candidate and evidence branch.
+- `zovro-unified-latest` — synchronized safety copy of the latest verified release candidate.
+- `zovro-final-deploy` — current Render production branch. Keep production on this branch until launch gates pass.
 
-Production launch still requires owner-controlled external credentials and evidence including Stripe activation/webhook, OneSignal REST/APNs/FCM credentials with real device subscriptions, signed iOS/Android builds, PostgreSQL durability verification, support/legal finalization, and store-console submission.
+## Current verified checkpoint
 
-## Push notifications
+- Release candidate head: `2f1bd621534f23bc414ef4609dd4ab7cda06588e`.
+- ZOVRO Full QA #159: PASS.
+- Push repository readiness includes server delivery, mobile registration, permission handling, external user binding, tap routing, native Android notification permission guard, and launch-readiness diagnostics.
+- PostgreSQL must remain in `mirror` mode until representative non-empty persistence, restart, backup/restore, and rollback checks pass.
+- Production payments remain disabled until Stripe onboarding, production keys, webhook validation, and lifecycle evidence are complete.
+- Production push remains blocked until the OneSignal server REST credential, APNs/FCM configuration, and real-device subscriptions are available.
 
-Server push uses OneSignal aliases keyed to each ZOVRO user ID. Native mobile builds initialize the OneSignal Capacitor plugin, log in with the authenticated ZOVRO user ID as `external_id`, request notification permission once, track push subscription state, and route request-related notification taps to the Jobs view. Production delivery requires `ONESIGNAL_REST_API_KEY` on the backend plus APNs/FCM platform credentials and at least one real subscribed device.
+## Safety rules
 
-## Safety
+- Never commit production secrets, database passwords, signing keys, certificates, Stripe secret keys, webhook secrets, or OneSignal REST keys.
+- Do not move PostgreSQL from `mirror` to `durable` without persistence evidence.
+- Do not deploy the release candidate to production until the external launch gates in `RELEASE_EVIDENCE_CHECKLIST.md` are satisfied.
 
-Never commit production passwords, private keys, database credentials, Stripe secret keys, OneSignal REST keys, APNs keys, FCM service credentials, or signing certificates to the repository.
+See `PUSH_RELEASE_STATUS.md`, `RELEASE_EVIDENCE_CHECKLIST.md`, `FINAL_QA_MATRIX.md`, and `STORE_SUBMISSION.md` for current release evidence and remaining gates.
