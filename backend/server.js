@@ -8,6 +8,7 @@ const database=require('./database');
   require('./response-security');
   require('./consent-guard');
   require('./request-privacy');
+  require('./workflow-api');
   require('./html-inject');
   require('./product-expansion');
   require('./server-mobile-payments');
