@@ -9,7 +9,7 @@ Checkpoint: 2026-09-09
 - ZOVRO Full QA #176 completed successfully on source commit `f74f22478467e881873883d632bfbc039caf31ad` after the support-contact hardening.
 - The current release line preserves SOS validation, request-size/invalid-JSON handling, Stripe webhook idempotency, PostgreSQL readiness, privacy, consent, biometric, Smart Match, and push protections.
 - A strict PostgreSQL cutover verifier is now part of the release path. It rejects empty-state evidence and requires schema version 5, non-empty representative data, equal row counts, and matching SHA-256 content fingerprints for every domain table before any durable cutover can be considered.
-- Current release head after DB cutover hardening: `2a251858b0195ce62967f4f19c8504b6577a2177`. A fresh Full QA run is required on this head before final sign-off.
+- Current DB-cutover hardening checkpoint is ready for fresh Full QA. The current branch head is the source of truth for that run.
 
 ## PostgreSQL — CONNECTION PASS / DURABILITY BLOCKED
 
@@ -17,7 +17,7 @@ Checkpoint: 2026-09-09
 - Application startup has reported `databaseUrlPresent=true`, `pgModuleAvailable=true`, and `postgresRuntimeReady=true`.
 - `postgres_mirror_ready` has completed successfully; last observed state remained `localRecords=0`, `remoteRecords=0`.
 - Zero/zero is no longer acceptable cutover evidence. `backend/scripts/verify-cutover-readiness.js` now fails unless representative records are present in both SQLite and PostgreSQL and every domain-table count/content fingerprint matches.
-- `backend npm run db:verify:cutover` is the required strict pre-cutover command.
+- `cd backend && DATABASE_URL='***' npm run db:verify:cutover` is the required strict pre-cutover command.
 - Direct read-only SQL through the Render connector previously failed because that connector path did not negotiate required SSL/TLS correctly. Do not weaken TLS.
 - Durability remains BLOCKED until representative non-empty records are mirrored, strict cutover verification passes, restart persistence is proven, and backup/restore/rollback evidence exists. Do not switch to `durable` yet.
 
