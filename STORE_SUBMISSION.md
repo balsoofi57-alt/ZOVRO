@@ -3,6 +3,7 @@
 Version: 1.0.0
 App ID / Bundle ID: com.zovro.app
 App name: ZOVRO
+Public support email: support@zovro.net
 
 ## Short description
 Fast access to nearby local service providers for roadside help, mobile auto service, home trades, moving, and urgent requests.
@@ -25,8 +26,8 @@ local services, roadside assistance, handyman, mechanic, plumbing, electrical, H
 - Canonical production API base: https://zovro-api-final.onrender.com
 - Health endpoint: https://zovro-api-final.onrender.com/api/health
 - Readiness endpoint: https://zovro-api-final.onrender.com/api/ready
-- Do not submit these endpoints as verified until both return HTTP 200 and readiness confirms the expected production database mode.
-- Privacy, Terms, and Support pages are included in the production web package, but their final public URLs and content must be verified before submission.
+- Approved public support email: support@zovro.net. Inbox delivery/monitoring still requires external verification before launch.
+- Privacy, Terms, and Support pages are included in the production web package, but their final public URLs must be verified before submission.
 - Account deletion is supported in-app and must be rechecked in the signed release build.
 - SOS/urgent service requests are marketplace requests and are not a replacement for emergency services.
 
@@ -37,7 +38,7 @@ local services, roadside assistance, handyman, mechanic, plumbing, electrical, H
 - STORE_ASSET_CHECKLIST.md — screenshot, icon, listing-asset and reviewer-claim checklist
 
 ## Assets / credentials still required at submission time
-- Final public support email/contact details
+- Verification that support@zovro.net receives and is monitored for support inquiries
 - Final public Privacy, Terms, and Support URLs
 - Final store screenshots and promotional graphics
 - Apple Developer signing credentials and App Store Connect access
