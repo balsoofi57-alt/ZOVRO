@@ -1,5 +1,6 @@
 'use strict';
 require('./startup-preflight');
+require('./log-privacy');
 const database=require('./database');
 (async()=>{
   await database.initDurable();
