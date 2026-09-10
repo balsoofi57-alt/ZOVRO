@@ -19,7 +19,7 @@ This tracker supplements [FINAL_QA_MATRIX.md](FINAL_QA_MATRIX.md), [RELEASE_CONF
 | Request privacy / consent / SOS / payment / push hardening | PASS | These checks remain part of `qa:all`; production deployment still requires matching final deployed SHA evidence. |
 | Strict PostgreSQL cutover guard | PASS in source | `backend/scripts/verify-cutover-readiness.js` requires schema version 5, representative non-empty records, equal SQLite/PostgreSQL row counts, and SHA-256 content-fingerprint matches for every domain table. `scripts/db-cutover-readiness-check.js` is included in `qa:all` to prevent removal of this gate. |
 | PR state | PASS | PR #1 remains open, Draft, mergeable, and unmerged. This is not commercial launch approval. |
-| Final-head QA after current database-cutover changes | BLOCKED until current workflow completes | Record the next successful Full QA run on the current release head before final sign-off. |
+| Current release-head QA | PASS | ZOVRO Full QA #290 completed successfully on source commit `c02c84447307708a912d747d2152d39701d008fd`; the complete QA suite passed. |
 
 ## Current live Render checkpoint
 
@@ -27,6 +27,7 @@ This tracker supplements [FINAL_QA_MATRIX.md](FINAL_QA_MATRIX.md), [RELEASE_CONF
 - Deployed backend commit remains `2eb66a874359abb28d632ad9d2d2f14885626c1c`.
 - Render remains intentionally configured with `ZOVRO_DB_MIRROR_MODE=mirror` and `ZOVRO_PLATFORM_FEE_BPS=0`.
 - Application startup has confirmed database URL/runtime readiness and PostgreSQL mirror initialization.
+- Recent startup evidence confirms `ONESIGNAL_APP_ID` is present while `ONESIGNAL_REST_API_KEY` is still absent.
 - Last observed mirror state was `localRecords=0`, `remoteRecords=0`; this is empty-state consistency only and is explicitly insufficient for DB cutover.
 - Do not change to durable mode until strict non-empty count/hash verification, restart persistence, backup/restore, and rollback evidence all pass.
 
@@ -42,7 +43,10 @@ This tracker supplements [FINAL_QA_MATRIX.md](FINAL_QA_MATRIX.md), [RELEASE_CONF
 ## Current OneSignal checkpoint
 
 - OneSignal app: `Zovro llc App` (`7992b022-6c11-4a66-bad4-8cbd114266d0`).
-- Active Subscriptions count remains 0.
+- Total Subscriptions = 0 and Active Subscriptions = 0 at the 2026-09-09 verification checkpoint.
+- The three final push templates exist for nearby request, provider accepted, and job status update.
+- Mobile source initializes the OneSignal Capacitor SDK, logs authenticated users in by `external_id`, requests permission once, exposes subscription status, and routes notification taps carrying a request ID back into the jobs flow.
+- Mobile build configuration now injects the OneSignal App ID and includes the Capacitor iOS notification-handling setting required for the OneSignal integration.
 - Render still lacks `ONESIGNAL_REST_API_KEY`.
 - APNs/FCM credentials plus real signed iOS/Android subscriptions are still required before PUSH-01 can pass.
 
@@ -65,7 +69,7 @@ This tracker supplements [FINAL_QA_MATRIX.md](FINAL_QA_MATRIX.md), [RELEASE_CONF
 ## Execution order
 
 1. Keep PR #1 Draft and PostgreSQL in mirror mode.
-2. Require current Full QA to pass with the new DB cutover guard.
+2. Current Full QA is PASS; preserve that evidence while continuing external launch-gate setup.
 3. Complete Stripe owner-controlled onboarding/keys/webhook and OneSignal REST/APNs/FCM/real-device setup.
 4. Generate representative mirror-mode data and run strict `db:verify:cutover` before any durable change.
 5. Prove restart persistence and backup/restore/rollback.
@@ -74,7 +78,7 @@ This tracker supplements [FINAL_QA_MATRIX.md](FINAL_QA_MATRIX.md), [RELEASE_CONF
 
 ## Final sign-off
 
-- [ ] QA passed on final PR head, with run URL and SHA.
+- [x] QA passed on the current release head, with run and SHA recorded above.
 - [ ] Every core gate above is PASS with traceable evidence.
 - [ ] Backend deployment and submitted Android/iOS artifacts are identified.
 - [ ] No secrets or personal data are present in evidence.
