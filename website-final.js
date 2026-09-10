@@ -21,6 +21,19 @@
     if(b){b.click();return}
     document.getElementById('nearby')?.scrollIntoView({behavior:'smooth'});
   }
+  function enhanceRegistrationNames(){
+    const legacy=document.getElementById('name');
+    if(!legacy||document.getElementById('firstName'))return;
+    const field=legacy.closest('.field');
+    if(!field)return;
+    const wrap=document.createElement('div');
+    wrap.className='z-name-grid';
+    wrap.innerHTML='<div class="field"><label for="firstName">First name</label><input id="firstName" name="given-name" autocomplete="given-name" placeholder="First name" required></div><div class="field"><label for="lastName">Last name</label><input id="lastName" name="family-name" autocomplete="family-name" placeholder="Last name" required></div>';
+    legacy.type='hidden';legacy.setAttribute('aria-hidden','true');
+    field.querySelector('label')?.remove();
+    field.insertAdjacentElement('beforebegin',wrap);
+    field.style.display='none';
+  }
   ready(()=>{
     document.title='ZOVRO — Anywhere, Anytime, Near to You.';
     const brand=document.querySelector('.brand');
@@ -100,5 +113,25 @@
 
     const shell=document.querySelector('.shell');
     if(shell&&!document.querySelector('.z-site-footer')){const f=document.createElement('footer');f.className='z-site-footer';f.innerHTML='<div>© 2026 ZOVRO LLC · Anywhere, Anytime, Near to You.</div><div><a href="privacy.html">Privacy</a><a href="terms.html">Terms</a><a href="support.html">Support</a></div>';shell.appendChild(f)}
+
+    const originalRenderAuth=window.renderAuth;
+    if(typeof originalRenderAuth==='function'&&!originalRenderAuth.__zovroNames){
+      const wrappedRenderAuth=function(){const out=originalRenderAuth.apply(this,arguments);setTimeout(enhanceRegistrationNames,0);return out};
+      wrappedRenderAuth.__zovroNames=true;window.renderAuth=wrappedRenderAuth;
+    }
+    const originalSubmitAuth=window.submitAuth;
+    if(typeof originalSubmitAuth==='function'&&!originalSubmitAuth.__zovroNames){
+      const wrappedSubmitAuth=async function(){
+        const first=document.getElementById('firstName'),last=document.getElementById('lastName'),legacy=document.getElementById('name');
+        if(first||last){
+          const firstValue=(first?.value||'').trim(),lastValue=(last?.value||'').trim();
+          if(!firstValue){first?.focus();call('toast','Please enter your first name');return}
+          if(!lastValue){last?.focus();call('toast','Please enter your last name');return}
+          if(legacy)legacy.value=(firstValue+' '+lastValue).replace(/\s+/g,' ').trim();
+        }
+        return originalSubmitAuth.apply(this,arguments);
+      };
+      wrappedSubmitAuth.__zovroNames=true;window.submitAuth=wrappedSubmitAuth;
+    }
   })
 })();
