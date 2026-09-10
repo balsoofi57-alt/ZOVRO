@@ -13,7 +13,7 @@ need(map.includes('maps.apple.com')&&map.includes('google.com/maps/dir'),'extern
 need(map.includes('setInterval')&&map.includes('10000'),'live refresh cadence missing');
 need(prep.includes("<script src=\"live-map.js\"></script>"),'mobile bundle does not load live map');
 need(prep.includes("'live-map.js'"),'mobile bundle does not copy live map');
-need(server.includes("/api/requests/")&&server.includes('/tracking'),'tracking API missing');
+need(server.includes('const track=url.pathname.match')&&server.includes('tracking$/'),'tracking API missing');
 need(server.includes("r.customerId===me.uid||r.providerId===me.uid"),'tracking authorization guard missing');
 need(!server.match(/providers\/nearby[^\n]*lat:x\.location/),'nearby API must not expose provider exact coordinates');
 console.log('ZOVRO maps/tracking QA passed: rendering, privacy, tracking authorization, navigation, attribution and refresh checks are present.');
