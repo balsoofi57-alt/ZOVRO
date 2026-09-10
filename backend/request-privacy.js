@@ -1,6 +1,7 @@
 'use strict';
 const http=require('http'),crypto=require('crypto');
 const {readDb}=require('./database');
+const {publicProfile}=require('./profile-privacy');
 
 const originalCreateServer=http.createServer.bind(http);
 const SECRET=process.env.ZOVRO_SECRET||'dev-only-change-before-production';
@@ -46,16 +47,7 @@ function publicDiscoveryRequest(r){
 
 function publicProviderView(provider){
   if(!provider||typeof provider!=='object')return provider;
-  const {
-    phone,
-    email,
-    license,
-    stripeCustomerId,
-    stripeRecipientAccountId,
-    passwordHash,
-    ...safe
-  }=provider;
-  return safe;
+  return publicProfile(provider);
 }
 
 function canUsePrivateRequest(r,uid){return r.customerId===uid||r.providerId===uid}
@@ -142,8 +134,8 @@ http.createServer=function(handler,...args){
       });
       return handler(req,res);
     }
-    const publicProfile=url.pathname.match(/^\/api\/providers\/([^/]+)\/profile$/);
-    if(req.method==='GET'&&publicProfile){
+    const publicProfileRoute=url.pathname.match(/^\/api\/providers\/([^/]+)\/profile$/);
+    if(req.method==='GET'&&publicProfileRoute){
       rewriteJsonResponse(res,parsed=>{
         if(parsed.provider)parsed.provider=publicProviderView(parsed.provider);
         return parsed;
