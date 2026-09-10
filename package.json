@@ -44,7 +44,8 @@
     "@capacitor-community/stripe": "7.2.0",
     "@onesignal/capacitor-plugin": "1.1.9",
     "@aparajita/capacitor-biometric-auth": "9.1.2",
-    "capacitor-secure-storage-plugin": "0.12.0"
+    "capacitor-secure-storage-plugin": "0.12.0",
+    "leaflet": "1.9.4"
   },
   "devDependencies": {
     "@capacitor/cli": "^7.0.0",
