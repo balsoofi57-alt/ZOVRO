@@ -1,0 +1,66 @@
+name: Build ZOVRO Android
+
+on:
+  push:
+    branches: [store-release-prep]
+    paths:
+      - '.github/workflows/android-build.yml'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'capacitor.config.json'
+      - 'scripts/**'
+      - '*.js'
+      - '*.html'
+      - '*.css'
+      - 'assets/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  android:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Install dependencies
+        run: npm ci --no-audit --no-fund
+      - name: Prepare Android native project
+        env:
+          ZOVRO_API_URL: https://zovro-api-final.onrender.com
+          ZOVRO_BUILD_CHANNEL: android-ci
+        run: npm run mobile:init
+      - name: Verify Android project
+        run: |
+          test -f android/gradlew
+          test -f android/app/src/main/AndroidManifest.xml
+          grep -q 'com.zovro.app' android/app/build.gradle || true
+      - name: Build debug APK
+        working-directory: android
+        run: ./gradlew --no-daemon assembleDebug
+      - name: Build unsigned release AAB
+        working-directory: android
+        run: ./gradlew --no-daemon bundleRelease
+      - name: Upload debug APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: zovro-android-debug-apk
+          path: android/app/build/outputs/apk/debug/*.apk
+          if-no-files-found: error
+          retention-days: 14
+      - name: Upload unsigned release AAB
+        uses: actions/upload-artifact@v4
+        with:
+          name: zovro-android-release-unsigned-aab
+          path: android/app/build/outputs/bundle/release/*.aab
+          if-no-files-found: error
+          retention-days: 14
