@@ -14,6 +14,12 @@ on:
       - '*.css'
       - 'assets/**'
   workflow_dispatch:
+    inputs:
+      upload_google_play:
+        description: Upload the signed AAB to the Google Play internal track as a draft
+        required: false
+        default: false
+        type: boolean
 
 permissions:
   contents: read
@@ -21,7 +27,7 @@ permissions:
 jobs:
   android:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 40
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -38,6 +44,17 @@ jobs:
           ZOVRO_API_URL: https://zovro-api-final.onrender.com
           ZOVRO_BUILD_CHANNEL: android-ci
         run: npm run mobile:init
+      - name: Assign unique Android release version
+        id: version
+        run: |
+          VERSION_CODE=$((GITHUB_RUN_NUMBER * 100 + GITHUB_RUN_ATTEMPT))
+          export ZOVRO_VERSION_CODE="$VERSION_CODE"
+          perl -0pi -e 's/versionCode\s+\d+/versionCode $ENV{ZOVRO_VERSION_CODE}/' android/app/build.gradle
+          perl -0pi -e 's/versionName\s+"[^"]+"/versionName "1.0.0"/' android/app/build.gradle
+          grep -Eq "versionCode[[:space:]]+$VERSION_CODE" android/app/build.gradle
+          grep -Eq 'versionName[[:space:]]+"1\.0\.0"' android/app/build.gradle
+          echo "version_code=$VERSION_CODE" >> "$GITHUB_OUTPUT"
+
       - name: Verify Android project
         run: |
           test -f android/gradlew
@@ -115,3 +132,76 @@ jobs:
             ZOVRO-Android-Release.sha256
           if-no-files-found: error
           retention-days: 14
+
+      - name: Verify optional Google Play upload authorization
+        id: play_upload
+        if: steps.signing.outputs.available == 'true' && github.event_name == 'workflow_dispatch' && inputs.upload_google_play == true
+        env:
+          GOOGLE_PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.ZOVRO_GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
+        run: |
+          if [ -z "$GOOGLE_PLAY_SERVICE_ACCOUNT_JSON" ]; then
+            echo "::error::Google Play upload was requested, but ZOVRO_GOOGLE_PLAY_SERVICE_ACCOUNT_JSON is missing."
+            exit 1
+          fi
+          echo "available=true" >> "$GITHUB_OUTPUT"
+
+      - name: Authenticate to Google Play Developer API
+        id: play_auth
+        if: steps.play_upload.outputs.available == 'true'
+        uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093 # v3
+        with:
+          credentials_json: ${{ secrets.ZOVRO_GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
+          token_format: access_token
+          access_token_scopes: https://www.googleapis.com/auth/androidpublisher
+
+      - name: Upload signed AAB to Google Play internal draft
+        if: steps.play_upload.outputs.available == 'true'
+        env:
+          GOOGLE_PLAY_ACCESS_TOKEN: ${{ steps.play_auth.outputs.access_token }}
+          VERSION_CODE: ${{ steps.version.outputs.version_code }}
+        run: |
+          set -euo pipefail
+          AAB_PATH=$(find android/app/build/outputs/bundle/release -type f -name '*.aab' | head -n 1)
+          test -n "$AAB_PATH"
+          test -n "$GOOGLE_PLAY_ACCESS_TOKEN"
+
+          API_ROOT="https://androidpublisher.googleapis.com/androidpublisher/v3/applications/com.zovro.app"
+          UPLOAD_ROOT="https://androidpublisher.googleapis.com/upload/androidpublisher/v3/applications/com.zovro.app"
+
+          EDIT_RESPONSE=$(curl --fail-with-body --silent --show-error \
+            --request POST \
+            --header "Authorization: Bearer $GOOGLE_PLAY_ACCESS_TOKEN" \
+            --header "Content-Type: application/json" \
+            --data '{}' \
+            "$API_ROOT/edits")
+          EDIT_ID=$(printf '%s' "$EDIT_RESPONSE" | jq -r '.id // empty')
+          test -n "$EDIT_ID"
+
+          BUNDLE_RESPONSE=$(curl --fail-with-body --silent --show-error \
+            --max-time 600 \
+            --request POST \
+            --header "Authorization: Bearer $GOOGLE_PLAY_ACCESS_TOKEN" \
+            --header "Content-Type: application/octet-stream" \
+            --data-binary "@$AAB_PATH" \
+            "$UPLOAD_ROOT/edits/$EDIT_ID/bundles?uploadType=media")
+          UPLOADED_VERSION_CODE=$(printf '%s' "$BUNDLE_RESPONSE" | jq -r '.versionCode // empty')
+          test "$UPLOADED_VERSION_CODE" = "$VERSION_CODE"
+
+          TRACK_PAYLOAD=$(jq -n \
+            --arg versionCode "$UPLOADED_VERSION_CODE" \
+            --arg releaseName "ZOVRO 1.0.0 internal build $UPLOADED_VERSION_CODE" \
+            '{track:"internal",releases:[{name:$releaseName,versionCodes:[$versionCode],status:"draft"}]}')
+
+          curl --fail-with-body --silent --show-error \
+            --request PUT \
+            --header "Authorization: Bearer $GOOGLE_PLAY_ACCESS_TOKEN" \
+            --header "Content-Type: application/json" \
+            --data "$TRACK_PAYLOAD" \
+            "$API_ROOT/edits/$EDIT_ID/tracks/internal" >/dev/null
+
+          curl --fail-with-body --silent --show-error \
+            --request POST \
+            --header "Authorization: Bearer $GOOGLE_PLAY_ACCESS_TOKEN" \
+            "$API_ROOT/edits/$EDIT_ID:commit?changesNotSentForReview=true&changesInReviewBehavior=ERROR_IF_IN_REVIEW" >/dev/null
+
+          echo "Google Play internal draft prepared for versionCode $UPLOADED_VERSION_CODE."
