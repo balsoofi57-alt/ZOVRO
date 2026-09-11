@@ -35,28 +35,45 @@ These are GitHub artifact-archive digests, not the contained APK/AAB file digest
 
 Workflow: `.github/workflows/ios-release.yml`
 
-The workflow always builds and uploads `zovro-ios-simulator-unsigned`. It now has an additional protected App Store path:
+The workflow always builds and uploads `zovro-ios-simulator-unsigned`. It has an additional protected App Store path:
 
 - Without all Apple signing secrets, it records that signing is unavailable and safely skips the device archive, IPA export, and signed-artifact upload.
 - With all secrets present, it decodes the certificate and provisioning profile only into the temporary macOS runner, creates an ephemeral keychain, verifies the Apple Distribution identity, validates the provisioning-profile Team ID and `com.zovro.app` authorization, creates a signed generic-iOS archive, verifies the code signature, exports an App Store Connect IPA, records SHA-256, uploads `zovro-ios-app-store-signed`, and removes temporary signing material.
+- Signed archives use marketing version `1.0.0` and a unique build number derived from the GitHub workflow run and attempt.
 
-Required GitHub Actions secrets:
+Required GitHub Actions signing secrets:
 
 - `ZOVRO_IOS_CERTIFICATE_P12_BASE64`
 - `ZOVRO_IOS_CERTIFICATE_PASSWORD`
 - `ZOVRO_IOS_PROVISIONING_PROFILE_BASE64`
 - `ZOVRO_APPLE_TEAM_ID`
 
-The certificate must include its private key and be exported as password-protected PKCS#12 (`.p12`) before base64 encoding. The provisioning profile must be an App Store profile for the explicit App ID matching `com.zovro.app` and the same Apple Team ID. Never commit certificates, private keys, provisioning profiles, passwords, decoded files, or App Store Connect credentials.
+The certificate must include its private key and be exported as password-protected PKCS#12 (`.p12`) before base64 encoding. The provisioning profile must be an App Store profile for the explicit App ID matching `com.zovro.app` and the same Apple Team ID.
 
-Latest verified unsigned-path evidence:
+### Controlled TestFlight upload
 
-- Source: `3bc30f4b8151c403a998d861a5638ccb5e33c46a`
-- [iOS run #45](https://github.com/balsoofi57-alt/ZOVRO/actions/runs/34634946756): SUCCESS
-- Unsigned simulator artifact archive digest: `sha256:3936154aa06509dc86bc52f8c1e8608121f6cc325913dc6280c251a1b8be9f39`
+TestFlight upload is disabled on normal pushes. It runs only from **Actions → ZOVRO iOS Release Verification → Run workflow** when the operator explicitly enables `upload_testflight` and all signing plus App Store Connect API secrets are present.
+
+Required GitHub Actions upload secrets:
+
+- `ZOVRO_APP_STORE_CONNECT_API_KEY_ID`
+- `ZOVRO_APP_STORE_CONNECT_ISSUER_ID`
+- `ZOVRO_APP_STORE_CONNECT_API_PRIVATE_KEY_BASE64`
+
+The private `.p8` key is decoded only into the temporary runner, used by `xcrun altool` to validate and upload the IPA, and removed by an exit trap. A successful upload sends the build for App Store Connect/TestFlight processing; it does not submit the app for App Review or publish it publicly.
+
+Never commit certificates, private keys, provisioning profiles, passwords, decoded files, App Store Connect API credentials, or recovery codes.
+
+Latest verified unsigned and no-upload path evidence:
+
+- Source: `5a9e4ad149e3c8f7fed4dcad5a2cb2b64d96452e`
+- [iOS run #47](https://github.com/balsoofi57-alt/ZOVRO/actions/runs/34636398262): SUCCESS
+- [Full QA run #355](https://github.com/balsoofi57-alt/ZOVRO/actions/runs/34636407687): SUCCESS
+- Unsigned simulator artifact archive digest: `sha256:f0b80e5d127abcde22be734609b0812e4465ebb6fa97cf33bdd392eddda34f4b`
 - Signed archive, IPA export, and signed-artifact steps: SKIPPED because the protected Apple signing secrets are not installed
+- TestFlight upload step: SKIPPED because this was a normal push, not an explicitly authorized manual upload
 - Always-run temporary signing-material cleanup step: SUCCESS
 
-This is a GitHub artifact-archive digest, not the contained app-bundle digest. iOS signing remains BLOCKED until the four secrets are installed, the signed branch executes successfully, the IPA finishes App Store Connect processing, and physical-device testing passes.
+This is a GitHub artifact-archive digest, not the contained app-bundle digest. iOS signing and TestFlight processing remain BLOCKED until the seven protected secrets are installed, the manual signed/upload path executes successfully, the build finishes App Store Connect processing, and physical-device testing passes.
 
 Apple Developer organization access and an App Store Connect app record are still required. Apple signing credentials must remain limited to authorized organization members and protected secret storage.
