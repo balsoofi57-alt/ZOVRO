@@ -90,5 +90,6 @@ async function toggleAvailability(){try{me=(await api('/provider/availability',{
 async function logout(){try{if(token)await api('/auth/logout',{method:'POST',body:'{}'})}catch{}token='';me=null;localStorage.removeItem('zovroToken');renderAccount();toast('Signed out')}async function deleteAccount(){if(!confirm('Permanently delete your ZOVRO account?'))return;try{await api('/me',{method:'DELETE',body:JSON.stringify({confirm:'DELETE'})});token='';me=null;localStorage.removeItem('zovroToken');renderAccount();toast('Account deleted')}catch(e){toast(e.message)}}boot();setInterval(()=>{if(me)loadJobs()},10000);
 </script>
 <script src="website-final.js"></script>
+<script src="profile-security-client.js"></script>
 </body>
 </html>
