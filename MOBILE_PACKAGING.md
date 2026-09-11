@@ -51,10 +51,11 @@ The certificate must include its private key and be exported as password-protect
 
 Latest verified unsigned-path evidence:
 
-- Source: `00cdac1d13497498e666dc74ac15a81f5ec824f1`
-- [iOS run #44](https://github.com/balsoofi57-alt/ZOVRO/actions/runs/34634174174): SUCCESS
-- Unsigned simulator artifact archive digest: `sha256:449a8905778a46d71718e4dafb990c5d5d62075f0826fa53dbb9c1acfe6f7956`
+- Source: `3bc30f4b8151c403a998d861a5638ccb5e33c46a`
+- [iOS run #45](https://github.com/balsoofi57-alt/ZOVRO/actions/runs/34634946756): SUCCESS
+- Unsigned simulator artifact archive digest: `sha256:3936154aa06509dc86bc52f8c1e8608121f6cc325913dc6280c251a1b8be9f39`
 - Signed archive, IPA export, and signed-artifact steps: SKIPPED because the protected Apple signing secrets are not installed
+- Always-run temporary signing-material cleanup step: SUCCESS
 
 This is a GitHub artifact-archive digest, not the contained app-bundle digest. iOS signing remains BLOCKED until the four secrets are installed, the signed branch executes successfully, the IPA finishes App Store Connect processing, and physical-device testing passes.
 
