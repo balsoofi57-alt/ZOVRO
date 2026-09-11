@@ -27,13 +27,12 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-          cache: npm
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '21'
       - name: Install dependencies
-        run: npm ci --no-audit --no-fund
+        run: npm install --no-audit --no-fund
       - name: Prepare Android native project
         env:
           ZOVRO_API_URL: https://zovro-api-final.onrender.com
@@ -43,7 +42,7 @@ jobs:
         run: |
           test -f android/gradlew
           test -f android/app/src/main/AndroidManifest.xml
-          grep -q 'com.zovro.app' android/app/build.gradle || true
+          grep -R -q 'com.zovro.app' android/app || true
       - name: Build debug APK
         working-directory: android
         run: ./gradlew --no-daemon assembleDebug
