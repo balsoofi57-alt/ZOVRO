@@ -29,6 +29,12 @@
     if(!initialized){await p.initialize({appId:APP_ID});initialized=true;await attachListeners(p)}
     return p;
   }
+  async function requestInitialPermission(p,userId){
+    const permissionKey='zovroPushPermissionRequested';
+    if(!userId||localStorage.getItem(permissionKey))return;
+    await p.requestPermission({fallbackToSettings:false});
+    localStorage.setItem(permissionKey,'1');
+  }
   async function syncUser(){
     if(busy)return;busy=true;
     try{
@@ -36,13 +42,10 @@
       const userId=typeof me!=='undefined'&&me?.id?String(me.id):null;
       if(userId&&userId!==lastUserId){
         await p.login({externalId:userId});lastUserId=userId;
-        const permissionKey='zovroPushPermissionRequested';
-        if(!localStorage.getItem(permissionKey)){
-          try{await p.requestPermission({fallbackToSettings:false})}finally{localStorage.setItem(permissionKey,'1')}
-        }
       }else if(!userId&&lastUserId){
         await p.logout();lastUserId=null;
       }
+      await requestInitialPermission(p,userId);
     }catch(e){console.warn('ZOVRO push sync unavailable:',e?.message||e)}finally{busy=false}
   }
   async function status(){
