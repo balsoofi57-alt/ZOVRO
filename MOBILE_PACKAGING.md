@@ -12,24 +12,38 @@ The workflow always builds a debug APK. It has two safe release paths:
 
 - Without complete signing secrets, it builds and uploads `zovro-android-release-unsigned-aab`.
 - With all signing secrets present, it decodes the upload keystore only into the temporary GitHub runner, validates the alias, signs the release bundle, verifies the JAR signature, records SHA-256, and uploads `zovro-android-release-signed-aab`.
+- Every generated Android build uses version name `1.0.0` and a unique `versionCode` derived from the GitHub workflow run and attempt.
 
-Required GitHub Actions secrets:
+Required GitHub Actions signing secrets:
 
 - `ZOVRO_ANDROID_KEYSTORE_BASE64`
 - `ZOVRO_ANDROID_KEYSTORE_PASSWORD`
 - `ZOVRO_ANDROID_KEY_ALIAS`
 - `ZOVRO_ANDROID_KEY_PASSWORD`
 
-The keystore must be stored as base64 text in the GitHub secret. Never commit the keystore, passwords, decoded file, or signing properties.
+The keystore must be stored as base64 text in the protected GitHub secret. Never commit the keystore, passwords, decoded file, or signing properties.
 
-Latest verified unsigned-path evidence:
+### Controlled Google Play internal upload
 
-- Source: `174054ba54f6577f3bd041a0bf16dd8d1d06153e`
-- [Android run #10](https://github.com/balsoofi57-alt/ZOVRO/actions/runs/34633140101): SUCCESS
-- Debug artifact archive digest: `sha256:d601e6282d1e9ad7cee830a3627638f0f306072e801baa50186edc9ea4ef62e4`
-- Unsigned AAB artifact archive digest: `sha256:d910a5dabade85da43256b2e3358f81d2ddc954e5ffcaabd7e757333368e4197`
+Google Play upload is disabled on normal pushes. It runs only from **Actions → Build ZOVRO Android → Run workflow** when the operator explicitly enables `upload_google_play`, all signing secrets are present, and this additional protected secret exists:
 
-These are GitHub artifact-archive digests, not the contained APK/AAB file digests. Android signing remains BLOCKED until the four secrets are installed and the signed branch executes successfully.
+- `ZOVRO_GOOGLE_PLAY_SERVICE_ACCOUNT_JSON`
+
+The service account must be linked to the ZOVRO app in Play Console with only the permissions needed to upload releases. The workflow obtains a short-lived Android Publisher access token, creates an edit, uploads the signed AAB, assigns it to the `internal` track with status `draft`, and commits it with `changesNotSentForReview=true` and `ERROR_IF_IN_REVIEW`. It therefore does not send changes for review or publish the app publicly.
+
+Never commit the service-account JSON or expose it in documentation, artifacts, logs, screenshots, or release notes.
+
+Latest verified unsigned and no-upload path evidence:
+
+- Source: `a31fdb1becc484c3e0a544ae8f1297241fabdfc6`
+- [Android run #11](https://github.com/balsoofi57-alt/ZOVRO/actions/runs/34637319949): SUCCESS
+- [Full QA run #357](https://github.com/balsoofi57-alt/ZOVRO/actions/runs/34637325386): SUCCESS
+- Debug artifact archive digest: `sha256:31f2cae7b069a113df536149d68e8aeafe38952c89642c190562d062db3d7e8d`
+- Unsigned AAB artifact archive digest: `sha256:dc1853728175f1236cd143257e65779c55fe9eeb74f1eb46adfd3de906832537`
+- Unique Android release-version assignment step: SUCCESS
+- Signed AAB and Google Play upload steps: SKIPPED because signing credentials are absent and this was a normal push
+
+These are GitHub artifact-archive digests, not the contained APK/AAB file digests. Android signing and Play internal upload remain BLOCKED until the five protected secrets are installed, the manually authorized signed/upload path passes, the draft is reviewed in Play Console, and physical-device testing succeeds.
 
 ## iOS CI
 
