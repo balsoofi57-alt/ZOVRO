@@ -12,6 +12,7 @@ const database=require('./database');
   require('./response-security');
   require('./consent-guard');
   require('./request-privacy');
+  require('./profile-private-api');
   require('./workflow-api');
   require('./html-inject');
   require('./product-expansion');
