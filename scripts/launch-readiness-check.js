@@ -68,3 +68,15 @@ for (const key of [undefined, '', 'x'.repeat(31), 'x'.repeat(32), 'é'.repeat(16
   assert(body.launchReady === expected, 'HTTP body must match readiness');
 }
 console.log('launch-readiness-check: PASS (including missing, short and valid encryption keys and HTTP status)');
+
+// Startup must use the payment adapter's validation, not just variable presence.
+const { execFileSync } = require('child_process');
+for (const key of ['', 'pk_live_public_fixture', 'invalid-secret', 'sk_test_fixture']) {
+  const env = { ...process.env, STRIPE_SECRET_KEY: key };
+  const result = JSON.parse(execFileSync(process.execPath, ['-e', "require('./backend/startup-preflight')"], { cwd: root, env, encoding: 'utf8' }).trim());
+  const expected = key === 'sk_test_fixture';
+  assert(result.stripeSecretConfigured === expected, 'startup must validate the configured Stripe server key');
+  assert(result.blockers.includes('stripe_secret') === !expected, 'startup must block invalid or public Stripe keys');
+  if (key) assert(!JSON.stringify(result).includes(key), 'startup must never log the Stripe key');
+}
+console.log('Startup Stripe configuration checks: PASS');

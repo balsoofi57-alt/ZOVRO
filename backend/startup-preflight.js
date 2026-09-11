@@ -1,4 +1,5 @@
 'use strict';
+const payments=require('./payments');
 
 function moduleAvailable(name){
   try { require.resolve(name); return true; } catch { return false; }
@@ -19,6 +20,7 @@ const status = {
   pgModuleAvailable: moduleAvailable('pg'),
   stripePublishablePresent: present('STRIPE_PUBLISHABLE_KEY'),
   stripeSecretPresent: present('STRIPE_SECRET_KEY'),
+  stripeSecretConfigured: payments.configured(),
   stripeWebhookPresent: present('STRIPE_WEBHOOK_SECRET'),
   applePayRequested: enabled('ZOVRO_APPLE_PAY_ENABLED'),
   applePayMerchantConfigured: merchantOk,
@@ -37,7 +39,7 @@ if(!status.databaseUrlPresent) status.blockers.push('database_url');
 if(!status.pgModuleAvailable) status.blockers.push('postgres_driver');
 if((status.mirrorRequested||status.durableRequested)&&!status.postgresRuntimeReady) status.blockers.push('postgres_runtime');
 if(!status.stripePublishablePresent) status.blockers.push('stripe_publishable');
-if(!status.stripeSecretPresent) status.blockers.push('stripe_secret');
+if(!status.stripeSecretConfigured) status.blockers.push('stripe_secret');
 if(!status.stripeWebhookPresent) status.blockers.push('stripe_webhook');
 if(status.applePayRequested&&!status.applePayMerchantConfigured) status.blockers.push('apple_pay_merchant');
 if(!status.oneSignalRestKeyPresent) status.blockers.push('onesignal_rest_key');

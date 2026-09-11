@@ -1,86 +1,70 @@
 # ZOVRO release evidence checklist
 
-Evidence checkpoint: 2026-09-09. Release PR: [#1](https://github.com/balsoofi57-alt/ZOVRO/pull/1).
-This tracker supplements [FINAL_QA_MATRIX.md](FINAL_QA_MATRIX.md), [RELEASE_CONFIGURATION.md](RELEASE_CONFIGURATION.md), [STORE_ASSET_CHECKLIST.md](STORE_ASSET_CHECKLIST.md), and [STORE_SUBMISSION.md](STORE_SUBMISSION.md).
+Verified checkpoint: 2026-09-11, 12:30 UTC. Owner: ZOVRO release maintainer (automated checks performed by Codex).
+Release PR: [#1](https://github.com/balsoofi57-alt/ZOVRO/pull/1), Draft. Source and production are separate; no store launch is claimed.
 
 ## Evidence rules
 
-- Use PASS, FAIL, or BLOCKED. Missing evidence means BLOCKED, not PASS.
-- Each completed gate needs an owner, UTC timestamp, full source commit, deployed commit or signed build identifier, environment, expected/actual result, and durable evidence link.
-- Store only redacted logs, event IDs, artifact checksums, and non-sensitive screenshots here. Keep secrets, signing keys, private customer data, and reviewer credentials in approved restricted stores.
-- A repository test proves the tested behavior in that environment only. Configured credentials, HTTP 200, or an unsigned build do not prove end-to-end launch readiness.
-- Recheck QA on the final PR head and record the actual deployed backend and submitted mobile builds separately.
+- Missing evidence is BLOCKED, not PASS. Repository QA, a configured credential, an HTTP 200 or an unsigned build alone does not prove commercial launch readiness.
+- Record exact source/deployed SHAs, timestamps, build IDs, environment, expected/actual results and links. Never commit secrets or customer data.
+- Keep PostgreSQL in mirror mode until representative non-empty count/hash parity, restart persistence, backup/restore and rollback checks pass.
 
-## Verified repository evidence
+## Verified source and build evidence
 
-| Check | Status | Evidence and scope |
+| Check | Result | Evidence and scope |
 | --- | --- | --- |
-| Full QA after support-contact hardening | PASS | ZOVRO Full QA #176 succeeded on source commit `f74f22478467e881873883d632bfbc039caf31ad`. Support email presence is now checked by store-readiness QA. |
-| Request privacy / consent / SOS / payment / push hardening | PASS | These checks remain part of `qa:all`; production deployment still requires matching final deployed SHA evidence. |
-| Strict PostgreSQL cutover guard | PASS in source | `backend/scripts/verify-cutover-readiness.js` requires schema version 5, representative non-empty records, equal SQLite/PostgreSQL row counts, and SHA-256 content-fingerprint matches for every domain table. `scripts/db-cutover-readiness-check.js` is included in `qa:all` to prevent removal of this gate. |
-| PR state | PASS | PR #1 remains open, Draft, mergeable, and unmerged. This is not commercial launch approval. |
-| Current release-head QA | PASS | ZOVRO Full QA #290 completed successfully on source commit `c02c84447307708a912d747d2152d39701d008fd`; the complete QA suite passed. |
+| Full QA | PASS | [Run #334](https://github.com/balsoofi57-alt/ZOVRO/actions/runs/34598884430), source `1e5393a7c0952aff66a09e0b8c58c452bfa4505e`. All 33 QA stages passed. Later source changes need their own applicable checks. |
+| Website/release reconciliation | PASS | Merge `722278a338930ac67110f39875b7b885f77bf231` preserves approved design, maps, SOS, biometric/session, consent and private-profile features. Mobile resources exist and scripts load once. |
+| Android compilation | PASS | [Build run](https://github.com/balsoofi57-alt/ZOVRO/actions/runs/34598595696), source `722278a338930ac67110f39875b7b885f77bf231`; debug APK and unsigned release AAB uploaded at 12:29 UTC. This is not release signing or installed-device validation. |
+| Android artifact archive digests | PASS | Debug archive SHA-256 `5265a0d16bbd548b6a7d7468480411197f5c113e4486f4f52a24829e714bd8e1`; unsigned AAB archive SHA-256 `8e9c0b80df996f66de45fadea292287d3d5bc2e01c542a3c8fdfc8f3b1ba3de3`. These are GitHub artifact archive digests, not the contained APK/AAB file hashes. Artifacts expire 2026-09-25. |
+| iOS verification coverage | PASS in source | Commit `6bc27e763499825d8a51935c421b6a99bb3f78f5` enables existing macOS simulator build on release-prep and root HTML/JS/CSS changes. [Run](https://github.com/balsoofi57-alt/ZOVRO/actions/runs/34599149738) was running at this checkpoint; build success not yet claimed. |
+| Encryption readiness | PASS in source | Runtime readiness now rejects absent/short profile-encryption keys with HTTP 503; byte-length boundary, multibyte values and no-secret-output cases tested. Not yet deployed to production. |
 
-## Current live Render checkpoint
+## Live production observations
 
-- Service `zovro-api-final` remains live on branch `zovro-final-deploy`, not on the Draft release-prep branch.
-- Deployed backend commit remains `2eb66a874359abb28d632ad9d2d2f14885626c1c`.
-- Render remains intentionally configured with `ZOVRO_DB_MIRROR_MODE=mirror` and `ZOVRO_PLATFORM_FEE_BPS=0`.
-- Application startup has confirmed database URL/runtime readiness and PostgreSQL mirror initialization.
-- Recent startup evidence confirms `ONESIGNAL_APP_ID` is present while `ONESIGNAL_REST_API_KEY` is still absent.
-- Last observed mirror state was `localRecords=0`, `remoteRecords=0`; this is empty-state consistency only and is explicitly insufficient for DB cutover.
-- Do not change to durable mode until strict non-empty count/hash verification, restart persistence, backup/restore, and rollback evidence all pass.
+Source: Render service/deploy tools and direct read-only HTTP requests, 2026-09-11.
 
-## Current Stripe live checkpoint
+- Primary service: `zovro-api-final`; branch `zovro-final-deploy`.
+- Render's latest live deployment: `c95e6dc1640b9c649b889bbcce41fe57088adc57`, deployment `dep-dahkbsbl550s73ahl9ag`, finished 00:06:33 UTC.
+- At 12:29:30 UTC, `/api/health` returned 200 and `database=sqlite+postgres-mirror`.
+- `/api/launch-readiness` returned **503**, `launchReady=false`, blocker **stripe_secret**. Database runtime/connection, Stripe publishable and webhook configuration, OneSignal app/REST configuration, app secret and allowed origins were reported configured.
+- The 12:29:27 startup log reported `stripeSecretPresent=true`; the runtime adapter reported `stripeConfigured=false`. This establishes an existing value that fails the adapter's accepted server-key format, not a working payment credential. The value itself was neither read nor disclosed. Correct configuration must be verified through runtime readiness and a real authorized payment lifecycle.
+- Startup reported `profileEncryptionConfigured=true`. Runtime encryption readiness hardening remains on the release-prep branch.
+- PostgreSQL remains `mirror`; a connected mirror does not prove durable recovery. No production records were created or changed in this verification.
+- Public [Privacy](https://zovro-web.onrender.com/privacy.html), [Terms](https://zovro-web.onrender.com/terms.html), and [Support](https://zovro-web.onrender.com/support.html) each returned 200. Inbox monitoring and legal review are not established by those responses.
 
-- Account name: `Zovro`; country US; default currency USD.
-- `charges_enabled=false`, `payouts_enabled=false`, `details_submitted=false`.
-- `card_payments=inactive` and `transfers=inactive`.
-- Stripe still requires owner/business profile, representative identity/contact information, statement descriptor, and Stripe Terms acceptance before activation can complete.
-- No live webhook endpoints are currently registered.
-- These identity/legal fields must not be fabricated or accepted by automation.
+## Live Stripe observations
 
-## Current OneSignal checkpoint
+Source: connected Stripe account read, 2026-09-11. Account: Zovro, US, live mode.
 
-- OneSignal app: `Zovro llc App` (`7992b022-6c11-4a66-bad4-8cbd114266d0`).
-- Total Subscriptions = 0 and Active Subscriptions = 0 at the 2026-09-09 verification checkpoint.
-- The three final push templates exist for nearby request, provider accepted, and job status update.
-- Mobile source initializes the OneSignal Capacitor SDK, logs authenticated users in by `external_id`, requests permission once, exposes subscription status, and routes notification taps carrying a request ID back into the jobs flow.
-- Mobile build configuration now injects the OneSignal App ID and includes the Capacitor iOS notification-handling setting required for the OneSignal integration.
-- Render still lacks `ONESIGNAL_REST_API_KEY`.
-- APNs/FCM credentials plus real signed iOS/Android subscriptions are still required before PUSH-01 can pass.
+- `charges_enabled=true`, `payouts_enabled=true`, `details_submitted=true`.
+- `card_payments=active`, `transfers=active`.
+- `requirements.currently_due` contains `company.tax_id`; error `verification_failed_tax_id_match` remains. Stripe reports an EIN/document mismatch and requires a matching document or corrected account EIN.
+- Reported deadline: 2026-10-09 18:52:08 UTC. Current activation does not close the verification gate.
+- No identity fields, EIN, documents, Terms acceptance, payment or payout were modified by this pass.
+- Historical PR evidence reports a configured production webhook; this pass verified only backend webhook configuration presence, not successful signed Stripe event delivery.
 
-## Launch gates and next actions
+## Remaining launch gates
 
-| ID | Gate | Status | Exact PASS evidence |
+| ID | Gate | Status | Exact next evidence |
 | --- | --- | --- | --- |
-| PAY-01 | Stripe account/configuration | BLOCKED | Complete live owner-controlled onboarding; card payments + transfers active; production publishable/secret keys stored securely in Render. |
-| PAY-02 | Signed webhook/payment lifecycle | BLOCKED | Register production webhook `/api/payments/webhook`; valid signature accepted, invalid signature rejected, replay idempotent, decline/refund/cancellation/provider-transfer flow evidenced. |
-| PUSH-01 | OneSignal/APNs/FCM | BLOCKED | Add server REST credential, APNs and FCM; register real devices; prove new-request/provider-accepted/job-status delivery and tap routing. |
-| AND-01 | Android release signing | BLOCKED | Signed AAB, source SHA, SHA-256 checksum, Play validation/test-track evidence, installed-device QA. |
-| IOS-01 | iOS distribution signing | BLOCKED | Signed archive/IPA, source SHA/checksum, TestFlight processing, physical-device Face ID/push QA. |
-| ASSET-01 | Final screenshots/graphics | BLOCKED | Capture from final signed builds with no private data or unsupported feature claims. |
-| SUPPORT-01 | Monitored support/public links | PARTIAL | `support@zovro.net` is approved and present in source. PASS requires inbox activation, successful send/receive/reply test, and verified public Privacy/Terms/Support URLs. |
-| LEGAL-01 | Legal/store declarations | BLOCKED | Final human legal review and Apple/Google privacy/data-safety declarations matching final production behavior. |
-| STORE-01 | Console ownership/submission | BLOCKED | Correct Apple/Google app records, sufficient roles, accepted signed builds, completed declarations/assets. |
-| DB-01 | PostgreSQL durability | BLOCKED | While in `mirror`, generate representative non-empty data. Run `cd backend && DATABASE_URL='***' npm run db:verify:cutover` and require `ok:true`, `nonEmpty:true`, equal counts and hashes for every domain table, empty mismatches. Restart/redeploy and rerun with the same records present. Take backup, restore to separate DB and verify again. Record rollback path. Only then switch to `durable`, restart, confirm durable readiness, and rerun integrated QA. |
-| LIVE-01 | Final integrated readiness | BLOCKED | Final release SHA deployed; signed mobile builds identified; customer/provider/SOS/payment/push/privacy/consent/security/support/deletion lifecycle passes end to end. |
+| PAY-01 | Runtime Stripe credential | FAIL | Correct `STRIPE_SECRET_KEY` in primary Render service using the existing account's valid server credential, restart, and require `stripeConfigured=true`. Do not place credentials in GitHub, client assets, or chat. Credential validity and permissions still need an API transaction check. |
+| TAX-01 | Company verification | BLOCKED | Authorized owner supplies IRS-matching legal name/EIN evidence or corrects account data; Stripe clears `company.tax_id`. Do not infer or fabricate identity information. |
+| PAY-02 | Payment/webhook lifecycle | BLOCKED | Authorized success, decline, refund/cancel, replay protection and provider-transfer checks; Stripe delivery event IDs and successful signature verification. |
+| PUSH-01 | Real mobile delivery | BLOCKED | APNs/FCM configuration, real signed iOS/Android device subscriptions, new request/acceptance/status delivery and notification tap routing. Server credentials alone do not pass this gate. |
+| AND-01 | Android distribution | BLOCKED | Release-signed AAB, source SHA, contained file SHA-256, Play test-track acceptance and physical-device tests. Debug APK and unsigned AAB exist. |
+| IOS-01 | iOS distribution | BLOCKED | Apple signing identity/provisioning, signed archive/IPA, TestFlight processing and device GPS/Face ID/payment/push tests. Simulator build is a separate gate. |
+| DB-01 | Durable storage | BLOCKED | Representative non-empty production mirror data, `npm run db:verify:cutover` with equal counts/hashes, restart persistence, isolated restore and rollback verification. Only then consider durable cutover. |
+| SUPPORT-01 | Support operations | BLOCKED | Public pages pass HTTP checks; monitored inbox send/receive/reply evidence still needed. |
+| STORE-01 | Store submission | BLOCKED | Authorized Apple/Google records and roles, signed-build screenshots, accurate privacy/data-safety declarations and final legal review. |
+| LIVE-01 | Integrated launch | BLOCKED | Identify final deployed backend SHA and signed mobile builds; customer/provider/request/SOS/payment/push/privacy/consent/support/deletion lifecycle passes. |
 
-## Execution order
+## Next execution order
 
-1. Keep PR #1 Draft and PostgreSQL in mirror mode.
-2. Current Full QA is PASS; preserve that evidence while continuing external launch-gate setup.
-3. Complete Stripe owner-controlled onboarding/keys/webhook and OneSignal REST/APNs/FCM/real-device setup.
-4. Generate representative mirror-mode data and run strict `db:verify:cutover` before any durable change.
-5. Prove restart persistence and backup/restore/rollback.
-6. Produce signed Android/iOS builds, complete physical-device QA, screenshots, support/legal evidence and store declarations.
-7. Only after every gate is PASS, deploy the final verified release SHA, switch database mode through controlled cutover, rerun integrated QA, and proceed to store submission.
+1. Complete native CI on the release source and fix failures without claiming distribution signing.
+2. Correct runtime payment configuration and resolve authoritative Stripe verification requirements.
+3. Complete non-empty mirror durability/recovery evidence without changing mode prematurely.
+4. Obtain signed-device payment/push/GPS/SOS evidence and finalized store/support/legal materials.
+5. Deploy the reviewed final source and perform integrated acceptance before commercial rollout.
 
-## Final sign-off
-
-- [x] QA passed on the current release head, with run and SHA recorded above.
-- [ ] Every core gate above is PASS with traceable evidence.
-- [ ] Backend deployment and submitted Android/iOS artifacts are identified.
-- [ ] No secrets or personal data are present in evidence.
-- [ ] Screenshots, support links and declarations match submitted builds.
-- [ ] Release owner records approval and rollout/rollback responsibility.
+Production secrets/signing identities cannot be reconstructed from source. Preserve existing keys and records; missing account evidence remains explicit.
