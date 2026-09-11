@@ -196,10 +196,12 @@ jobs:
             ZOVRO-iOS-Release.sha256
 
       - name: Remove temporary signing material
-        if: always() && steps.signing.outputs.available == 'true'
+        if: always()
         run: |
-          security delete-keychain "$ZOVRO_KEYCHAIN_PATH" || true
-          rm -f "$ZOVRO_PROFILE_PATH"
+          security delete-keychain "$RUNNER_TEMP/zovro-signing.keychain-db" 2>/dev/null || true
+          if [[ -n "${ZOVRO_PROFILE_PATH:-}" ]]; then
+            rm -f "$ZOVRO_PROFILE_PATH"
+          fi
           rm -f "$RUNNER_TEMP/zovro-distribution.p12"
           rm -f "$RUNNER_TEMP/zovro-app-store.mobileprovision"
           rm -f "$RUNNER_TEMP/zovro-app-store.plist"
