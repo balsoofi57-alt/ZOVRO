@@ -46,9 +46,50 @@ jobs:
       - name: Build debug APK
         working-directory: android
         run: ./gradlew --no-daemon assembleDebug
+      - name: Prepare optional Play upload signing
+        id: signing
+        env:
+          KEYSTORE_BASE64: ${{ secrets.ZOVRO_ANDROID_KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.ZOVRO_ANDROID_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.ZOVRO_ANDROID_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.ZOVRO_ANDROID_KEY_PASSWORD }}
+        run: |
+          if [ -n "$KEYSTORE_BASE64" ] && [ -n "$KEYSTORE_PASSWORD" ] && [ -n "$KEY_ALIAS" ] && [ -n "$KEY_PASSWORD" ]; then
+            KEYSTORE_PATH="$RUNNER_TEMP/zovro-upload.jks"
+            printf '%s' "$KEYSTORE_BASE64" | base64 --decode > "$KEYSTORE_PATH"
+            chmod 600 "$KEYSTORE_PATH"
+            keytool -list -keystore "$KEYSTORE_PATH" -storepass "$KEYSTORE_PASSWORD" -alias "$KEY_ALIAS" >/dev/null
+            echo "available=true" >> "$GITHUB_OUTPUT"
+            echo "keystore_path=$KEYSTORE_PATH" >> "$GITHUB_OUTPUT"
+          else
+            echo "available=false" >> "$GITHUB_OUTPUT"
+            echo "Play upload signing secrets are incomplete; producing an unsigned release candidate."
+          fi
       - name: Build unsigned release AAB
+        if: steps.signing.outputs.available != 'true'
         working-directory: android
         run: ./gradlew --no-daemon bundleRelease
+      - name: Build signed release AAB
+        if: steps.signing.outputs.available == 'true'
+        working-directory: android
+        env:
+          ZOVRO_KEYSTORE_PATH: ${{ steps.signing.outputs.keystore_path }}
+          ZOVRO_KEYSTORE_PASSWORD: ${{ secrets.ZOVRO_ANDROID_KEYSTORE_PASSWORD }}
+          ZOVRO_KEY_ALIAS: ${{ secrets.ZOVRO_ANDROID_KEY_ALIAS }}
+          ZOVRO_KEY_PASSWORD: ${{ secrets.ZOVRO_ANDROID_KEY_PASSWORD }}
+        run: |
+          ./gradlew --no-daemon bundleRelease \
+            "-Pandroid.injected.signing.store.file=$ZOVRO_KEYSTORE_PATH" \
+            "-Pandroid.injected.signing.store.password=$ZOVRO_KEYSTORE_PASSWORD" \
+            "-Pandroid.injected.signing.key.alias=$ZOVRO_KEY_ALIAS" \
+            "-Pandroid.injected.signing.key.password=$ZOVRO_KEY_PASSWORD"
+      - name: Verify signed bundle and record digest
+        if: steps.signing.outputs.available == 'true'
+        run: |
+          AAB_PATH=$(find android/app/build/outputs/bundle/release -type f -name '*.aab' | head -n 1)
+          test -n "$AAB_PATH"
+          jarsigner -verify "$AAB_PATH" | grep -q 'jar verified'
+          sha256sum "$AAB_PATH" | tee ZOVRO-Android-Release.sha256
       - name: Upload debug APK
         uses: actions/upload-artifact@v4
         with:
@@ -57,9 +98,20 @@ jobs:
           if-no-files-found: error
           retention-days: 14
       - name: Upload unsigned release AAB
+        if: steps.signing.outputs.available != 'true'
         uses: actions/upload-artifact@v4
         with:
           name: zovro-android-release-unsigned-aab
           path: android/app/build/outputs/bundle/release/*.aab
+          if-no-files-found: error
+          retention-days: 14
+      - name: Upload signed release AAB
+        if: steps.signing.outputs.available == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: zovro-android-release-signed-aab
+          path: |
+            android/app/build/outputs/bundle/release/*.aab
+            ZOVRO-Android-Release.sha256
           if-no-files-found: error
           retention-days: 14
