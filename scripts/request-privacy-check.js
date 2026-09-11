@@ -4,6 +4,7 @@ const root=path.resolve(__dirname,'..');
 const read=p=>fs.readFileSync(path.join(root,p),'utf8');
 const privacy=read('backend/request-privacy.js');
 const server=read('backend/server.js');
+const profilePrivacy=require('../backend/profile-privacy');
 
 assert.match(server,/require\('\.\/request-privacy'\)/,'request privacy guard must load before API server');
 assert.ok(server.indexOf("require('./request-privacy')")<server.indexOf("require('./server-mobile-payments')"),'privacy guard must load before API server');
@@ -30,12 +31,14 @@ assert.match(privacy,/outside your current service range/,'out-of-range acceptan
 assert.match(privacy,/Update your current location before accepting this request/,'stale or missing provider location rejection missing');
 
 assert.match(privacy,/function publicProviderView\(provider\)/,'public provider serializer missing');
-for(const sensitive of ['phone','email','license','stripeCustomerId','stripeRecipientAccountId','passwordHash']){
-  assert.match(privacy,new RegExp(`\\b${sensitive}\\b`),`provider serializer must explicitly remove ${sensitive}`);
+assert.match(privacy,/return publicProfile\(provider\)/,'public provider serializer must use strict allowlist');
+for(const sensitive of ['phone','email','license','stripeCustomerId','stripeRecipientAccountId','passwordHash','dateOfBirth','residentialAddress','identityDocuments','paymentProfile']){
+  assert.ok(!profilePrivacy.PUBLIC_PROFILE_FIELDS.has(sensitive),`public provider allowlist must exclude ${sensitive}`);
 }
+for(const visible of ['name','photoUrl','role','service'])assert.ok(profilePrivacy.PUBLIC_PROFILE_FIELDS.has(visible),`public provider allowlist should include ${visible}`);
 assert.ok(privacy.includes("url.pathname==='/api/providers/nearby'"),'nearby provider response privacy interception missing');
-assert.ok(privacy.includes("const publicProfile=url.pathname.match(/^\\/api\\/providers\\/([^/]+)\\/profile$/)"),'public provider profile privacy interception missing');
+assert.ok(privacy.includes("const publicProfileRoute=url.pathname.match(/^\\/api\\/providers\\/([^/]+)\\/profile$/)"),'public provider profile privacy interception missing');
 assert.match(privacy,/provider:publicProviderView\(row\.provider\)/,'nearby provider rows must use the public provider serializer');
 assert.match(privacy,/parsed\.provider=publicProviderView\(parsed\.provider\)/,'public provider profile must use the public provider serializer');
 
-console.log('Request privacy QA passed: customer and provider public data are redacted, private chat is restricted, and acceptance enforces active/available/service-compatible providers plus fresh 15-mile SOS or 25-mile normal distance limits.');
+console.log('Request privacy QA passed: strict public allowlists protect personal data, private chat is restricted, and acceptance enforces active/available/service-compatible providers plus fresh 15-mile SOS or 25-mile normal distance limits.');
