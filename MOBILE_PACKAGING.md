@@ -8,7 +8,7 @@ Release path: production web bundle → Capacitor sync → physical-device testi
 
 Workflow: `.github/workflows/android-build.yml`
 
-The workflow always builds a debug APK. It now has two safe release paths:
+The workflow always builds a debug APK. It has two safe release paths:
 
 - Without complete signing secrets, it builds and uploads `zovro-android-release-unsigned-aab`.
 - With all signing secrets present, it decodes the upload keystore only into the temporary GitHub runner, validates the alias, signs the release bundle, verifies the JAR signature, records SHA-256, and uploads `zovro-android-release-signed-aab`.
@@ -35,14 +35,27 @@ These are GitHub artifact-archive digests, not the contained APK/AAB file digest
 
 Workflow: `.github/workflows/ios-release.yml`
 
-The current workflow verifies an unsigned iOS Simulator release. A signed App Store archive still requires:
+The workflow always builds and uploads `zovro-ios-simulator-unsigned`. It now has an additional protected App Store path:
 
-- Apple Developer organization access
-- Distribution certificate and private key
-- App Store provisioning profile for `com.zovro.app`
-- Apple Team ID
-- App Store Connect app record
-- Temporary-runner certificate/profile import
-- Signed archive export, TestFlight processing, and physical-device validation
+- Without all Apple signing secrets, it records that signing is unavailable and safely skips the device archive, IPA export, and signed-artifact upload.
+- With all secrets present, it decodes the certificate and provisioning profile only into the temporary macOS runner, creates an ephemeral keychain, verifies the Apple Distribution identity, validates the provisioning-profile Team ID and `com.zovro.app` authorization, creates a signed generic-iOS archive, verifies the code signature, exports an App Store Connect IPA, records SHA-256, uploads `zovro-ios-app-store-signed`, and removes temporary signing material.
 
-Do not add certificates, private keys, provisioning profiles, passwords, or App Store Connect API credentials to the repository.
+Required GitHub Actions secrets:
+
+- `ZOVRO_IOS_CERTIFICATE_P12_BASE64`
+- `ZOVRO_IOS_CERTIFICATE_PASSWORD`
+- `ZOVRO_IOS_PROVISIONING_PROFILE_BASE64`
+- `ZOVRO_APPLE_TEAM_ID`
+
+The certificate must include its private key and be exported as password-protected PKCS#12 (`.p12`) before base64 encoding. The provisioning profile must be an App Store profile for the explicit App ID matching `com.zovro.app` and the same Apple Team ID. Never commit certificates, private keys, provisioning profiles, passwords, decoded files, or App Store Connect credentials.
+
+Latest verified unsigned-path evidence:
+
+- Source: `00cdac1d13497498e666dc74ac15a81f5ec824f1`
+- [iOS run #44](https://github.com/balsoofi57-alt/ZOVRO/actions/runs/34634174174): SUCCESS
+- Unsigned simulator artifact archive digest: `sha256:449a8905778a46d71718e4dafb990c5d5d62075f0826fa53dbb9c1acfe6f7956`
+- Signed archive, IPA export, and signed-artifact steps: SKIPPED because the protected Apple signing secrets are not installed
+
+This is a GitHub artifact-archive digest, not the contained app-bundle digest. iOS signing remains BLOCKED until the four secrets are installed, the signed branch executes successfully, the IPA finishes App Store Connect processing, and physical-device testing passes.
+
+Apple Developer organization access and an App Store Connect app record are still required. Apple signing credentials must remain limited to authorized organization members and protected secret storage.
