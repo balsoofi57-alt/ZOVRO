@@ -4,6 +4,20 @@ ZOVRO is prepared for a Capacitor iOS/Android shell using application ID `com.zo
 
 Release path: production web bundle → Capacitor sync → physical-device testing → signing → TestFlight / Play internal testing → store submission.
 
+## Automated release safety guard
+
+Command: `npm run mobile-release-workflows:check`
+
+The guard runs inside `qa:all` and fails CI if either mobile workflow loses its manual-upload condition, signing requirement, read-only repository permission, internal/draft restriction, no-review protection, signature verification, unique build numbering, or temporary-secret cleanup. It also rejects committed `.jks`, `.keystore`, `.p8`, `.p12`, and `.mobileprovision` files outside generated/excluded build directories.
+
+Latest guard evidence:
+
+- Source: `eafe37382598ed48da100e8e43ceff64f3d75e01`
+- [Full QA run #362](https://github.com/balsoofi57-alt/ZOVRO/actions/runs/34638332920): SUCCESS
+- Log result: `mobile-release-workflow-check: PASS`
+- [Android run #13](https://github.com/balsoofi57-alt/ZOVRO/actions/runs/34638328571): SUCCESS
+- [iOS run #49](https://github.com/balsoofi57-alt/ZOVRO/actions/runs/34638328605): SUCCESS
+
 ## Android CI
 
 Workflow: `.github/workflows/android-build.yml`
