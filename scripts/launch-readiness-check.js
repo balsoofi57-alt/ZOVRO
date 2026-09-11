@@ -30,4 +30,41 @@ assert(launch.includes("oneSignalServerConfigured"), 'OneSignal server configura
 assert(launch.includes("production_secret"), 'production secret blocker must be enforced');
 assert(launch.includes("allowed_origins"), 'allowed-origins blocker must be enforced');
 
-console.log('launch-readiness-check: PASS');
+// Execute the real snapshot and HTTP handler with healthy external dependencies.
+const vm = require('vm');
+const healthyEnv = {
+  DATABASE_URL: 'postgresql://localhost/test', ZOVRO_DB_MIRROR_MODE: 'mirror',
+  STRIPE_PUBLISHABLE_KEY: 'pk_test_fixture', ONESIGNAL_APP_ID: 'fixture',
+  ONESIGNAL_REST_API_KEY: 'fixture', ZOVRO_SECRET: 's'.repeat(32),
+  ZOVRO_ALLOWED_ORIGINS: 'https://example.test'
+};
+for (const key of [undefined, '', 'x'.repeat(31), 'x'.repeat(32), 'é'.repeat(16)]) {
+  let handler;
+  const http = { createServer: fn => { handler = fn; } };
+  const env = { ...healthyEnv };
+  if (key !== undefined) env.ZOVRO_PROFILE_ENCRYPTION_KEY = key;
+  const context = { module: { exports: {} }, Buffer, URL, process: { env }, require(name) {
+    if (name === 'http') return http;
+    if (name === './database') return { dbInfo: () => ({ postgresConfigured: true, postgresOperational: true }) };
+    if (name === './payments') return { configured: () => true, webhookConfigured: () => true };
+    if (name === './push') return { configured: () => true };
+    throw Error('Unexpected dependency: ' + name);
+  }};
+  vm.runInNewContext(launch, context, { filename: launchPath });
+  const expected = Buffer.byteLength(key || '', 'utf8') >= 32;
+  const status = context.module.exports.snapshot();
+  assert(status.launchReady === expected, 'readiness must enforce encryption key byte length');
+  assert(status.checks.profileEncryptionConfigured === expected, 'encryption check must match readiness');
+  assert(status.blockers.includes('profile_encryption_key') === !expected, 'missing/short key must block launch');
+  assert(status.checks.dbMirrorMode === 'mirror', 'readiness must preserve mirror mode');
+  if (key) assert(!JSON.stringify(status).includes(key), 'readiness must never expose encryption key');
+  http.createServer(() => { throw Error('Readiness request unexpectedly fell through'); });
+  let code, headers, body;
+  handler({ method: 'GET', url: '/api/launch-readiness' }, {
+    writeHead(c, h) { code = c; headers = h; }, end(b) { body = JSON.parse(b); }
+  });
+  assert(code === (expected ? 200 : 503), 'HTTP status must match encryption readiness');
+  assert(headers['cache-control'] === 'no-store', 'readiness must not be cached');
+  assert(body.launchReady === expected, 'HTTP body must match readiness');
+}
+console.log('launch-readiness-check: PASS (including missing, short and valid encryption keys and HTTP status)');

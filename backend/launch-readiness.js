@@ -27,6 +27,7 @@ function snapshot() {
     !String(process.env.ZOVRO_SECRET).includes('dev-only')
   );
   const allowedOriginsPresent = present('ZOVRO_ALLOWED_ORIGINS');
+  const profileEncryptionConfigured = Buffer.byteLength(String(process.env.ZOVRO_PROFILE_ENCRYPTION_KEY || ''), 'utf8') >= 32;
   const applePayRequested = enabled('ZOVRO_APPLE_PAY_ENABLED');
   const applePayMerchantPresent = /^merchant\.[A-Za-z0-9.-]+$/.test(String(process.env.ZOVRO_APPLE_PAY_MERCHANT_ID || '').trim());
 
@@ -41,6 +42,7 @@ function snapshot() {
   if (!oneSignalRestKeyPresent) blockers.push('onesignal_rest_key');
   if (!productionSecretPresent) blockers.push('production_secret');
   if (!allowedOriginsPresent) blockers.push('allowed_origins');
+  if (!profileEncryptionConfigured) blockers.push('profile_encryption_key');
   if (applePayRequested && !applePayMerchantPresent) blockers.push('apple_pay_merchant');
 
   return {
@@ -62,6 +64,7 @@ function snapshot() {
       oneSignalServerConfigured,
       productionSecretPresent,
       allowedOriginsPresent,
+      profileEncryptionConfigured,
       applePayRequested,
       applePayMerchantPresent
     },
