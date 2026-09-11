@@ -3,9 +3,12 @@ name: ZOVRO iOS Release Verification
 on:
   workflow_dispatch:
   push:
-    branches: [main]
+    branches: [main, store-release-prep]
     paths:
-      - 'index.html'
+      - '*.html'
+      - '*.js'
+      - '*.css'
+      - 'package-lock.json'
       - 'assets/**'
       - 'scripts/**'
       - 'capacitor.config.json'
@@ -44,7 +47,7 @@ jobs:
           ditto -c -k --sequesterRsrc --keepParent "$APP_PATH" ZOVRO-iOS-Simulator-Release.zip
       - uses: actions/upload-artifact@v4
         with:
-          name: zovro-ios-release-candidate
+          name: zovro-ios-simulator-unsigned
           retention-days: 14
           if-no-files-found: error
           path: ZOVRO-iOS-Simulator-Release.zip
