@@ -2,6 +2,7 @@
 const http=require('http'),crypto=require('crypto');
 const {readDb}=require('./database');
 const {publicProfile}=require('./profile-privacy');
+const {matchesService}=require('../src/provider-services');
 
 const originalCreateServer=http.createServer.bind(http);
 const SECRET=process.env.ZOVRO_SECRET||'dev-only-change-before-production';
@@ -56,7 +57,7 @@ function isCompatibleProvider(user,r){
   if(user.role!=='provider')return false;
   if((user.accountStatus||'active')!=='active')return false;
   if(user.availability===false)return false;
-  if(user.service&&r.service&&user.service!==r.service)return false;
+  if(!matchesService(user,r.service))return false;
   return true;
 }
 

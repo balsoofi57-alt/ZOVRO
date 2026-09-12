@@ -21,7 +21,7 @@ assert.match(privacy,/actor\?\.user\.role==='provider'/,'provider request-list r
 assert.match(privacy,/r\.providerId===actor\.user\.id\?r:publicDiscoveryRequest\(r\)/,'only accepted provider may receive full request view');
 assert.match(privacy,/function isCompatibleProvider/,'acceptance compatibility guard missing');
 assert.match(privacy,/user\.availability===false/,'unavailable providers must be rejected');
-assert.match(privacy,/user\.service&&r\.service&&user\.service!==r\.service/,'service mismatch must be rejected');
+assert.match(privacy,/!matchesService\(user,r\.service\)/,'service matching must include every selected specialty');
 assert.match(privacy,/function locationFresh/,'provider location freshness guard missing');
 assert.match(privacy,/15\*60\*1000/,'provider location must expire after 15 minutes');
 assert.match(privacy,/function milesBetween/,'distance calculation missing');

@@ -7,7 +7,7 @@ const json=(res,code,obj)=>{res.writeHead(code,{'content-type':'application/json
 const send=(res,code,type,text)=>{res.writeHead(code,{'content-type':type,'cache-control':'no-cache','x-content-type-options':'nosniff','referrer-policy':'no-referrer'});res.end(text)};
 const body=req=>new Promise((resolve,reject)=>{let s='';req.on('data',c=>{s+=c;if(s.length>250000){reject(new Error('Body too large'));req.destroy()}});req.on('end',()=>{try{resolve(s?JSON.parse(s):{})}catch(e){reject(e)}});req.on('error',reject)});
 function file(name){return fs.readFileSync(path.join(ROOT,name),'utf8')}
-function enhancedIndex(){let html=file('index.html');const head='<link rel="stylesheet" href="/src/zovro-theme.css">';const scripts='<script src="/src/service-catalog.js"></script><script src="/src/product-features.js"></script><script src="/src/zovro-enhancements.js"></script><script src="/src/workflow-client.js"></script>';return html.replace('</head>',head+'</head>').replace('</body>',scripts+'</body>')}
+function enhancedIndex(){let html=file('index.html');const head='<link rel="stylesheet" href="/src/zovro-theme.css">';const scripts='<script src="/src/product-features.js"></script><script src="/src/zovro-enhancements.js"></script><script src="/src/workflow-client.js"></script>';return html.replace('</head>',head+'</head>').replace('</body>',scripts+'</body>')}
 async function productApi(req,res,next){
   let url;try{url=new URL(req.url,'http://localhost')}catch{return next(req,res)}
   if(req.method==='GET'&&(url.pathname==='/'||url.pathname==='/index.html'))return send(res,200,'text/html; charset=utf-8',enhancedIndex());

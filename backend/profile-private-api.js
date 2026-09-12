@@ -3,6 +3,7 @@ const http=require('http');
 const {readDb,writeDb}=require('./database');
 const {currentUser}=require('./request-privacy');
 const {encryptSensitive,decryptSensitive,publicProfile}=require('./profile-privacy');
+const {servicesFor}=require('../src/provider-services');
 
 const originalCreateServer=http.createServer.bind(http);
 const KEY=String(process.env.ZOVRO_PROFILE_ENCRYPTION_KEY||'');
@@ -50,7 +51,7 @@ http.createServer=function(handler,...args){return originalCreateServer(async(re
   try{
     if(req.method==='GET'&&url.pathname==='/api/profile/private'){
       requireKey();
-      return json(res,200,{profile:{name:user.name,photoUrl:user.photoUrl||'',role:user.role,service:user.service||'',...decryptPrivate(user)},completion:completionFromStored(user),privacy:'Only you can access these private profile fields.'});
+      return json(res,200,{profile:{name:user.name,photoUrl:user.photoUrl||'',role:user.role,service:user.service||'',services:servicesFor(user),...decryptPrivate(user)},completion:completionFromStored(user),privacy:'Only you can access these private profile fields.'});
     }
     if(req.method==='PATCH'&&url.pathname==='/api/profile/private'){
       requireKey();
@@ -70,7 +71,7 @@ http.createServer=function(handler,...args){return originalCreateServer(async(re
       }
       if(b.name!==undefined){const name=cleanText(b.name,80);if(name.split(/\s+/).filter(Boolean).length<2)return json(res,400,{error:'Full first and last name required'});user.name=name}
       writeDb(db);
-      return json(res,200,{ok:true,profile:{name:user.name,photoUrl:user.photoUrl||'',role:user.role,service:user.service||'',...decryptPrivate(user)},completion:completionFromStored(user)});
+      return json(res,200,{ok:true,profile:{name:user.name,photoUrl:user.photoUrl||'',role:user.role,service:user.service||'',services:servicesFor(user),...decryptPrivate(user)},completion:completionFromStored(user)});
     }
     if(req.method==='GET'&&url.pathname==='/api/profile/public'){
       return json(res,200,{profile:publicProfile(user),completion:completionFromStored(user)});

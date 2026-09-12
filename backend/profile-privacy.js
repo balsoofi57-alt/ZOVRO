@@ -1,5 +1,6 @@
 'use strict';
 const crypto=require('crypto');
+const {servicesFor}=require('../src/provider-services');
 
 const PUBLIC_PROFILE_FIELDS=new Set(['id','name','photoUrl','role','service','providerVerified','identityVerified','licensed','insured','rating','ratingCount','availability']);
 const PRIVATE_PROFILE_FIELDS=new Set(['phone','email','dateOfBirth','residentialAddress','licenseNumber','insuranceDetails','identityDocuments','paymentProfile','emergencyContact']);
@@ -21,6 +22,7 @@ function publicProviderStats(stats){
 function publicProfile(user={}){
   const out={};
   for(const key of PUBLIC_PROFILE_FIELDS) if(user[key]!==undefined) out[key]=user[key];
+  if(user.role==='provider')out.services=servicesFor(user);
   const stats=publicProviderStats(user.stats);
   if(stats)out.stats=stats;
   return out;
