@@ -16,7 +16,14 @@ on:
       - 'service-worker.js'
       - 'capacitor.config.json'
       - 'package.json'
+      - 'package-lock.json'
+      - 'backend/package.json'
+      - 'backend/package-lock.json'
       - '.github/workflows/qa.yml'
+      - '.github/workflows/android-build.yml'
+      - '.github/workflows/android-release.yml'
+      - '.github/workflows/ios-release.yml'
+      - '.github/workflows/finalize-website.yml'
   pull_request:
     branches: [main]
     paths:
@@ -31,7 +38,14 @@ on:
       - 'service-worker.js'
       - 'capacitor.config.json'
       - 'package.json'
+      - 'package-lock.json'
+      - 'backend/package.json'
+      - 'backend/package-lock.json'
       - '.github/workflows/qa.yml'
+      - '.github/workflows/android-build.yml'
+      - '.github/workflows/android-release.yml'
+      - '.github/workflows/ios-release.yml'
+      - '.github/workflows/finalize-website.yml'
 
 permissions:
   contents: read
@@ -45,10 +59,14 @@ jobs:
       - uses: actions/setup-node@v5
         with:
           node-version: '22'
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            backend/package-lock.json
       - name: Install root dependencies
-        run: npm install --no-audit --no-fund
+        run: npm ci --no-audit --no-fund
       - name: Install backend dependencies
-        run: npm install --no-audit --no-fund
+        run: npm ci --no-audit --no-fund
         working-directory: backend
       - name: Run complete QA suite
         env:
