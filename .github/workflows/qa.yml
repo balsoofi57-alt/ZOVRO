@@ -3,7 +3,7 @@ name: ZOVRO Full QA
 on:
   workflow_dispatch:
   push:
-    branches: [main, feature/zovro-product-expansion, store-release-prep]
+    branches: [main, feature/zovro-product-expansion, store-release-prep, zovro-final-deploy]
     paths:
       - 'backend/**'
       - 'src/**'
@@ -41,8 +41,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
         with:
           node-version: '22'
       - name: Install root dependencies
