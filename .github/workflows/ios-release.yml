@@ -17,6 +17,8 @@ on:
       - 'package-lock.json'
       - 'assets/**'
       - 'scripts/**'
+      - 'src/**'
+      - 'manifest.webmanifest'
       - 'capacitor.config.json'
       - 'package.json'
       - '.github/workflows/ios-release.yml'

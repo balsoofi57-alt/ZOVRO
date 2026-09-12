@@ -7,6 +7,10 @@ on:
     paths:
       - 'backend/**'
       - 'src/**'
+      - '*.js'
+      - '*.css'
+      - 'assets/**'
+      - 'store/**'
       - 'scripts/**'
       - 'index.html'
       - 'privacy.html'
@@ -27,6 +31,10 @@ on:
     paths:
       - 'backend/**'
       - 'src/**'
+      - '*.js'
+      - '*.css'
+      - 'assets/**'
+      - 'store/**'
       - 'scripts/**'
       - 'index.html'
       - 'privacy.html'
