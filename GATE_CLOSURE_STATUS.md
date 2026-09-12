@@ -1,8 +1,19 @@
 # ZOVRO Gate Closure Status
 
-Checkpoint: 2026-09-11
+Checkpoint: 2026-09-12
 
-## Repository / QA — PASS
+## Latest continuation — provider history and handoff privacy
+
+- Resumed release candidate `store-release-prep` at `f3a4e8750a8376042afafe78acbb7a365fe5fcb7`.
+- Reproduced an end-to-end failure: public profile sanitization removed the new `stats` object, breaking professional history and reliability display.
+- Fixed the public serializer to retain only explicitly named aggregate statistics, nullable new-provider ratings/completion rates, and known professional-level labels. Nested audit details, emergency reasons, contact data, and malformed values remain excluded.
+- Extended integration checks to cover nearby-provider statistics, contact-field redaction, former-provider request-list/chat/tracking denial, replacement discovery redaction, and private handoff reasons after acceptance.
+- Local `npm run qa:all` passed after the fix (Node 24.19.0). GitHub's Node 22 QA and mobile build results must be checked against the new commit; the older run numbers below are historical evidence only.
+- Independently checked Render: `zovro-api-final` remains live at `c95e6dc1640b9c649b889bbcce41fe57088adc57`. At 2026-09-12 00:19 UTC, `/api/health` returned `ok=true`, and `/api/ready` returned `ready=true`, `mirrorMode=mirror`, `postgresOperational=true`.
+- These source changes are on the release candidate, not yet deployed to production. PR #1 stays Draft; no store upload, live transaction, or database-mode change was performed in this continuation.
+- Stripe tax verification, real signed payment webhook delivery, signed-device push, mobile signing/store access, support/legal verification, screenshots and database durability evidence remain open. Their external account state was not reverified in this continuation.
+
+## Earlier repository / QA evidence (2026-09-11)
 
 - Release PR #1 remains Draft and mergeable pending external launch gates.
 - Current verified release-candidate head: `6009cc6d4896887e54b83adb3e0af8e487d61ffd`.

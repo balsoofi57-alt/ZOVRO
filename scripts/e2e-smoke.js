@@ -1,4 +1,5 @@
 'use strict';
+const assert=require('node:assert/strict');
 const {spawn}=require('child_process');
 const fs=require('fs'),os=require('os'),path=require('path');
 const root=path.resolve(__dirname,'..'), backend=path.join(root,'backend'), data=fs.mkdtempSync(path.join(os.tmpdir(),'zovro-e2e-'));
@@ -21,14 +22,30 @@ await call('PATCH','/api/provider/availability',{available:true},p2.token);
 await call('POST','/api/provider/location',{lat:42.3223,lng:-83.1763,accuracy:10},p.token);
 await call('POST','/api/provider/location',{lat:42.323,lng:-83.175,accuracy:10},p2.token);
 const nearby=await call('GET','/api/providers/nearby?lat=42.315&lng=-83.19&service=Roadside%20Assistance',null,c.token);if(!nearby.providers.length)throw new Error('Nearby provider matching failed');
+for(const row of nearby.providers){
+assert.equal(row.provider.stats.completedJobs,0,'Nearby profiles must include public professional history');
+assert.equal(row.provider.stats.rating,null,'New providers must not receive a fabricated rating');
+for(const field of ['phone','email','license','passwordHash'])assert.equal(row.provider[field],undefined,`Nearby profile leaked ${field}`);
+}
 const noRequestConsent=await fetch(base+'/api/requests',{method:'POST',headers:{'content-type':'application/json',authorization:`Bearer ${c.token}`,'x-zovro-terms-version':TERMS,'x-zovro-privacy-version':PRIVACY},body:JSON.stringify({service:'Roadside Assistance',details:'No consent test',location:{lat:42.315,lng:-83.19}})});if(noRequestConsent.status!==428)throw new Error(`Request without service consent returned ${noRequestConsent.status}, expected 428`);
 const created=await call('POST','/api/requests',{service:'Roadside Assistance',details:'ZOVRO 1.0 Final end-to-end smoke test',address:'Dearborn, MI',location:{lat:42.315,lng:-83.19}},c.token);const id=created.request.id;
 await call('POST',`/api/requests/${id}/accept`,{},p.token);
 await call('POST',`/api/requests/${id}/status`,{status:'On the way'},p.token);
 const shortReason=await fetch(base+`/api/requests/${id}/provider-emergency-handoff`,{method:'POST',headers:{'content-type':'application/json',authorization:`Bearer ${p.token}`},body:JSON.stringify({reason:'car'})});if(shortReason.status!==400)throw new Error(`Short emergency reason returned ${shortReason.status}, expected 400`);
 const handedOff=await call('POST',`/api/requests/${id}/provider-emergency-handoff`,{reason:'Vehicle breakdown while traveling to the customer'},p.token);if(handedOff.request.status!=='Looking for replacement'||handedOff.request.providerId!==null||handedOff.dispatch.notifiedProviders<1)throw new Error('Emergency handoff did not reopen and redispatch the request');
+const formerJobs=await call('GET','/api/requests',null,p.token);
+assert(!formerJobs.requests.some(r=>r.id===id),'Former provider must not rediscover the handed-off job');
+for(const route of ['messages','tracking']){
+const denied=await fetch(base+`/api/requests/${id}/${route}`,{headers:{authorization:`Bearer ${p.token}`}});
+assert.equal(denied.status,404,`Former provider retained ${route} access`);
+}
+const discovery=(await call('GET','/api/requests',null,p2.token)).requests.find(r=>r.id===id);
+assert(discovery,'Replacement provider must discover the open request');
+for(const field of ['customerId','address','location','messages','handoffs','lastHandoffReason'])assert.equal(discovery[field],undefined,`Replacement discovery leaked ${field}`);
 const formerProviderRetry=await fetch(base+`/api/requests/${id}/accept`,{method:'POST',headers:{'content-type':'application/json',authorization:`Bearer ${p.token}`},body:'{}'});if(formerProviderRetry.status!==409)throw new Error(`Former provider reaccept returned ${formerProviderRetry.status}, expected 409`);
-await call('POST',`/api/requests/${id}/accept`,{},p2.token);
+const replacementAccepted=await call('POST',`/api/requests/${id}/accept`,{},p2.token);
+assert.equal(replacementAccepted.request.lastHandoffReason,undefined,'Replacement must not receive the previous provider emergency reason');
+assert.equal(replacementAccepted.request.handoffs[0].reason,undefined,'Handoff history must redact private reasons');
 const malformedQuote=await fetch(base+`/api/requests/${id}/quote`,{method:'POST',headers:{'content-type':'application/json',authorization:`Bearer ${p2.token}`},body:'{bad'});if(malformedQuote.status!==400)throw new Error(`Malformed payment JSON returned ${malformedQuote.status}, expected 400`);
 const quote=await call('POST',`/api/requests/${id}/quote`,{amountCents:10000},p2.token);if(quote.payment.amountCents!==10000)throw new Error('Payment quote route did not recover after malformed JSON');
 await call('POST',`/api/requests/${id}/messages`,{text:'Replacement provider is on the way.'},p2.token);

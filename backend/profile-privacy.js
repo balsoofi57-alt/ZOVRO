@@ -4,9 +4,25 @@ const crypto=require('crypto');
 const PUBLIC_PROFILE_FIELDS=new Set(['id','name','photoUrl','role','service','providerVerified','identityVerified','licensed','insured','rating','ratingCount','availability']);
 const PRIVATE_PROFILE_FIELDS=new Set(['phone','email','dateOfBirth','residentialAddress','licenseNumber','insuranceDetails','identityDocuments','paymentProfile','emergencyContact']);
 
+// Copy only public aggregates, never raw audit rows or handoff reasons.
+function publicProviderStats(stats){
+  if(!stats||typeof stats!=='object'||Array.isArray(stats))return undefined;
+  const out={};
+  for(const field of ['completedJobs','ratingCount','providerCancellations','emergencyHandoffs','reliabilityScore','dispatchPriorityScore']){
+    if(typeof stats[field]==='number'&&Number.isFinite(stats[field]))out[field]=stats[field];
+  }
+  for(const field of ['rating','completionRate']){
+    if(stats[field]===null||(typeof stats[field]==='number'&&Number.isFinite(stats[field])))out[field]=stats[field];
+  }
+  if(['Excellent','Good','Needs improvement','Low'].includes(stats.professionalLevel))out.professionalLevel=stats.professionalLevel;
+  return out;
+}
+
 function publicProfile(user={}){
   const out={};
   for(const key of PUBLIC_PROFILE_FIELDS) if(user[key]!==undefined) out[key]=user[key];
+  const stats=publicProviderStats(user.stats);
+  if(stats)out.stats=stats;
   return out;
 }
 
