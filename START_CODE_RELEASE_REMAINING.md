@@ -28,4 +28,12 @@ The code confirms customer authorization to start work. It does not verify ident
 
 `node scripts/backup-sqlite.js <existing-SQLite-file> <new-private-directory>` creates an online SQLite backup, verifies integrity, and writes a SHA-256/count manifest with private filesystem permissions. It refuses an existing output directory. Keep the complete directory outside the ephemeral service before changing storage. The isolated QA fixture exercises WAL-backed data and restores a separate copy. This is not evidence of a production backup.
 
-The running service does not yet contain this utility. Transfer or execute the reviewed utility through an authenticated service shell without redeploying first. Dashboard access currently requires sign-in. Do not expose a new public backup endpoint.
+The running service does not yet contain this utility. Transfer or execute the reviewed utility through an authenticated service shell without redeploying first. Dashboard sign-in was completed on 2026-09-13, but the live Shell page explicitly blocks shell access on the Free compute plan. Do not expose a new public backup endpoint.
+
+## Authenticated Render follow-up — 2026-09-13
+
+- Verified the signed-in dashboard for `zovro-api-final` and independently rechecked Render deployment metadata: the live revision remains `c95e6dc1640b9c649b889bbcce41fe57088adc57`. The production branch tip is `d961050e08f1c5d6b18764a7dd0de439f4e28835`; branch state is not deployment evidence.
+- Both Shell and Disk display upgrade-required dialogs. Compute explicitly says Free instances do not support SSH, one-off jobs, or persistent disks. Signing in alone therefore does not unblock the production backup.
+- The smallest paid compute option shown is $7/month (0.5 CPU, 512 MB RAM). This is compute only; disk pricing and total recurring cost were not established. No paid plan was selected or purchased.
+- Before changing plans, establish a supported way to preserve/export the existing primary SQLite data without assuming an instance replacement retains it. Ask Render support for a preservation/export procedure if no authenticated export is available; sending that support request requires the user's explicit authorization. Include only service ID and the technical question, never secrets or customer records.
+- No production backup, restart, deployment, disk creation, data-path switch, or PostgreSQL cutover was performed. The production persistence gate remains open.
