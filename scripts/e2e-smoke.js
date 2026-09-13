@@ -32,6 +32,7 @@ const created=await call('POST','/api/requests',{service:'Roadside Assistance',d
 await call('POST',`/api/requests/${id}/accept`,{},p.token);
 await call('POST',`/api/requests/${id}/status`,{status:'On the way'},p.token);
 const shortReason=await fetch(base+`/api/requests/${id}/provider-emergency-handoff`,{method:'POST',headers:{'content-type':'application/json',authorization:`Bearer ${p.token}`},body:JSON.stringify({reason:'car'})});if(shortReason.status!==400)throw new Error(`Short emergency reason returned ${shortReason.status}, expected 400`);
+await call('POST',`/api/requests/${id}/start-code`,{code:'491826'},c.token);
 const handedOff=await call('POST',`/api/requests/${id}/provider-emergency-handoff`,{reason:'Vehicle breakdown while traveling to the customer'},p.token);if(handedOff.request.status!=='Looking for replacement'||handedOff.request.providerId!==null||handedOff.dispatch.notifiedProviders<1)throw new Error('Emergency handoff did not reopen and redispatch the request');
 const formerJobs=await call('GET','/api/requests',null,p.token);
 assert(!formerJobs.requests.some(r=>r.id===id),'Former provider must not rediscover the handed-off job');
@@ -49,7 +50,34 @@ assert.equal(replacementAccepted.request.handoffs[0].reason,undefined,'Handoff h
 const malformedQuote=await fetch(base+`/api/requests/${id}/quote`,{method:'POST',headers:{'content-type':'application/json',authorization:`Bearer ${p2.token}`},body:'{bad'});if(malformedQuote.status!==400)throw new Error(`Malformed payment JSON returned ${malformedQuote.status}, expected 400`);
 const quote=await call('POST',`/api/requests/${id}/quote`,{amountCents:10000},p2.token);if(quote.payment.amountCents!==10000)throw new Error('Payment quote route did not recover after malformed JSON');
 await call('POST',`/api/requests/${id}/messages`,{text:'Replacement provider is on the way.'},p2.token);
-for(const status of ['On the way','Arrived','In progress','Completed'])await call('POST',`/api/requests/${id}/status`,{status},p2.token);
+// Start-code authorization, guessing protection, privacy and one-time use.
+async function expectStatus(url,body,token,expected){const response=await fetch(base+url,{method:'POST',headers:{'content-type':'application/json',authorization:`Bearer ${token}`},body:JSON.stringify(body)});assert.equal(response.status,expected,await response.text())}
+const codePath=`/api/requests/${id}/start-code`,statusPath=`/api/requests/${id}/status`;
+for(const status of ['On the way','Arrived'])await call('POST',statusPath,{status},p2.token);
+await expectStatus(statusPath,{status:'In progress',startCode:'491826'},p2.token,409);
+
+await expectStatus(codePath,{code:'193847'},p2.token,404);
+await expectStatus(codePath,{code:'123'},c.token,400);
+const protectedJob=await call('POST',codePath,{code:'193847'},c.token);
+assert.equal(protectedJob.request.startCodeRequired,true);
+assert.equal(protectedJob.request.startCodeHash,undefined);
+const providerJobs=await call('GET','/api/requests',null,p2.token);
+assert.ok(!JSON.stringify(providerJobs).includes('startCodeHash'));
+assert.ok(!JSON.stringify(providerJobs).includes('193847'));
+await expectStatus(statusPath,{status:'Completed'},p2.token,409);
+for(let i=0;i<5;i++)await expectStatus(statusPath,{status:'In progress',startCode:'000000'},p2.token,403);
+await expectStatus(statusPath,{status:'In progress',startCode:'193847'},p2.token,429);
+await call('POST',codePath,{code:'827361'},c.token);
+await expectStatus(statusPath,{status:'In progress',startCode:'193847'},p2.token,403);
+const started=await call('POST',statusPath,{status:'In progress',startCode:'827361'},p2.token);
+assert.ok(started.request.startCodeVerifiedAt);
+assert.equal(started.request.startCodeHash,undefined);
+await expectStatus(codePath,{code:'555555'},c.token,409);
+const repeatAccept=await call('POST',`/api/requests/${id}/accept`,{},p2.token);
+assert.equal(repeatAccept.request.status,'In progress','Accept retries must not rewind a protected job');
+await call('POST',statusPath,{status:'Completed'},p2.token);
+await expectStatus(statusPath,{status:'In progress',startCode:'827361'},p2.token,409);
+
 await call('POST',`/api/requests/${id}/rating`,{stars:5},c.token);
 const reqs=await call('GET','/api/requests',null,c.token);const final=reqs.requests.find(x=>x.id===id);if(!final||final.status!=='Completed'||final.rating!==5||final.completedProviderId!==p2.user.id||final.reassignmentCount!==1)throw new Error('Final reassigned request state/rating failed');
 const originalProfile=await call('GET',`/api/providers/${p.user.id}/profile`,null,c.token),replacementProfile=await call('GET',`/api/providers/${p2.user.id}/profile`,null,c.token);if(originalProfile.provider.stats.emergencyHandoffs!==1||originalProfile.provider.stats.reliabilityScore!==98)throw new Error('Emergency handoff did not affect provider reliability history');if(replacementProfile.provider.stats.completedJobs!==1||replacementProfile.provider.stats.dispatchPriorityScore<=originalProfile.provider.stats.dispatchPriorityScore)throw new Error('Successful replacement provider did not gain dispatch priority');
