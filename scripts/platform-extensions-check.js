@@ -1,0 +1,15 @@
+'use strict';
+const assert=require('assert');
+const p=require('../src/platform-extensions');
+const radius=p.serviceRadius({providerId:'p1',radiusMiles:20,homeLocation:{lat:42.3314,lng:-83.0458}});
+assert(p.isWithinServiceArea(radius,{lat:42.3223,lng:-83.1763})===true,'Service area check failed');
+assert(p.dynamicServiceArea({baseRadiusMiles:25,demandLevel:'high'}).radiusMiles===20,'Dynamic service area failed');
+let tip=p.createTip({requestId:'r1',customerId:'c1',providerId:'p1',amount:12.5});tip=p.markTipPaid(tip);assert(tip.status==='paid'&&tip.amount===12.5,'Tip workflow failed');
+const h1=p.jobHistoryEntry({requestId:'r1',customerId:'c1',providerId:'p1',service:'Plumbing',status:'completed',completedAt:'2026-09-01T12:00:00Z',total:120});
+const h2=p.jobHistoryEntry({requestId:'r2',customerId:'c1',providerId:'p2',service:'Jump Start',status:'completed',completedAt:'2026-09-02T12:00:00Z',total:80});
+assert(p.buildJobHistory([h1,h2],{customerId:'c1'})[0].id==='r2','Job history ordering failed');
+let mode=p.accountMode({userId:'u1',mode:'customer'});mode=p.switchAccountMode(mode,{mode:'business',businessAccountId:'b1'});assert(mode.mode==='business'&&mode.businessAccountId==='b1','Account mode switching failed');
+let ticket=p.supportTicket({openedBy:'u1',subject:'Need help',priority:'high',requestId:'r1'});ticket=p.addSupportMessage(ticket,{authorId:'u1',message:'Please review'});ticket=p.closeSupportTicket(ticket,{resolution:'Resolved'});assert(ticket.status==='closed'&&ticket.messages.length===1,'Support ticket workflow failed');
+const metrics=p.providerMetrics({providerId:'p1',jobs:[{providerId:'p1',status:'completed',rating:5,total:100},{providerId:'p1',status:'cancelled',total:50},{providerId:'p2',status:'completed',rating:4,total:90}]});assert(metrics.jobs===2&&metrics.completed===1&&metrics.cancellationRate===50&&metrics.averageRating===5,'Provider metrics failed');
+let media=p.mediaAttachment({ownerUserId:'u1',requestId:'r1',type:'image',mediaRef:'media-1',mimeType:'image/jpeg',sizeBytes:1000});media=p.markMediaScanned(media,{safe:true});assert(media.scanStatus==='clean','Media scan status failed');
+console.log(JSON.stringify({ok:true,serviceArea:true,tips:true,jobHistory:true,accountModes:true,support:true,providerMetrics:true,mediaMetadata:true}));

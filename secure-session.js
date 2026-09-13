@@ -1,7 +1,7 @@
 (function(){
   'use strict';
   const KEY='zovroToken';
-  let ready=false,lastKnown='',busy=false;
+  let ready=false,lastKnown='',busy=false,initPromise=null;
   const plugin=()=>window.Capacitor?.Plugins?.SecureStoragePlugin||null;
   const currentToken=()=>{try{return typeof token!=='undefined'?String(token||''):''}catch{return ''}};
   const setRuntime=v=>{const value=String(v||'');try{token=value}catch{}window.ZOVRO_SESSION_TOKEN=value;lastKnown=value};
@@ -22,19 +22,27 @@
       if(typeof renderAccount==='function')renderAccount();
     }
   }
-  async function initialize(){
+  async function initializeInternal(){
     const native=plugin();
     const legacy=String(localStorage.getItem(KEY)||'');
     let saved=await get();
     if(legacy){await set(legacy);saved=legacy;localStorage.removeItem(KEY)}
     if(saved&&!currentToken()){
+      if(window.ZOVRO_BIOMETRIC?.shouldProtect?.()){
+        const unlocked=await window.ZOVRO_BIOMETRIC.authenticate('Unlock your ZOVRO account');
+        if(!unlocked){setRuntime('');ready=true;return {native:!!native,restored:false,biometricLocked:true}}
+      }
       setRuntime(saved);
       await restoreAccount();
     }else if(currentToken()){
       await set(currentToken());localStorage.removeItem(KEY);setRuntime(currentToken());
     }else setRuntime('');
     ready=true;
-    return {native:!!native,restored:!!saved};
+    return {native:!!native,restored:!!saved,biometricLocked:false};
+  }
+  function initialize(){
+    if(!initPromise)initPromise=initializeInternal().catch(e=>{console.warn('ZOVRO secure session unavailable:',e?.message||e);setRuntime('');ready=true;return {native:!!plugin(),restored:false,error:true}});
+    return initPromise;
   }
   async function sync(){
     if(!ready||busy)return;busy=true;
@@ -46,7 +54,6 @@
       window.ZOVRO_SESSION_TOKEN=runtime;
     }catch(e){console.warn('ZOVRO secure session sync unavailable:',e?.message||e)}finally{busy=false}
   }
-  window.ZOVRO_SECURE_SESSION={get,set,remove,initialize,sync,isNativeSecure:()=>!!plugin(),status:()=>({native:!!plugin(),ready,hasSession:!!currentToken()})};
-  initialize().catch(e=>{console.warn('ZOVRO secure session unavailable:',e?.message||e);window.ZOVRO_SESSION_TOKEN=currentToken();ready=true});
+  window.ZOVRO_SECURE_SESSION={get,set,remove,initialize,ready:initialize,sync,isNativeSecure:()=>!!plugin(),status:()=>({native:!!plugin(),ready,hasSession:!!currentToken()})};
   setInterval(sync,750);
 })();

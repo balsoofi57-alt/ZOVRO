@@ -3,10 +3,14 @@ name: ZOVRO Full QA
 on:
   workflow_dispatch:
   push:
-    branches: [main, feature/zovro-product-expansion]
+    branches: [main, feature/zovro-product-expansion, store-release-prep, zovro-final-deploy]
     paths:
       - 'backend/**'
       - 'src/**'
+      - '*.js'
+      - '*.css'
+      - 'assets/**'
+      - 'store/**'
       - 'scripts/**'
       - 'index.html'
       - 'privacy.html'
@@ -16,7 +20,36 @@ on:
       - 'service-worker.js'
       - 'capacitor.config.json'
       - 'package.json'
+      - 'backend/package.json'
       - '.github/workflows/qa.yml'
+      - '.github/workflows/android-build.yml'
+      - '.github/workflows/android-release.yml'
+      - '.github/workflows/ios-release.yml'
+      - '.github/workflows/finalize-website.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'backend/**'
+      - 'src/**'
+      - '*.js'
+      - '*.css'
+      - 'assets/**'
+      - 'store/**'
+      - 'scripts/**'
+      - 'index.html'
+      - 'privacy.html'
+      - 'terms.html'
+      - 'support.html'
+      - 'manifest.webmanifest'
+      - 'service-worker.js'
+      - 'capacitor.config.json'
+      - 'package.json'
+      - 'backend/package.json'
+      - '.github/workflows/qa.yml'
+      - '.github/workflows/android-build.yml'
+      - '.github/workflows/android-release.yml'
+      - '.github/workflows/ios-release.yml'
+      - '.github/workflows/finalize-website.yml'
 
 permissions:
   contents: read
@@ -26,8 +59,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
         with:
           node-version: '22'
       - name: Install root dependencies

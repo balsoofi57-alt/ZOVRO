@@ -1,0 +1,82 @@
+{
+  "schemaVersion": 1,
+  "app": {
+    "name": "ZOVRO",
+    "version": "1.0.0",
+    "bundleId": "com.zovro.app",
+    "defaultLocale": "en-US",
+    "copyright": "2026 ZOVRO LLC"
+  },
+  "urls": {
+    "marketing": "https://zovro.net/",
+    "privacy": "https://zovro-web.onrender.com/privacy.html",
+    "terms": "https://zovro-web.onrender.com/terms.html",
+    "support": "https://zovro-web.onrender.com/support.html"
+  },
+  "supportEmail": "support@zovro.net",
+  "apple": {
+    "name": "ZOVRO",
+    "subtitle": "Local Help, Right Nearby",
+    "promotionalText": "Find nearby providers for roadside, auto, home, moving, and urgent service requests. Request now or schedule for later.",
+    "description": "ZOVRO helps customers connect with nearby service providers for everyday and urgent local-service needs.\n\nCreate a request, describe what you need, find suitable nearby providers, communicate in the app, follow job progress, and leave a rating when the work is complete. Providers can set their availability, receive relevant nearby requests, accept work, share updates, and build a service history.\n\nService categories include roadside assistance, mobile auto service, plumbing, electrical, HVAC, appliance repair, roofing, painting, flooring, lawn care, snow removal, cleanup, moving, and other local services.\n\nLocation is requested only when you use a location-dependent feature. Verification badges are shown only when the corresponding verification has been completed.\n\nZOVRO urgent and SOS requests are marketplace service requests. ZOVRO does not provide police, fire, medical, or emergency-dispatch services and does not replace 911.",
+    "keywords": "local services,roadside,handyman,mechanic,plumber,HVAC,moving,home repair",
+    "primaryCategory": "Lifestyle",
+    "secondaryCategory": "Utilities",
+    "reviewNotes": "Use two test accounts supplied privately in App Store Connect: one customer and one provider. Review the request, provider acceptance, messaging, status update, account deletion, and SOS marketplace-assistance flows. ZOVRO SOS does not replace 911. No credentials are stored in this repository."
+  },
+  "googlePlay": {
+    "appName": "ZOVRO",
+    "shortDescription": "Find nearby pros for roadside, auto, home, moving, and urgent help.",
+    "fullDescription": "ZOVRO helps customers connect with nearby service providers for everyday and urgent local-service needs.\n\nCreate a request, explain what you need, find suitable nearby providers, communicate in the app, follow job progress, and leave a rating after completed work. Providers can manage availability, receive relevant nearby requests, accept jobs, share progress updates, and build a service history.\n\nAvailable categories include roadside assistance, mobile auto service, plumbing, electrical, HVAC, appliance repair, roofing, painting, flooring, lawn care, snow removal, cleanup, moving, and other local services.\n\nLocation is requested only when you use a location-dependent feature. Verification badges are displayed only when the corresponding verification has been completed. Account deletion is available in the app and through the public support process.\n\nZOVRO urgent and SOS requests are marketplace service requests. ZOVRO does not provide police, fire, medical, or emergency-dispatch services and does not replace 911.",
+    "category": "House & Home",
+    "tags": [
+      "home services",
+      "local services",
+      "roadside assistance",
+      "moving"
+    ]
+  },
+  "screenshots": {
+    "capturePolicy": "Capture only from the final signed build with synthetic accounts and no personal data.",
+    "story": [
+      "Home and service discovery",
+      "Describe a need with Smart Match",
+      "Nearby available providers",
+      "Request details and provider acceptance",
+      "Job tracking and status",
+      "Private in-app messaging",
+      "Ratings and provider history",
+      "Privacy, support, and account deletion"
+    ],
+    "appleIPhonePortrait": {
+      "preferredDisplay": "6.9-inch",
+      "acceptedPixelSizes": [
+        "1260x2736",
+        "1290x2796",
+        "1320x2868"
+      ],
+      "count": "1-10",
+      "format": [
+        "png",
+        "jpg",
+        "jpeg"
+      ],
+      "alphaAllowed": false
+    },
+    "googlePhonePortrait": {
+      "recommendedPixelSize": "1080x1920",
+      "minimumCount": 2,
+      "recommendedCount": 4,
+      "format": [
+        "png",
+        "jpg",
+        "jpeg"
+      ],
+      "alphaAllowed": false
+    },
+    "googleFeatureGraphic": {
+      "pixelSize": "1024x500",
+      "required": true
+    }
+  }
+}

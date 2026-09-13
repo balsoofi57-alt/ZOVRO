@@ -2,5 +2,6 @@
   "appId": "com.zovro.app",
   "appName": "ZOVRO",
   "webDir": "www",
+  "ios": { "handleApplicationNotifications": false },
   "server": { "androidScheme": "https", "cleartext": false }
 }

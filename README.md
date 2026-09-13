@@ -1,39 +1,44 @@
 # ZOVRO
 
-ZOVRO is an on-demand local-services marketplace for customers and service providers, with priority support for roadside assistance, mobile auto service, home trades, moving, and urgent requests.
+ZOVRO is a two-sided local-services marketplace for customers and service providers, covering roadside assistance, mobile auto service, home trades, moving, lawn/snow, pest control, and urgent requests.
 
-## Production services
+## Release identity
 
-- Web app: https://zovro-web.onrender.com
-- API: https://zovro-api.onrender.com
-- API health: `/api/health`
-- API readiness: `/api/ready`
+- App name: ZOVRO
+- Version: 1.0.0
+- Bundle/App ID: `com.zovro.app`
+- Canonical production API: `https://zovro-api-final.onrender.com`
+- Public support email: `support@zovro.net`
 
-## Current production capabilities
+## QA
 
-- Customer and provider account registration/login
-- Authenticated sessions and password security
-- Customer service requests and urgent/SOS dispatch
-- Provider availability and GPS location updates
-- Nearby-provider search and ETA estimates
-- First-provider acceptance and job assignment
-- Job lifecycle: Accepted → On the way → Arrived → In progress → Completed
-- Cancellation rules and audit events
-- Customer/provider messaging
-- Notifications
-- Provider ratings, reputation and verification workflow
-- Account deletion
-- Production security headers, rate limiting and operational metrics
-- Responsive web client connected to the live API
+Run the complete repository QA chain from the repository root:
 
-## Release state
+```bash
+npm run qa:all
+```
 
-Version: **1.0.0 / FINAL**
+The full suite covers product behavior, production configuration, launch readiness, payment safety, saved cards, server/mobile/native push readiness, CORS/security, store readiness, PostgreSQL cutover guarding, release packaging, end-to-end request flow, SOS/location safety, biometrics, Smart Match, request privacy, log privacy, and legal consent.
 
-The final production-connected package passes the local release, store-readiness, production, security, operations, account-security, UI-security, dispatch, lifecycle, cancellation, reputation, deployment, final, Render-blueprint, and end-to-end smoke checks.
+## PostgreSQL cutover safety
 
-## External launch gates
+Production must remain in `ZOVRO_DB_MIRROR_MODE=mirror` until representative non-empty data is proven durable.
 
-Before treating the platform as a full public commercial launch, complete persistent production database storage, final Apple/Google signing and store submission, production payments, true push-notification credentials, production maps/routing, and final legal/support contact review.
+The strict pre-cutover command is:
 
-Do not commit production secrets to this repository.
+```bash
+cd backend
+DATABASE_URL='***' npm run db:verify:cutover
+```
+
+This check rejects an empty database and requires schema version 5, equal SQLite/PostgreSQL row counts, and matching SHA-256 content fingerprints across every domain table. Restart persistence plus backup/restore/rollback evidence are still required before changing to `durable`.
+
+## Release discipline
+
+- Do not commit production secrets or signing credentials.
+- Keep PR #1 Draft until external launch gates are complete.
+- Do not enable paid production jobs until Stripe live onboarding, capabilities, keys, webhook and lifecycle tests pass.
+- Do not claim production push readiness until OneSignal REST/APNs/FCM credentials and real-device delivery pass.
+- Do not move Render production to the release head until database durability, payments, push, signing/store access, support verification and final legal/store declarations are complete.
+
+See `RELEASE_EVIDENCE_CHECKLIST.md`, `GATE_CLOSURE_STATUS.md`, `POSTGRES_MIGRATION.md`, `RELEASE_CONFIGURATION.md`, and `STORE_SUBMISSION.md` for the current gate status and evidence requirements.
