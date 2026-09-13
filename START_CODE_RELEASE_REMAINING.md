@@ -23,3 +23,9 @@ Before any restart or deployment:
 - Verify a device with an older client cannot bypass a protected request through a direct status update.
 
 The code confirms customer authorization to start work. It does not verify identity by itself, authorize a charge, certify completion, or guarantee physical safety.
+
+## Backup utility ready for an authenticated operator
+
+`node scripts/backup-sqlite.js <existing-SQLite-file> <new-private-directory>` creates an online SQLite backup, verifies integrity, and writes a SHA-256/count manifest with private filesystem permissions. It refuses an existing output directory. Keep the complete directory outside the ephemeral service before changing storage. The isolated QA fixture exercises WAL-backed data and restores a separate copy. This is not evidence of a production backup.
+
+The running service does not yet contain this utility. Transfer or execute the reviewed utility through an authenticated service shell without redeploying first. Dashboard access currently requires sign-in. Do not expose a new public backup endpoint.
