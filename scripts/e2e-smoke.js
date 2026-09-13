@@ -8,7 +8,9 @@ const TERMS='2026-09-09',PRIVACY='2026-09-09',REQUEST='service-request-v1';
 function sleep(ms){return new Promise(r=>setTimeout(r,ms))}
 function consentHeaders(method,url,body){const h={};if(method==='POST'&&url==='/api/auth/register'){h['x-zovro-terms-version']=TERMS;h['x-zovro-privacy-version']=PRIVACY}if(method==='POST'&&url==='/api/requests'){h['x-zovro-terms-version']=TERMS;h['x-zovro-privacy-version']=PRIVACY;if(body?.source==='sos')h['x-zovro-request-kind']='sos';else h['x-zovro-request-consent']=REQUEST}return h}
 async function call(method,url,body,token){const r=await fetch(base+url,{method,headers:{'content-type':'application/json',...(token?{authorization:`Bearer ${token}`}:{}) ,...consentHeaders(method,url,body)},body:body?JSON.stringify(body):undefined});let j={};try{j=await r.json()}catch{};if(!r.ok)throw new Error(`${method} ${url} -> ${r.status} ${JSON.stringify(j)}`);return j}
-(async()=>{const child=spawn(process.execPath,['server.js'],{cwd:backend,env:{...process.env,NODE_ENV:'production',PORT:String(port),ZOVRO_DATA_DIR:data,ZOVRO_SECRET:'final-e2e-secret-not-production-1234567890',ZOVRO_OPS_TOKEN:'final-e2e-ops-token-1234567890',ZOVRO_ALLOWED_ORIGINS:'https://localhost',ZOVRO_DB_MIRROR_MODE:'off',ZOVRO_APP_VERSION:'1.0.0'},stdio:['ignore','pipe','pipe']});
+(async()=>{const launch=()=>spawn(process.execPath,['server.js'],{cwd:backend,env:{...process.env,NODE_ENV:'production',PORT:String(port),ZOVRO_DATA_DIR:data,ZOVRO_SECRET:'final-e2e-secret-not-production-1234567890',ZOVRO_OPS_TOKEN:'final-e2e-ops-token-1234567890',ZOVRO_ALLOWED_ORIGINS:'https://localhost',ZOVRO_DB_MIRROR_MODE:'off',ZOVRO_APP_VERSION:'1.0.0'},stdio:['ignore','pipe','pipe']});let child=launch();
+async function stopServer(){const exited=new Promise(resolve=>child.once('exit',resolve));child.kill('SIGTERM');await exited}
+async function restartServer(){child=launch();for(let i=0;i<50;i++){try{const h=await call('GET','/api/health');if(h.ok)return}catch{}await sleep(100)}throw new Error('Server did not recover after restart')}
 try{let ready=false;for(let i=0;i<40;i++){try{const h=await call('GET','/api/health');if(h.ok&&h.stage==='FINAL'&&h.version==='1.0.0'){ready=true;break}}catch{}await sleep(100)}if(!ready)throw new Error('Final backend did not become ready with expected version/stage');
 const malformed=await fetch(base+'/api/auth/login',{method:'POST',headers:{'content-type':'application/json'},body:'{bad'});if(malformed.status!==400)throw new Error(`Malformed JSON returned ${malformed.status}, expected 400`);
 const oversized=await fetch(base+'/api/auth/login',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({value:'x'.repeat(1000001)})});if(oversized.status!==413)throw new Error(`Oversized JSON returned ${oversized.status}, expected 413`);
@@ -67,7 +69,20 @@ assert.ok(!JSON.stringify(providerJobs).includes('193847'));
 await expectStatus(statusPath,{status:'Completed'},p2.token,409);
 for(let i=0;i<5;i++)await expectStatus(statusPath,{status:'In progress',startCode:'000000'},p2.token,403);
 await expectStatus(statusPath,{status:'In progress',startCode:'193847'},p2.token,429);
+await stopServer();
+await restartServer();
+await expectStatus(statusPath,{status:'In progress',startCode:'193847'},p2.token,429);
+assert.equal((await call('GET','/api/requests',null,c.token)).requests.find(r=>r.id===id).status,'Arrived');
 await call('POST',codePath,{code:'827361'},c.token);
+await stopServer();
+// Manipulate only the isolated test database to exercise expiry without waiting a day.
+const {DatabaseSync}=require('node:sqlite');
+const isolatedDb=new DatabaseSync(path.join(data,'zovro.sqlite'));
+try{const row=JSON.parse(isolatedDb.prepare('SELECT data FROM service_requests WHERE id=?').get(id).data);assert.ok(row.startCodeHash);assert.ok(!row.startCodeHash.includes('827361'));row.startCodeExpiresAt=Date.now()-1000;isolatedDb.prepare('UPDATE service_requests SET data=? WHERE id=?').run(JSON.stringify(row),id)}finally{isolatedDb.close()}
+await restartServer();
+await expectStatus(statusPath,{status:'In progress',startCode:'827361'},p2.token,409);
+await call('POST',codePath,{code:'827361'},c.token);
+
 await expectStatus(statusPath,{status:'In progress',startCode:'193847'},p2.token,403);
 const started=await call('POST',statusPath,{status:'In progress',startCode:'827361'},p2.token);
 assert.ok(started.request.startCodeVerifiedAt);
