@@ -4,13 +4,43 @@ ZOVRO is prepared for a Capacitor iOS/Android shell using application ID `com.zo
 
 Release path: production web bundle → Capacitor sync → physical-device testing → signing → TestFlight / Play internal testing → store submission.
 
+## Verified mobile release checkpoint — 2026-09-13
+
+This checkpoint supersedes the historical build evidence below. The verified source revision is `a6352b59dddf2cf95f6854b4e300ebb26eb76a0d`; a later documentation-only commit recording these results is not itself the tested revision.
+
+| Workflow | Evidence | Actual release result |
+| --- | --- | --- |
+| Full QA | [#400](https://github.com/balsoofi57-alt/ZOVRO/actions/runs/34733448683), completed successfully | QA for the exact source revision |
+| Android | [#23](https://github.com/balsoofi57-alt/ZOVRO/actions/runs/34733446894), completed successfully | Debug APK and unsigned AAB only; signed build, signature verification, and Play upload skipped |
+| iOS | [#58](https://github.com/balsoofi57-alt/ZOVRO/actions/runs/34733446902), completed successfully | Unsigned simulator app only; signed archive, IPA export, and TestFlight upload skipped; signing cleanup completed |
+
+Verified GitHub artifact archive digests (not digests of the contained app files):
+
+| Artifact | SHA-256 |
+| --- | --- |
+| `zovro-android-debug-apk` | `f5beda64007cf98c2291558a7515a76396acd13a130bab27df878fa92e70a9dd` |
+| `zovro-android-release-unsigned-aab` | `653f599c9d0d16040554852d3809369948e138b62ddbcbf07203645c78859d29` |
+| `zovro-ios-simulator-unsigned` | `a304a8645738a3f4dc691e050e76929e2e8294a78f7e606bc032631a6942500e` |
+
+The artifacts were available when checked and expire on 2026-09-27. The iOS simulator artifact cannot be installed on an iPhone. No signed store artifact or store upload is established by these successful runs.
+
+### Work still required
+
+1. Supply the protected signing and upload credentials listed below, and verify access to the matching Play Console and App Store Connect app records.
+2. Execute and verify the signed Android AAB and iOS IPA paths. Review signature verification and artifact identity before any upload.
+3. Run the separately authorized manual internal-draft Play and TestFlight upload paths, then verify processing in the store consoles.
+4. Close the production persistence gate in `START_CODE_RELEASE_REMAINING.md` and coordinate backend/UI rollout before testing start-code behavior against production.
+5. Test signed builds on physical devices: GPS/SOS, APNs/FCM delivery and tap routing, biometric login, payments, start-code expiry/lockout and provider replacement. Capture final store screenshots from those builds.
+
+No production deployment, database-mode change, signing credential installation, or store submission was performed during this evidence review.
+
 ## Automated release safety guard
 
 Command: `npm run mobile-release-workflows:check`
 
 The guard runs inside `qa:all` and fails CI if either mobile workflow loses its manual-upload condition, signing requirement, read-only repository permission, internal/draft restriction, no-review protection, signature verification, unique build numbering, or temporary-secret cleanup. It also rejects committed `.jks`, `.keystore`, `.p8`, `.p12`, and `.mobileprovision` files outside generated/excluded build directories.
 
-Latest guard evidence:
+Historical guard evidence:
 
 - Source: `eafe37382598ed48da100e8e43ceff64f3d75e01`
 - [Full QA run #362](https://github.com/balsoofi57-alt/ZOVRO/actions/runs/34638332920): SUCCESS
@@ -47,7 +77,7 @@ The service account must be linked to the ZOVRO app in Play Console with only th
 
 Never commit the service-account JSON or expose it in documentation, artifacts, logs, screenshots, or release notes.
 
-Latest verified unsigned and no-upload path evidence:
+Historical unsigned and no-upload path evidence:
 
 - Source: `a31fdb1becc484c3e0a544ae8f1297241fabdfc6`
 - [Android run #11](https://github.com/balsoofi57-alt/ZOVRO/actions/runs/34637319949): SUCCESS
@@ -92,7 +122,7 @@ The private `.p8` key is decoded only into the temporary runner, used by `xcrun 
 
 Never commit certificates, private keys, provisioning profiles, passwords, decoded files, App Store Connect API credentials, or recovery codes.
 
-Latest verified unsigned and no-upload path evidence:
+Historical unsigned and no-upload path evidence:
 
 - Source: `5a9e4ad149e3c8f7fed4dcad5a2cb2b64d96452e`
 - [iOS run #47](https://github.com/balsoofi57-alt/ZOVRO/actions/runs/34636398262): SUCCESS
