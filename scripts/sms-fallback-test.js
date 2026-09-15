@@ -1,0 +1,27 @@
+'use strict';
+const assert=require('assert');
+process.env.ZOVRO_SMS_MODE='mock';
+const sms=require('../backend/sms-fallback');
+(async()=>{
+ assert.equal(sms.classifyReply('1'),'accept');
+ assert.equal(sms.classifyReply(' موافق '),'accept');
+ assert.equal(sms.classifyReply('2'),'decline');
+ assert.equal(sms.classifyReply('لا أريد'),'decline');
+ assert.equal(sms.classifyReply('hello'),'unknown');
+ const user={id:'p1',role:'provider',accountStatus:'active',availability:true,phoneVerified:true,smsJobAlertsOptIn:true,smsOptedOut:false,phone:'+13135550123'};
+ assert.equal(sms.smsEligible(user),true);
+ assert.equal(sms.smsEligible({...user,smsJobAlertsOptIn:false}),false);
+ assert.equal(sms.smsEligible({...user,smsOptedOut:true}),false);
+ const offer=sms.createOffer({requestId:'r1',providerId:'p1'});
+ const mock=new sms.MockSmsProvider();
+ const sent=await sms.sendJobOffer({smsProvider:mock,user,offer});
+ assert.equal(sent.mock,true);
+ assert.equal(mock.sent.length,1);
+ assert.equal(mock.sent[0].to.includes('5550123'),false);
+ assert.deepEqual(sms.evaluateAcceptance({offer,providerUser:user,request:{id:'r1',status:'Open',providerId:null}}),{ok:true});
+ assert.equal(sms.evaluateAcceptance({offer,providerUser:{...user,availability:false},request:{id:'r1',status:'Open',providerId:null}}).reason,'provider_unavailable');
+ assert.equal(sms.evaluateAcceptance({offer,providerUser:user,request:{id:'r1',status:'Assigned',providerId:'p2'}}).reason,'job_unavailable');
+ const expired={...offer,expiresAt:new Date(Date.now()-1000).toISOString()};
+ assert.equal(sms.evaluateAcceptance({offer:expired,providerUser:user,request:{id:'r1',status:'Open',providerId:null}}).reason,'offer_expired');
+ console.log('sms-fallback-test: PASS (mock only; no real messages sent)');
+})().catch(e=>{console.error(e);process.exit(1)});
