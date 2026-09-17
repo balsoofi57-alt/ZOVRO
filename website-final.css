@@ -9,3 +9,13 @@
 .modal .sheet h2{color:#fff!important}
 .modal .sheet .field input,.modal .sheet .field select,.modal .sheet .field textarea{background:#061a2c!important;border:2px solid rgba(159,205,242,.42)!important}
 .modal .sheet .primary{background:var(--z-gold)!important;color:#142238!important}
+
+/* Light-silver foreground sheets: intentionally distinct from dark background. */
+.modal{background:rgba(0,5,12,.90)!important;backdrop-filter:blur(8px) brightness(.38)!important}
+.modal .sheet{background:linear-gradient(155deg,#f7f9fb 0%,#e5e9ee 48%,#cbd2da 100%)!important;border:3px solid #ffffff!important;color:#10243a!important;box-shadow:0 0 0 2px rgba(180,190,202,.9),0 24px 75px rgba(0,0,0,.78)!important}
+.modal .sheet h2,.modal .sheet label,.modal .sheet b{color:#10243a!important}
+.modal .sheet .muted,.modal .sheet small{color:#46596d!important}
+.modal .sheet .field input,.modal .sheet .field select,.modal .sheet .field textarea,.modal .sheet input,.modal .sheet select,.modal .sheet textarea{background:#ffffff!important;color:#10243a!important;border:2px solid #8798aa!important}
+.modal .sheet input::placeholder,.modal .sheet textarea::placeholder{color:#66788b!important}
+.modal .sheet .btn.ghost{background:#d7dde4!important;color:#10243a!important;border-color:#9aa8b7!important}
+.modal .sheet .btn.primary{background:var(--z-gold)!important;color:#142238!important;border-color:transparent!important}
