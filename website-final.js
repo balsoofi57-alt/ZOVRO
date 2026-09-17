@@ -34,7 +34,39 @@
     field.insertAdjacentElement('beforebegin',wrap);
     field.style.display='none';
   }
+  function enhanceRegistrationConsent(){
+    if(!document.getElementById('name')||document.getElementById('zLegalConsent'))return;
+    const registerFields=document.getElementById('registerFields');
+    if(!registerFields)return;
+    const wrap=document.createElement('div');
+    wrap.id='zLegalConsentWrap';
+    wrap.className='field';
+    wrap.innerHTML='<label style="display:flex;gap:10px;align-items:flex-start;font-weight:700;line-height:1.45"><input id="zLegalConsent" type="checkbox" required style="width:20px;height:20px;flex:0 0 20px;margin-top:2px"><span>I agree to the <a href="terms.html" target="_blank" rel="noopener">Terms of Service</a> and acknowledge the <a href="privacy.html" target="_blank" rel="noopener">Privacy Policy</a>.</span></label><div id="zLegalConsentError" role="alert" aria-live="polite" style="display:none;margin-top:7px;color:#ffb4b4;font-size:12px">Please accept the Terms of Service and Privacy Policy to create your account.</div>';
+    registerFields.appendChild(wrap);
+  }
+  function installRegistrationConsentTransport(){
+    if(window.__zovroConsentTransportInstalled)return;
+    window.__zovroConsentTransportInstalled=true;
+    const nativeFetch=window.fetch.bind(window);
+    window.fetch=async function(input,init){
+      try{
+        const url=typeof input==='string'?input:(input&&input.url)||'';
+        if(/\/api\/auth\/register(?:\?|$)/.test(url)&&init&&typeof init.body==='string'){
+          const consent=document.getElementById('zLegalConsent');
+          const payload=JSON.parse(init.body);
+          if(consent?.checked){
+            const acceptedAt=new Date().toISOString();
+            Object.assign(payload,{termsAccepted:true,privacyAccepted:true,termsAndPrivacyAccepted:true,legalAccepted:true,acceptedTerms:true,acceptedPrivacy:true,termsVersion:'current',privacyVersion:'current',legalAcceptedAt:acceptedAt,acceptedAt});
+            payload.consent={...(payload.consent&&typeof payload.consent==='object'?payload.consent:{}),terms:true,privacy:true,acceptedAt};
+            init={...init,body:JSON.stringify(payload)};
+          }
+        }
+      }catch{}
+      return nativeFetch(input,init);
+    };
+  }
   ready(()=>{
+    installRegistrationConsentTransport();
     document.title='ZOVRO — Anywhere, Anytime, Near to You.';
     const brand=document.querySelector('.brand');
     if(brand&&!brand.querySelector('.z-official-brand'))brand.innerHTML='<img class="z-official-brand" src="assets/zovro-official-brand.webp" alt="ZOVRO — Anywhere, Anytime, Near to You.">';
@@ -116,7 +148,7 @@
 
     const originalRenderAuth=window.renderAuth;
     if(typeof originalRenderAuth==='function'&&!originalRenderAuth.__zovroNames){
-      const wrappedRenderAuth=function(){const out=originalRenderAuth.apply(this,arguments);setTimeout(enhanceRegistrationNames,0);return out};
+      const wrappedRenderAuth=function(){const out=originalRenderAuth.apply(this,arguments);setTimeout(()=>{enhanceRegistrationNames();enhanceRegistrationConsent()},0);return out};
       wrappedRenderAuth.__zovroNames=true;window.renderAuth=wrappedRenderAuth;
     }
     const originalSubmitAuth=window.submitAuth;
@@ -128,6 +160,10 @@
           if(!firstValue){first?.focus();call('toast','Please enter your first name');return}
           if(!lastValue){last?.focus();call('toast','Please enter your last name');return}
           if(legacy)legacy.value=(firstValue+' '+lastValue).replace(/\s+/g,' ').trim();
+          const consent=document.getElementById('zLegalConsent');
+          const error=document.getElementById('zLegalConsentError');
+          if(!consent?.checked){if(error)error.style.display='block';consent?.focus();call('toast','Please accept the Terms and Privacy Policy');return}
+          if(error)error.style.display='none';
         }
         return originalSubmitAuth.apply(this,arguments);
       };
