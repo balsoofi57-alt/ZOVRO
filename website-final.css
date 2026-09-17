@@ -2,3 +2,10 @@
 .modal{background:rgba(2,9,18,.74)!important;backdrop-filter:blur(2px)}
 .modal .sheet{border:2px solid rgba(226,232,240,.92)!important;box-shadow:0 0 0 1px rgba(255,255,255,.24),0 0 22px rgba(210,222,235,.18),0 -20px 60px rgba(0,0,0,.42)!important}
 @media(max-width:760px){.modal{padding:18px 10px 0!important}.modal .sheet{border-radius:26px 26px 0 0!important}}
+
+/* Strong visual separation for foreground workflow dialogs. */
+.modal{background:rgba(0,4,10,.88)!important;backdrop-filter:blur(7px) brightness(.45)!important}
+.modal .sheet{background:linear-gradient(160deg,#123f66 0%,#0c3152 48%,#082640 100%)!important;border:3px solid #e7edf3!important;box-shadow:0 0 0 2px rgba(255,255,255,.16),0 22px 70px rgba(0,0,0,.72)!important}
+.modal .sheet h2{color:#fff!important}
+.modal .sheet .field input,.modal .sheet .field select,.modal .sheet .field textarea{background:#061a2c!important;border:2px solid rgba(159,205,242,.42)!important}
+.modal .sheet .primary{background:var(--z-gold)!important;color:#142238!important}
