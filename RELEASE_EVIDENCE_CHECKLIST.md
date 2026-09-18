@@ -1,13 +1,13 @@
 # ZOVRO release evidence checklist
 
-Verified checkpoint: 2026-09-11, 18:06 UTC. Owner: ZOVRO release maintainer (automated checks performed by Codex).
+Verified checkpoint: 2026-09-17. Repository evidence refreshed after production-source reconciliation. Owner: ZOVRO release maintainer (automated checks performed by Codex).
 Release PR: [#1](https://github.com/balsoofi57-alt/ZOVRO/pull/1), Draft. Source and production branches remain separate; no store launch is claimed.
 
 ## Evidence rules
 
 - Missing evidence is BLOCKED, not PASS. Repository QA, configured credentials, HTTP 200 responses, or unsigned builds alone do not prove commercial launch readiness.
 - Record exact source/deployed SHAs, timestamps, build IDs, environment, expected/actual results, and links. Never commit secrets or customer data.
-- Keep PostgreSQL in mirror mode until representative non-empty count/hash parity, restart persistence, backup/restore, and rollback checks pass.
+- PostgreSQL production mode is now durable. Startup restore/table-count verification and write-safety guards must remain green; do not perform destructive database tests on production.
 - Do not merge diverged branches blindly. Reconcile reviewed changes and preserve production hardening.
 
 ## Verified source and build evidence
@@ -58,7 +58,7 @@ Source: connected Zovro Stripe account, US live mode, checked 2026-09-11.
 | PUSH-01 | Real mobile delivery | BLOCKED | Configure APNs/FCM, register signed iOS/Android devices, and record request/acceptance/status delivery plus notification-tap routing. |
 | AND-01 | Android distribution | BLOCKED | Produce a release-signed AAB, record its source SHA and SHA-256, obtain Play test-track acceptance, and pass physical-device tests. |
 | IOS-01 | iOS distribution | BLOCKED | Produce a signed archive/IPA, complete TestFlight processing, and pass physical-device GPS, Face ID, payment, and push tests. |
-| DB-01 | Durable storage | BLOCKED | Create representative non-empty mirror traffic; prove strict count/hash parity, restart persistence, isolated restore, and rollback. Only then consider durable cutover. |
+| DB-01 | Durable storage | PARTIAL/PASS FOR CURRENT STARTUP | Production has been moved to durable mode and startup restore reported 7 restored records with per-table count verification. Remaining external evidence: isolated backup/restore and rollback drill without destructive production changes. |
 | SUPPORT-01 | Support operations | BLOCKED | Record monitored `support@zovro.net` send, receive, and reply evidence. |
 | STORE-01 | Store submission | PARTIAL | en-US listing metadata and public URLs are prepared. Remaining: signed-build screenshots/graphics, authorized Apple/Google records, completed privacy/data-safety forms, content rating, and legal review. |
 | LIVE-01 | Integrated launch | BLOCKED | Identify final deployed backend SHA and signed mobile builds, then pass customer/provider/request/SOS/payment/push/privacy/consent/support/deletion lifecycle tests. |
@@ -68,7 +68,17 @@ Source: connected Zovro Stripe account, US live mode, checked 2026-09-11.
 1. Resolve the Stripe EIN mismatch and complete a controlled live payment/webhook proof.
 2. Sign Android/iOS builds and complete physical-device push, GPS, SOS, biometric, and payment tests.
 3. Capture truthful screenshots from those signed builds and upload the prepared store listing metadata.
-4. Generate representative non-empty mirror traffic and complete durability/recovery evidence without changing mirror mode prematurely.
+4. Preserve durable mode; complete isolated backup/restore and rollback evidence without destructive production changes.
 5. Reconcile final reviewed source with production, perform integrated acceptance, and only then move PR #1 out of Draft.
 
 Production secrets and signing identities cannot be reconstructed from source. Missing external account or device evidence remains explicit.
+
+
+## 2026-09-17 source reconciliation update
+
+- Canonical release source remains `zovro-final-deploy`; `main` and production are diverged, so blind merge is prohibited.
+- Current customer/service UX, secure payment client, tip flow, Change Order, security code, and Request Again were selectively reconciled into production source.
+- Enhanced production mobile bundle was preserved: secure session, biometric, consent, private profile, OneSignal push client, Leaflet live map, and support center.
+- Production/store/final checks now gate the reconciled release-critical client features and reject the legacy payment UI renderer override.
+- SMS transport remains disabled by default; no real SMS is part of automated release evidence.
+- Real payment, real push, signed-device, store-account, support-inbox, and signing evidence remain external gates and must not be marked PASS from source inspection alone.
