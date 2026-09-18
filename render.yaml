@@ -1,3 +1,4 @@
+# Reference blueprint only. Live production currently uses the existing Render services zovro-api-final and zovro-web; do not apply this file blindly.
 services:
   - type: web
     name: zovro-api
