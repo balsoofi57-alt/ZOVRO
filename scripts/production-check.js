@@ -22,5 +22,10 @@ if(!paymentServer.includes("platformFeeBps:payments.feeBps()")){console.error('p
 const smsProvider=fs.readFileSync(path.join(root,'backend','sms-provider.js'),'utf8');
 for(const token of ['validTwilioSignature','ZOVRO_SMS_ENABLED',"deliveryUnknown:true","retryable:res.status===429||res.status>=500","inboundPreference(body,optOutType)"]){if(!smsProvider.includes(token)){console.error('SMS safety layer missing:',token);bad=true}}
 for(const token of ["row.status='delivery_unknown'","result.retryable!==true","inboundPreference(p.Body,p.OptOutType)"]){if(!core.includes(token)){console.error('SMS outbox safety wiring missing:',token);bad=true}}
+const releaseFiles=['index.html','payment-client.js','payment-ui.js','push-client.js','live-map.js','scripts/prepare-mobile.js'];
+for(const file of releaseFiles){if(!fs.existsSync(path.join(root,file))){console.error('Missing release-critical source:',file);bad=true}}
+const paymentClient=fs.readFileSync(path.join(root,'payment-client.js'),'utf8'),paymentUi=fs.readFileSync(path.join(root,'payment-ui.js'),'utf8'),html=fs.readFileSync(path.join(root,'index.html'),'utf8');
+if(!paymentClient.includes('tipRequest')||!paymentUi.includes('tipJob')||paymentUi.includes('window.jobHtml=function')){console.error('Current payment/tip client release source is not locked');bad=true}
+for(const token of ['securityCode','Change Order','Request again'])if(!html.includes(token)){console.error('Current service lifecycle UX missing:',token);bad=true}
 const pkg=JSON.parse(fs.readFileSync(path.join(root,'package.json'),'utf8'));if(pkg.version!=='1.0.0'){console.error('Unexpected app version');bad=true}
 if(bad)process.exit(1);console.log('ZOVRO production configuration check passed.');
