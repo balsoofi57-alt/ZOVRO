@@ -33,13 +33,17 @@ async function sendSms({to,body,idempotencyKey}){
       body:formBody(to,String(body||'').slice(0,320))
     });
     const data=await res.json().catch(()=>({}));
-    if(!res.ok)return {ok:false,status:res.status,errorCode:data.code||null};
+    if(!res.ok)return {ok:false,status:res.status,errorCode:data.code||null,retryable:res.status===429||res.status>=500};
     return {ok:true,messageSid:data.sid||null,status:data.status||'queued'};
-  }catch(e){return {ok:false,error:e.name==='AbortError'?'timeout':'transport_error'};}
+  }catch(e){return e.name==='AbortError'?{ok:false,error:'timeout',deliveryUnknown:true,retryable:false}:{ok:false,error:'transport_error',retryable:true};}
   finally{clearTimeout(timer)}
 }
 function normalizeKeyword(v){return String(v||'').trim().toUpperCase().replace(/[^A-Z]/g,'');}
-function inboundPreference(body){
+function inboundPreference(body,optOutType){
+  const t=String(optOutType||'').trim().toUpperCase();
+  if(t==='STOP')return 'opt_out';
+  if(t==='START')return 'opt_in';
+  if(t==='HELP')return 'help';
   const k=normalizeKeyword(body);
   if(['STOP','STOPALL','UNSUBSCRIBE','CANCEL','END','QUIT'].includes(k))return 'opt_out';
   if(['START','UNSTOP'].includes(k))return 'opt_in';
