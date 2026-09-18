@@ -24,13 +24,8 @@
     if(!confirm('Confirm the service is complete and release payment to the provider?'))return;
     try{await api('/requests/'+id+'/confirm-completion',{method:'POST',body:'{}'});toast('Payment released');await loadJobs()}catch(e){toast(e.message)}
   };
-  window.jobHtml=function(j){
-    const mine=me.role==='provider'&&j.providerId===me.id,open=me.role==='provider'&&!j.providerId&&!closed(j);
-    const payState=paymentLabel(j);
-    const canQuote=mine&&!closed(j);
-    const canPay=me.role==='customer'&&j.customerId===me.id&&j.providerId&&j.quotedAmountCents&&!['paid_held','released','refund_pending','refunded'].includes(j.paymentState);
-    const canRelease=me.role==='customer'&&j.customerId===me.id&&j.status==='Completed'&&j.paymentState==='paid_held';
-    return `<div class="card job"><div class="row"><div class="grow"><b>${esc(j.service)}</b><div class="muted">${esc(j.details)}</div></div><span class="tag ${j.urgent?'urgent':''}">${esc(j.status)}</span></div><p class="muted">${esc(j.address||'Location shared in app')}</p>${payState?`<p><span class="tag">💳 ${esc(payState)}</span></p>`:''}<div class="bar">${open?`<button class="btn ok" onclick="acceptJob('${j.id}')">Accept</button>`:''}${mine?nextButton(j):''}${canQuote?`<button class="btn ghost" onclick="quoteJob('${j.id}')">${j.quotedAmountCents?'Update quote':'Send quote'}</button>`:''}${canPay?`<button class="btn primary" onclick="payJob('${j.id}')">Pay securely ${dollars(j.quotedAmountCents)}</button>`:''}${canRelease?`<button class="btn ok" onclick="releasePayment('${j.id}')">Release payment</button>`:''}${!closed(j)&&(me.role==='customer'||mine)?`<button class="btn ghost" onclick="cancelJob('${j.id}')">Cancel</button>`:''}${j.providerId?`<button class="btn ghost" onclick="openChat('${j.id}')">Chat</button>`:''}${me.role==='customer'&&j.status==='Completed'&&!j.rating?`<button class="btn primary" onclick="rateJob('${j.id}')">Rate</button>`:''}</div></div>`
-  };
+  // Payment helpers intentionally do not override the shared website job-card renderer.
+  // The common renderer owns Chat, tracking, security code, repeat request and mutual ratings
+  // so the prepared iOS/Android bundle stays visually and behaviorally aligned with the website.
   if(typeof me!=='undefined'&&me)loadJobs().catch(()=>{});
 })();
