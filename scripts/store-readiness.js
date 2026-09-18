@@ -67,8 +67,10 @@ for (const token of ['quoteJob', 'payJob', 'releasePayment', 'ZOVRO_PAYMENTS.pay
   assert(paymentUi.includes(token), 'Secure payment UX missing: ' + token);
 }
 assert(
-  paymentClient.includes("localStorage.getItem('zovroToken')"),
-  'Payment client is not using the authenticated ZOVRO session'
+  paymentClient.includes("window.ZOVRO_SESSION_TOKEN") &&
+  !paymentClient.includes("localStorage.getItem('zovroToken')") &&
+  !paymentClient.includes("localStorage.zovroToken"),
+  'Payment client must use only the authenticated secure ZOVRO session'
 );
 
 const listingPath = path.join(root, 'store/listing.en-US.json');
