@@ -33,7 +33,7 @@ assert(launch.includes("allowed_origins"), 'allowed-origins blocker must be enfo
 // Execute the real snapshot and HTTP handler with healthy external dependencies.
 const vm = require('vm');
 const healthyEnv = {
-  DATABASE_URL: 'postgresql://localhost/test', ZOVRO_DB_MIRROR_MODE: 'mirror',
+  DATABASE_URL: 'postgresql://localhost/test', ZOVRO_DB_MIRROR_MODE: 'durable',
   STRIPE_PUBLISHABLE_KEY: 'pk_test_fixture', ONESIGNAL_APP_ID: 'fixture',
   ONESIGNAL_REST_API_KEY: 'fixture', ZOVRO_SECRET: 's'.repeat(32),
   ZOVRO_ALLOWED_ORIGINS: 'https://example.test'
@@ -45,7 +45,7 @@ for (const key of [undefined, '', 'x'.repeat(31), 'x'.repeat(32), 'é'.repeat(16
   if (key !== undefined) env.ZOVRO_PROFILE_ENCRYPTION_KEY = key;
   const context = { module: { exports: {} }, Buffer, URL, process: { env }, require(name) {
     if (name === 'http') return http;
-    if (name === './database') return { dbInfo: () => ({ postgresConfigured: true, postgresOperational: true }) };
+    if (name === './database') return { dbInfo: () => ({ postgresConfigured: true, postgresOperational: true, mirrorWriteSafe: true }) };
     if (name === './payments') return { configured: () => true, webhookConfigured: () => true };
     if (name === './push') return { configured: () => true };
     throw Error('Unexpected dependency: ' + name);
@@ -56,7 +56,8 @@ for (const key of [undefined, '', 'x'.repeat(31), 'x'.repeat(32), 'é'.repeat(16
   assert(status.launchReady === expected, 'readiness must enforce encryption key byte length');
   assert(status.checks.profileEncryptionConfigured === expected, 'encryption check must match readiness');
   assert(status.blockers.includes('profile_encryption_key') === !expected, 'missing/short key must block launch');
-  assert(status.checks.dbMirrorMode === 'mirror', 'readiness must preserve mirror mode');
+  assert(status.checks.dbMirrorMode === 'durable', 'readiness must require durable mode');
+  assert(status.checks.durableOperational === true, 'durable readiness must require verified restore/write safety');
   if (key) assert(!JSON.stringify(status).includes(key), 'readiness must never expose encryption key');
   http.createServer(() => { throw Error('Readiness request unexpectedly fell through'); });
   let code, headers, body;
