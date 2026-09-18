@@ -20,6 +20,16 @@
     if(!window.ZOVRO_PAYMENTS)return toast('Secure payment is unavailable on this device');
     try{await window.ZOVRO_PAYMENTS.payRequest(id);toast('Payment submitted securely');await loadJobs()}catch(e){toast(e.message||'Payment was not completed')}
   };
+  window.tipJob=async function(id){
+    if(!window.ZOVRO_PAYMENTS?.tipRequest)return toast('Secure tip payment is unavailable on this device');
+    const j=(jobs||[]).find(x=>x.id===id);if(!j)return;
+    if(j.status!=='Completed')return toast('Tips are available after the service is completed');
+    const entered=prompt('Optional tip in USD','5.00');if(entered===null)return;
+    const amount=Math.round(Number(entered)*100);
+    if(!Number.isFinite(amount)||amount<100||amount>100000)return toast('Enter a tip from $1 to $1,000');
+    if(!confirm('Send '+dollars(amount)+' tip to this provider? ZOVRO keeps $0 from this tip.'))return;
+    try{await window.ZOVRO_PAYMENTS.tipRequest(id,amount);toast('Tip submitted securely');await loadJobs()}catch(e){toast(e.message||'Tip was not completed')}
+  };
   window.releasePayment=async function(id){
     if(!confirm('Confirm the service is complete and release payment to the provider?'))return;
     try{await api('/requests/'+id+'/confirm-completion',{method:'POST',body:'{}'});toast('Payment released');await loadJobs()}catch(e){toast(e.message)}
