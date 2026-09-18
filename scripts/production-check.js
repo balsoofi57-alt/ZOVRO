@@ -17,6 +17,8 @@ const paymentCore=fs.readFileSync(path.join(root,'backend','payments.js'),'utf8'
 if(!paymentCore.includes("ZOVRO_PLATFORM_FEE_BPS||1000")){console.error('platform fee default must remain 10%');bad=true}
 const paymentServer=fs.readFileSync(path.join(root,'backend','server-payments.js'),'utf8');
 if(!paymentServer.includes("platformFeeBps:payments.feeBps()")){console.error('public payment config must expose the effective platform fee');bad=true}
-const smsProvider=fs.readFileSync(path.join(root,'backend','sms-provider.js'),'utf8');if(!smsProvider.includes('validTwilioSignature')||!smsProvider.includes('ZOVRO_SMS_ENABLED')){console.error('SMS safety layer missing');bad=true}
+const smsProvider=fs.readFileSync(path.join(root,'backend','sms-provider.js'),'utf8');
+for(const token of ['validTwilioSignature','ZOVRO_SMS_ENABLED',"deliveryUnknown:true","retryable:res.status===429||res.status>=500","inboundPreference(body,optOutType)"]){if(!smsProvider.includes(token)){console.error('SMS safety layer missing:',token);bad=true}}
+for(const token of ["row.status='delivery_unknown'","result.retryable!==true","inboundPreference(p.Body,p.OptOutType)"]){if(!core.includes(token)){console.error('SMS outbox safety wiring missing:',token);bad=true}}
 const pkg=JSON.parse(fs.readFileSync(path.join(root,'package.json'),'utf8'));if(pkg.version!=='1.0.0'){console.error('Unexpected app version');bad=true}
 if(bad)process.exit(1);console.log('ZOVRO production configuration check passed.');
