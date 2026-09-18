@@ -21,6 +21,8 @@ for (const file of ['privacy.html', 'terms.html', 'support.html']) {
   else console.log('OK', file);
 }
 
+const releaseSourceFiles = ['index.html','payment-client.js','payment-ui.js','push-client.js','live-map.js','secure-session.js','service-worker.js'];
+for (const file of releaseSourceFiles) assert(fs.existsSync(path.join(root,file)), 'Unified release source missing: ' + file);
 const html = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
 const server = fs.readFileSync(path.join(root, 'backend/server-core.js'), 'utf8');
 for (const token of ['deleteAccount()', 'privacy.html', 'terms.html', 'support.html']) {
