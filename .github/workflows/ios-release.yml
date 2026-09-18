@@ -9,7 +9,7 @@ on:
         default: false
         type: boolean
   push:
-    branches: [main, store-release-prep]
+    branches: [main, store-release-prep, zovro-final-deploy]
     paths:
       - '*.html'
       - '*.js'
