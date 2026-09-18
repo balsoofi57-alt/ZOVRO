@@ -66,7 +66,7 @@ http.createServer=function(handler,...args){return originalCreateServer(async(re
       if(b.email!==undefined)user.email=cleanText(b.email,120).toLowerCase();
       if(b.photoUrl!==undefined){
         const photo=cleanText(b.photoUrl,1000);
-        if(photo&&!/^https:\/\//i.test(photo)&&!/^data:image\/(png|jpeg|webp);base64,/i.test(photo))return json(res,400,{error:'Profile photo must be a secure HTTPS image or supported image data'});
+        if(photo&&!/^https:\/\//i.test(photo))return json(res,400,{error:'Profile photo must use a secure HTTPS URL from approved object storage'});
         user.photoUrl=photo;
       }
       if(b.name!==undefined){const name=cleanText(b.name,80);if(name.split(/\s+/).filter(Boolean).length<2)return json(res,400,{error:'Full first and last name required'});user.name=name}
