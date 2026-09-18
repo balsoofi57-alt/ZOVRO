@@ -80,6 +80,13 @@ requireTokens('iOS workflow', ios, [
   'if: always()'
 ]);
 
+forbidTokens('Android verification workflow', androidVerification, [
+  'tracks/production',
+  'status:"completed"',
+  'status:"inProgress"',
+  'upload_google_play'
+]);
+
 forbidTokens('Android workflow', android, [
   'tracks/production',
   'status:"completed"',
