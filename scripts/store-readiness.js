@@ -63,9 +63,11 @@ assert(
   prepare.includes("'payment-ui.js'") && prepare.includes('zovro-api-final.onrender.com'),
   'Final API/payment UI is not bundled'
 );
-for (const token of ['quoteJob', 'payJob', 'releasePayment', 'ZOVRO_PAYMENTS.payRequest']) {
+for (const token of ['quoteJob', 'payJob', 'tipJob', 'releasePayment', 'ZOVRO_PAYMENTS.payRequest', 'ZOVRO_PAYMENTS.tipRequest']) {
   assert(paymentUi.includes(token), 'Secure payment UX missing: ' + token);
 }
+assert(!paymentUi.includes('window.jobHtml=function'), 'Payment UI must not override the shared job renderer');
+assert(html.includes('Request again') && html.includes('securityCode') && html.includes('Change Order'), 'Current service lifecycle UX is missing from release source');
 assert(
   paymentClient.includes("window.ZOVRO_SESSION_TOKEN") &&
   !paymentClient.includes("localStorage.getItem('zovroToken')") &&
