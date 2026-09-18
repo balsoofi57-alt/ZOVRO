@@ -82,15 +82,26 @@ CREATE TABLE IF NOT EXISTS notifications (
   data JSONB NOT NULL
 );
 
+CREATE TABLE IF NOT EXISTS sms_outbox (
+  id TEXT PRIMARY KEY,
+  user_id TEXT,
+  request_id TEXT,
+  status TEXT,
+  created_at TIMESTAMPTZ,
+  data JSONB NOT NULL
+);
+
 CREATE INDEX IF NOT EXISTS idx_requests_customer ON service_requests(customer_id);
 CREATE INDEX IF NOT EXISTS idx_requests_provider ON service_requests(provider_id);
 CREATE INDEX IF NOT EXISTS idx_messages_request ON messages(request_id);
 CREATE INDEX IF NOT EXISTS idx_notifications_user ON notifications(user_id, created_at);
+CREATE INDEX IF NOT EXISTS idx_sms_outbox_status ON sms_outbox(status, created_at);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_sms_outbox_request_user_type ON sms_outbox(request_id,user_id,(data->>'type'));
 CREATE INDEX IF NOT EXISTS idx_workflows_user_type ON workflow_records(user_id, type);
 CREATE INDEX IF NOT EXISTS idx_workflows_provider_type ON workflow_records(provider_id, type);
 CREATE INDEX IF NOT EXISTS idx_workflows_request ON workflow_records(request_id);
 
-INSERT INTO meta(key,value) VALUES('schemaVersion','6')
+INSERT INTO meta(key,value) VALUES('schemaVersion','7')
 ON CONFLICT (key) DO UPDATE SET value=EXCLUDED.value;
 
 COMMIT;
