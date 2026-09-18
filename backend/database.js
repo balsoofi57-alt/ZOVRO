@@ -5,7 +5,7 @@ const push=require('./push');
 const mirror=require('./postgres-mirror');
 const DATA=process.env.ZOVRO_DATA_DIR?path.resolve(process.env.ZOVRO_DATA_DIR):path.join(__dirname,'data'), SQLITE=path.join(DATA,'zovro.sqlite'), LEGACY=path.join(DATA,'db.json');
 const MIRROR_MODE=/^(mirror|durable)$/.test(String(process.env.ZOVRO_DB_MIRROR_MODE||'').toLowerCase())?String(process.env.ZOVRO_DB_MIRROR_MODE).toLowerCase():'off';
-const SCHEMA_VERSION=6;
+const SCHEMA_VERSION=7;
 let postgresOperational=false,postgresError=null;
 fs.mkdirSync(DATA,{recursive:true});
 const db=new DatabaseSync(SQLITE);
@@ -21,16 +21,19 @@ CREATE TABLE IF NOT EXISTS verification_requests(id TEXT PRIMARY KEY,provider_id
 CREATE TABLE IF NOT EXISTS provider_locations(provider_id TEXT PRIMARY KEY,updated_at TEXT,data TEXT NOT NULL);
 CREATE TABLE IF NOT EXISTS device_sessions(id TEXT PRIMARY KEY,user_id TEXT,data TEXT NOT NULL);
 CREATE TABLE IF NOT EXISTS notifications(id TEXT PRIMARY KEY,user_id TEXT,created_at TEXT,data TEXT NOT NULL);
+CREATE TABLE IF NOT EXISTS sms_outbox(id TEXT PRIMARY KEY,user_id TEXT,request_id TEXT,status TEXT,created_at TEXT,data TEXT NOT NULL);
 CREATE INDEX IF NOT EXISTS idx_requests_customer ON service_requests(customer_id);
 CREATE INDEX IF NOT EXISTS idx_requests_provider ON service_requests(provider_id);
 CREATE INDEX IF NOT EXISTS idx_messages_request ON messages(request_id);
 CREATE INDEX IF NOT EXISTS idx_notifications_user ON notifications(user_id,created_at);
+CREATE INDEX IF NOT EXISTS idx_sms_outbox_status ON sms_outbox(status,created_at);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_sms_outbox_request_user_type ON sms_outbox(request_id,user_id,json_extract(data,'$.type'));
 CREATE INDEX IF NOT EXISTS idx_workflows_user_type ON workflow_records(user_id,type);
 CREATE INDEX IF NOT EXISTS idx_workflows_provider_type ON workflow_records(provider_id,type);
 CREATE INDEX IF NOT EXISTS idx_workflows_request ON workflow_records(request_id);`);
-const shape=d=>{d=d||{};d.schemaVersion=SCHEMA_VERSION;for(const k of ['users','requests','messages','ratings','audit','workflows','verificationRequests','providerLocations','deviceSessions','notifications'])if(!Array.isArray(d[k]))d[k]=[];return d};
+const shape=d=>{d=d||{};d.schemaVersion=SCHEMA_VERSION;for(const k of ['users','requests','messages','ratings','audit','workflows','verificationRequests','providerLocations','deviceSessions','notifications','smsOutbox'])if(!Array.isArray(d[k]))d[k]=[];return d};
 function rows(table){return db.prepare(`SELECT data FROM ${table}`).all().map(r=>JSON.parse(r.data))}
-function readDb(){return shape({schemaVersion:SCHEMA_VERSION,users:rows('users'),requests:rows('service_requests'),messages:rows('messages'),ratings:rows('ratings'),audit:rows('audit_log'),workflows:rows('workflow_records'),verificationRequests:rows('verification_requests'),providerLocations:rows('provider_locations'),deviceSessions:rows('device_sessions'),notifications:rows('notifications')})}
+function readDb(){return shape({schemaVersion:SCHEMA_VERSION,users:rows('users'),requests:rows('service_requests'),messages:rows('messages'),ratings:rows('ratings'),audit:rows('audit_log'),workflows:rows('workflow_records'),verificationRequests:rows('verification_requests'),providerLocations:rows('provider_locations'),deviceSessions:rows('device_sessions'),notifications:rows('notifications'),smsOutbox:rows('sms_outbox')})}
 function replace(table,items,sql,params){db.exec(`DELETE FROM ${table}`);const st=db.prepare(sql);for(const x of items)st.run(...params(x))}
 function writeDb(input,options={}){const d=shape(input),existingNotificationIds=new Set(db.prepare('SELECT id FROM notifications').all().map(r=>r.id));db.exec('BEGIN IMMEDIATE');try{
  replace('users',d.users,'INSERT INTO users(id,data) VALUES(?,?)',x=>[x.id,JSON.stringify(x)]);
@@ -43,11 +46,12 @@ function writeDb(input,options={}){const d=shape(input),existingNotificationIds=
  replace('provider_locations',d.providerLocations,'INSERT INTO provider_locations(provider_id,updated_at,data) VALUES(?,?,?)',x=>[x.providerId,x.updatedAt||null,JSON.stringify(x)]);
  replace('device_sessions',d.deviceSessions,'INSERT INTO device_sessions(id,user_id,data) VALUES(?,?,?)',x=>[x.id||x.token||require('crypto').randomUUID(),x.userId||null,JSON.stringify(x)]);
  replace('notifications',d.notifications,'INSERT INTO notifications(id,user_id,created_at,data) VALUES(?,?,?,?)',x=>[x.id,x.userId||null,x.createdAt||null,JSON.stringify(x)]);
+ replace('sms_outbox',d.smsOutbox,'INSERT INTO sms_outbox(id,user_id,request_id,status,created_at,data) VALUES(?,?,?,?,?,?)',x=>[x.id,x.userId||null,x.requestId||null,x.status||null,x.createdAt||null,JSON.stringify(x)]);
  db.prepare("INSERT OR REPLACE INTO meta(key,value) VALUES('schemaVersion',?)").run(String(SCHEMA_VERSION));db.exec('COMMIT');
  if(!options.suppressPush){const newlyCreated=d.notifications.filter(n=>n?.id&&!existingNotificationIds.has(n.id));if(newlyCreated.length)push.deliverMany(newlyCreated)}
  if(!options.suppressMirror&&MIRROR_MODE!=='off'&&mirror.enabled())mirror.enqueue(d);
 }catch(e){try{db.exec('ROLLBACK')}catch{}throw e}}
-function stateCount(d){return ['users','requests','messages','ratings','audit','workflows','verificationRequests','providerLocations','deviceSessions','notifications'].reduce((n,k)=>n+(d[k]?.length||0),0)}
+function stateCount(d){return ['users','requests','messages','ratings','audit','workflows','verificationRequests','providerLocations','deviceSessions','notifications','smsOutbox'].reduce((n,k)=>n+(d[k]?.length||0),0)}
 function migrateWorkflowAudit(){const workflowCount=db.prepare('SELECT COUNT(*) n FROM workflow_records').get().n;if(workflowCount)return;const legacy=rows('audit_log').filter(x=>String(x?.kind||'').startsWith('workflow:'));if(!legacy.length)return;const st=db.prepare('INSERT OR IGNORE INTO workflow_records(id,type,user_id,provider_id,request_id,status,created_at,updated_at,data) VALUES(?,?,?,?,?,?,?,?,?)');db.exec('BEGIN IMMEDIATE');try{for(const x of legacy)st.run(x.id,String(x.kind).replace(/^workflow:/,''),x.user||null,x.providerId||null,x.requestId||null,x.status||null,x.at||null,x.updatedAt||x.at||null,JSON.stringify(x));db.exec('COMMIT');console.log(JSON.stringify({event:'workflow_records_migrated',records:legacy.length}))}catch(e){try{db.exec('ROLLBACK')}catch{}throw e}}
 async function initDurable(){
  if(MIRROR_MODE==='off'){postgresOperational=false;postgresError=null;return {mode:'off',postgres:false}}
