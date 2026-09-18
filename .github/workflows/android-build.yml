@@ -2,7 +2,7 @@ name: Build ZOVRO Android
 
 on:
   push:
-    branches: [store-release-prep]
+    branches: [store-release-prep, zovro-final-deploy]
     paths:
       - '.github/workflows/android-build.yml'
       - 'package.json'
