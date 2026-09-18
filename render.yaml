@@ -1,24 +1,50 @@
-# Reference blueprint only. Live production currently uses the existing Render services zovro-api-final and zovro-web; do not apply this file blindly.
+# ZOVRO Render blueprint reference.
+# Matches the intended production topology. Existing live services should be linked/adopted deliberately; do not create duplicates.
 services:
   - type: web
-    name: zovro-api
-    runtime: docker
-    dockerfilePath: ./Dockerfile
-    healthCheckPath: /api/ready
-    maxShutdownDelaySeconds: 30
-    numInstances: 1
-    disk:
-      name: zovro-data
-      mountPath: /app/backend/data
-      sizeGB: 1
+    name: zovro-api-final
+    runtime: node
+    branch: zovro-final-deploy
+    buildCommand: cd backend && npm install
+    startCommand: node backend/server.js
+    healthCheckPath: /api/health
+    autoDeployTrigger: commit
     envVars:
       - key: NODE_ENV
         value: production
       - key: ZOVRO_APP_VERSION
         value: 1.0.0
+      - key: DATABASE_URL
+        sync: false
+      - key: ZOVRO_DB_MIRROR_MODE
+        value: durable
       - key: ZOVRO_SECRET
-        generateValue: true
+        sync: false
       - key: ZOVRO_OPS_TOKEN
-        generateValue: true
+        sync: false
       - key: ZOVRO_ALLOWED_ORIGINS
         sync: false
+      - key: ZOVRO_PROFILE_ENCRYPTION_KEY
+        sync: false
+      - key: STRIPE_SECRET_KEY
+        sync: false
+      - key: STRIPE_WEBHOOK_SECRET
+        sync: false
+      - key: STRIPE_PUBLISHABLE_KEY
+        sync: false
+      - key: ONESIGNAL_APP_ID
+        sync: false
+      - key: ONESIGNAL_REST_API_KEY
+        sync: false
+      - key: ZOVRO_PLATFORM_FEE_BPS
+        value: "1000"
+      - key: ZOVRO_SMS_ENABLED
+        value: "false"
+
+  - type: web
+    name: zovro-web
+    runtime: static
+    branch: zovro-final-deploy
+    buildCommand: echo "No build required"
+    staticPublishPath: .
+    autoDeployTrigger: commit
