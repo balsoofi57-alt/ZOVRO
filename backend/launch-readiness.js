@@ -35,6 +35,8 @@ function snapshot() {
   if (!databaseUrlPresent) blockers.push('database_url');
   if ((dbMirrorMode === 'mirror' || dbMirrorMode === 'durable') && !postgresConfigured) blockers.push('postgres_runtime');
   if ((dbMirrorMode === 'mirror' || dbMirrorMode === 'durable') && postgresConfigured && !postgresOperational) blockers.push('postgres_connection');
+  if (dbMirrorMode !== 'durable') blockers.push('database_not_durable');
+  if (dbMirrorMode === 'durable' && !database.mirrorWriteSafe) blockers.push('database_restore_unverified');
   if (!stripePublishablePresent) blockers.push('stripe_publishable');
   if (!stripeConfigured) blockers.push('stripe_secret');
   if (!stripeWebhookConfigured) blockers.push('stripe_webhook');
@@ -56,6 +58,7 @@ function snapshot() {
       postgresConfigured,
       postgresOperational,
       dbMirrorMode,
+      durableOperational: dbMirrorMode === 'durable' && postgresOperational && Boolean(database.mirrorWriteSafe),
       stripePublishablePresent,
       stripeConfigured,
       stripeWebhookConfigured,
