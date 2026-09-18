@@ -12,5 +12,6 @@ for(const token of ['OneSignalCapacitor','login({externalId:userId})','requestPe
 if(!prepare.includes("'push-client.js'")){console.error('Native push client is not bundled');bad=true}
 if(!prepare.includes("'payment-ui.js'")||!prepare.includes('zovro-api-final.onrender.com')){console.error('Final API/payment UI is not bundled');bad=true}
 for(const token of ['quoteJob','payJob','releasePayment','ZOVRO_PAYMENTS.payRequest'])if(!paymentUi.includes(token)){console.error('Secure payment UX missing:',token);bad=true}
-if(!paymentClient.includes("localStorage.getItem('zovroToken')")){console.error('Payment client is not using the authenticated ZOVRO session');bad=true}
+if(!paymentClient.includes('window.ZOVRO_SESSION_TOKEN')){console.error('Payment client is not using the synchronized secure ZOVRO session');bad=true}
+if(prepare.includes("localStorage.zovroToken=token")||prepare.includes("localStorage.removeItem('zovroToken')")){console.error('Mobile preparation still writes the auth token to localStorage');bad=true}
 if(bad)process.exit(1);console.log('ZOVRO store-readiness check passed.');
