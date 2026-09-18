@@ -25,9 +25,11 @@ function forbidTokens(name, text, tokens) {
 }
 
 const android = read('.github/workflows/android-build.yml');
+const androidVerification = read('.github/workflows/android-release.yml');
 const ios = read('.github/workflows/ios-release.yml');
 
 requireTokens('Android workflow', android, [
+  'branches: [store-release-prep, zovro-final-deploy]',
   'upload_google_play:',
   'default: false',
   "github.event_name == 'workflow_dispatch'",
@@ -48,7 +50,15 @@ requireTokens('Android workflow', android, [
   'changesInReviewBehavior=ERROR_IF_IN_REVIEW'
 ]);
 
+requireTokens('Android verification workflow', androidVerification, [
+  'branches: [main, store-release-prep, zovro-final-deploy]',
+  'ZOVRO_ANDROID_KEYSTORE_BASE64',
+  'jarsigner -verify',
+  'app-release.aab.sha256'
+]);
+
 requireTokens('iOS workflow', ios, [
+  'branches: [main, store-release-prep, zovro-final-deploy]',
   'upload_testflight:',
   'default: false',
   "github.event_name == 'workflow_dispatch'",
@@ -82,7 +92,7 @@ forbidTokens('iOS workflow', ios, [
   'automaticRelease'
 ]);
 
-for (const [name, text] of [['Android workflow', android], ['iOS workflow', ios]]) {
+for (const [name, text] of [['Android workflow', android], ['Android verification workflow', androidVerification], ['iOS workflow', ios]]) {
   if (!/permissions:\s*\n\s*contents:\s*read/.test(text)) {
     fail(name + ' must keep repository permissions read-only');
   }
