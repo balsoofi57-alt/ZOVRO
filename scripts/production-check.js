@@ -13,6 +13,10 @@ const directPayment=wrapper.includes('server-payments');
 const layeredPayment=wrapper.includes('server-mobile-payments')&&fs.existsSync(mobileWrapperPath)&&fs.readFileSync(mobileWrapperPath,'utf8').includes("require('./server-payments')");
 if((!directPayment&&!layeredPayment)||!payments.includes('STRIPE_SECRET_KEY')||!payments.includes('STRIPE_WEBHOOK_SECRET')){console.error('Payment layer wiring missing');bad=true}
 const m=fs.readFileSync(mobileEnv,'utf8');for(const key of ['ZOVRO_API_URL','ZOVRO_BUILD_CHANNEL'])if(!m.includes(key)){console.error('Missing mobile build variable documentation:',key);bad=true}
+const paymentCore=fs.readFileSync(path.join(root,'backend','payments.js'),'utf8');
+if(!paymentCore.includes("ZOVRO_PLATFORM_FEE_BPS||1000")){console.error('platform fee default must remain 10%');bad=true}
+const paymentServer=fs.readFileSync(path.join(root,'backend','server-payments.js'),'utf8');
+if(!paymentServer.includes("platformFeeBps:payments.feeBps()")){console.error('public payment config must expose the effective platform fee');bad=true}
 const smsProvider=fs.readFileSync(path.join(root,'backend','sms-provider.js'),'utf8');if(!smsProvider.includes('validTwilioSignature')||!smsProvider.includes('ZOVRO_SMS_ENABLED')){console.error('SMS safety layer missing');bad=true}
 const pkg=JSON.parse(fs.readFileSync(path.join(root,'package.json'),'utf8'));if(pkg.version!=='1.0.0'){console.error('Unexpected app version');bad=true}
 if(bad)process.exit(1);console.log('ZOVRO production configuration check passed.');
