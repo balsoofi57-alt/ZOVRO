@@ -1,0 +1,25 @@
+'use strict';
+const assert=require('assert'),crypto=require('crypto');
+process.env.ZOVRO_SMS_ENABLED='false';
+process.env.TWILIO_AUTH_TOKEN='test_auth_token_12345678901234567890';
+delete require.cache[require.resolve('../backend/sms-provider')];
+const sms=require('../backend/sms-provider');
+(async()=>{
+  const s=sms.safeStatus();
+  assert.strictEqual(s.enabled,false);
+  assert.strictEqual(s.configured,false);
+  const skipped=await sms.sendSms({to:'+13135550100',body:'test',idempotencyKey:'offline-test'});
+  assert.strictEqual(skipped.skipped,true);
+  assert.strictEqual(skipped.reason,'sms_disabled');
+  assert.strictEqual(sms.inboundPreference('anything','STOP'),'opt_out');
+  assert.strictEqual(sms.inboundPreference('anything','START'),'opt_in');
+  assert.strictEqual(sms.inboundPreference('HELP'),'help');
+  assert.strictEqual(sms.inboundPreference('STOP ALL'),'opt_out');
+  assert.strictEqual(sms.inboundPreference('1'),'ignore');
+  const url='https://example.test/api/sms/twilio/inbound',params={From:'+13135550100',Body:'STOP'};
+  const base=Object.keys(params).sort().reduce((x,k)=>x+k+params[k],url);
+  const signature=crypto.createHmac('sha1',process.env.TWILIO_AUTH_TOKEN).update(base).digest('base64');
+  assert.strictEqual(sms.validTwilioSignature({signature,url,params}),true);
+  assert.strictEqual(sms.validTwilioSignature({signature:'bad',url,params}),false);
+  console.log('ZOVRO SMS offline safety check passed; no network message was sent.');
+})().catch(e=>{console.error(e.stack||e);process.exit(1)});
