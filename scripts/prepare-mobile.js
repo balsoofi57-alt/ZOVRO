@@ -13,7 +13,7 @@ html=html.replaceAll('localStorage.zovroToken=token','ZOVRO_SECURE_SESSION.set(t
 html=html.replaceAll("localStorage.removeItem('zovroToken')",'ZOVRO_SECURE_SESSION.remove()');
 html=html.replace('boot();setInterval(()=>{if(me)loadJobs()},10000);',"ZOVRO_SECURE_SESSION.get().then(t=>{token=t||'';boot();setInterval(()=>{if(me)loadJobs()},10000)});");
 const state='<div id="state" class="state">Checking API…</div>';
-const chooser='<div style="display:flex;align-items:center;gap:8px"><select id="zovroLanguage" class="state" aria-label="Language" onchange="ZOVRO_I18N.setLanguage(this.value)"><option value="en">English</option><option value="es">Español</option></select><div id="state" class="state">Checking API…</div></div>';
+const chooser='<div style="display:flex;align-items:center;gap:8px"><select id="zovroLanguage" class="state" aria-label="Language" onchange="ZOVRO_I18N.setLanguage(this.value)"><option value="en">English</option><option value="ar">العربية</option><option value="es">Español</option></select><div id="state" class="state">Checking API…</div></div>';
 if(html.includes(state))html=html.replace(state,chooser);
 if(!html.includes('<script src="i18n.js"></script>'))html=html.replace('</body>','<script src="secure-session.js"></script>\n<script src="i18n.js"></script>\n<script src="payment-client.js"></script>\n<script src="push-client.js"></script>\n<script src="payment-ui.js"></script>\n</body>');
 fs.writeFileSync(path.join(out,'index.html'),html);
