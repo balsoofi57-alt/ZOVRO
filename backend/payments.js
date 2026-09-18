@@ -4,7 +4,7 @@ const STRIPE_API='https://api.stripe.com/v1';
 const SECRET_KEY=String(process.env.STRIPE_SECRET_KEY||'').trim();
 const WEBHOOK_SECRET=String(process.env.STRIPE_WEBHOOK_SECRET||'').trim();
 const STRIPE_API_VERSION=String(process.env.STRIPE_API_VERSION||'').trim();
-const FEE_BPS=Number(process.env.ZOVRO_PLATFORM_FEE_BPS||0);
+const FEE_BPS=Number(process.env.ZOVRO_PLATFORM_FEE_BPS||1000);
 const CURRENCY=String(process.env.ZOVRO_PAYMENT_CURRENCY||'usd').toLowerCase();
 function configured(){return /^sk_(test|live)_/.test(SECRET_KEY)}
 function webhookConfigured(){return /^whsec_/.test(WEBHOOK_SECRET)}
