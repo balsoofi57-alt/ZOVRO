@@ -16,7 +16,7 @@ if(IS_PROD&&(SECRET==='dev-only-change-before-production'||SECRET.length<32)){co
 if(IS_PROD&&OPS_TOKEN.length<24){console.error('ZOVRO_OPS_TOKEN must be at least 24 characters in production.');process.exit(1)}
 if(IS_PROD&&!ALLOWED_ORIGINS.size){console.error('ZOVRO_ALLOWED_ORIGINS is required in production.');process.exit(1)}
 fs.mkdirSync(DATA,{recursive:true});
-const BASE_SECURITY_HEADERS={'x-content-type-options':'nosniff','referrer-policy':'no-referrer','x-frame-options':'DENY','permissions-policy':'geolocation=(self), camera=(), microphone=()','cross-origin-opener-policy':'same-origin','cross-origin-resource-policy':'same-origin'};
+const BASE_SECURITY_HEADERS={'x-content-type-options':'nosniff','referrer-policy':'no-referrer','x-frame-options':'DENY','permissions-policy':'geolocation=(self), camera=(), microphone=()','cross-origin-opener-policy':'same-origin','cross-origin-resource-policy':'same-origin','cross-origin-embedder-policy':'credentialless','content-security-policy':"default-src 'none'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'","strict-transport-security':'max-age=63072000; includeSubDomains; preload'};
 const json=(res,code,obj,extra={})=>{res.writeHead(code,{'content-type':'application/json; charset=utf-8','cache-control':'no-store',...BASE_SECURITY_HEADERS,...extra});res.end(JSON.stringify(obj))};
 const body=req=>new Promise((resolve,reject)=>{let s='',bytes=0,tooLarge=false;req.on('data',c=>{bytes+=c.length;if(bytes>1e6){tooLarge=true;s='';return}if(!tooLarge)s+=c});req.on('end',()=>{if(tooLarge){const e=new Error('Body too large');e.code='BODY_TOO_LARGE';return reject(e)}try{resolve(s?JSON.parse(s):{})}catch(cause){const e=new Error('Invalid JSON');e.code='INVALID_JSON';e.cause=cause;reject(e)}});req.on('error',reject)});
 const hash=p=>{const salt=crypto.randomBytes(16).toString('hex');return salt+':'+crypto.scryptSync(p,salt,64).toString('hex')};
@@ -31,7 +31,8 @@ async function processSmsOutbox(){if(!smsProvider.safeStatus().configured)return
 function audit(db,user,action,meta={}){db.audit.unshift({id:crypto.randomUUID(),user:user?.uid||null,action,meta,at:new Date().toISOString()});db.audit=db.audit.slice(0,1000)}
 function canAccess(r,me){return r.customerId===me.uid||r.providerId===me.uid||(me.role==='provider'&&!r.providerId)}
 const attempts=new Map();
-function clientIp(req){const forwarded=String(req.headers['x-forwarded-for']||'').split(',')[0].trim();return forwarded||req.socket.remoteAddress||'local'}
+const MAX_CONCURRENT_PER_IP=24,activeByIp=new Map();
+function clientIp(req){const direct=req.socket.remoteAddress||'local';const forwarded=String(req.headers['x-forwarded-for']||'').split(',')[0].trim();return forwarded&&direct!== 'local'?forwarded:direct}
 function limited(req,key,limit=20,windowMs=60000){const now=Date.now(),k=clientIp(req)+':'+key,a=attempts.get(k)||[];const fresh=a.filter(t=>now-t<windowMs);fresh.push(now);if(fresh.length>limit)attempts.set(k,fresh.slice(-limit));else attempts.set(k,fresh);if(attempts.size>5000)for(const [ak,av] of attempts)if(!av.some(t=>now-t<windowMs))attempts.delete(ak);return fresh.length>limit}
 const cleanPhone=v=>String(v||'').replace(/[^0-9+]/g,'').slice(0,30);
 const validPhone=v=>/^\+?[0-9]{7,15}$/.test(v);
