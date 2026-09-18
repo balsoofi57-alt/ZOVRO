@@ -31,7 +31,6 @@ async function processSmsOutbox(){if(!smsProvider.safeStatus().configured)return
 function audit(db,user,action,meta={}){db.audit.unshift({id:crypto.randomUUID(),user:user?.uid||null,action,meta,at:new Date().toISOString()});db.audit=db.audit.slice(0,1000)}
 function canAccess(r,me){return r.customerId===me.uid||r.providerId===me.uid||(me.role==='provider'&&!r.providerId)}
 const attempts=new Map();
-const MAX_CONCURRENT_PER_IP=24,activeByIp=new Map();
 function clientIp(req){const direct=req.socket.remoteAddress||'local';const forwarded=String(req.headers['x-forwarded-for']||'').split(',')[0].trim();return forwarded&&direct!== 'local'?forwarded:direct}
 function limited(req,key,limit=20,windowMs=60000){const now=Date.now(),k=clientIp(req)+':'+key,a=attempts.get(k)||[];const fresh=a.filter(t=>now-t<windowMs);fresh.push(now);if(fresh.length>limit)attempts.set(k,fresh.slice(-limit));else attempts.set(k,fresh);if(attempts.size>5000)for(const [ak,av] of attempts)if(!av.some(t=>now-t<windowMs))attempts.delete(ak);return fresh.length>limit}
 const cleanPhone=v=>String(v||'').replace(/[^0-9+]/g,'').slice(0,30);
