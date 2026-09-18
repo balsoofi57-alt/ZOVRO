@@ -59,6 +59,11 @@ for (const token of [
   assert(pushClient.includes(token), 'Native push client missing: ' + token);
 }
 assert(prepare.includes("'push-client.js'"), 'Native push client is not bundled');
+for (const token of ["'live-map.js'","'biometric-client.js'","'consent-client.js'","'support-center.js'","'profile-security-client.js'","'leaflet.js'"]) {
+  assert(prepare.includes(token), 'Required mobile capability is not bundled: ' + token);
+}
+assert(prepare.includes('ZOVRO_SECURE_SESSION.initialize()'), 'Mobile secure session initialization is missing');
+assert(prepare.includes('oneSignalAppId') && prepare.includes('mapTileUrl'), 'Mobile runtime config is incomplete');
 assert(
   prepare.includes("'payment-ui.js'") && prepare.includes('zovro-api-final.onrender.com'),
   'Final API/payment UI is not bundled'
