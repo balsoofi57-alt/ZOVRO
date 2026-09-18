@@ -16,7 +16,14 @@ on:
       - 'service-worker.js'
       - 'capacitor.config.json'
       - 'package.json'
-      - '.github/workflows/qa.yml'
+      - 'payment-client.js'
+      - 'payment-ui.js'
+      - 'push-client.js'
+      - 'live-map.js'
+      - 'profile-security-client.js'
+      - 'consent-client.js'
+      - 'biometric-client.js'
+      - '.github/workflows/*.yml'
   pull_request:
     branches: [main]
     paths:
@@ -31,7 +38,14 @@ on:
       - 'service-worker.js'
       - 'capacitor.config.json'
       - 'package.json'
-      - '.github/workflows/qa.yml'
+      - 'payment-client.js'
+      - 'payment-ui.js'
+      - 'push-client.js'
+      - 'live-map.js'
+      - 'profile-security-client.js'
+      - 'consent-client.js'
+      - 'biometric-client.js'
+      - '.github/workflows/*.yml'
 
 permissions:
   contents: read
