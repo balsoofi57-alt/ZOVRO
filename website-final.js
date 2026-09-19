@@ -48,17 +48,20 @@
     if(window.__zovroConsentTransportInstalled)return;
     window.__zovroConsentTransportInstalled=true;
     const nativeFetch=window.fetch.bind(window);
-    window.fetch=async function(input,init={}){
-      const url=typeof input==='string'?input:(input&&input.url)||'';
-      if(/\/api\/auth\/register(?:\?|$)/.test(url)){
-        const consent=document.getElementById('zLegalConsent');
-        if(consent?.checked){
-          const headers=new Headers(init.headers||(input&&input.headers)||{});
-          headers.set('X-ZOVRO-Terms-Version','2026-09-09');
-          headers.set('X-ZOVRO-Privacy-Version','2026-09-09');
-          init={...init,headers};
+    window.fetch=async function(input,init){
+      try{
+        const url=typeof input==='string'?input:(input&&input.url)||'';
+        if(/\/api\/auth\/register(?:\?|$)/.test(url)&&init&&typeof init.body==='string'){
+          const consent=document.getElementById('zLegalConsent');
+          const payload=JSON.parse(init.body);
+          if(consent?.checked){
+            const acceptedAt=new Date().toISOString();
+            Object.assign(payload,{termsAccepted:true,privacyAccepted:true,termsAndPrivacyAccepted:true,legalAccepted:true,acceptedTerms:true,acceptedPrivacy:true,termsVersion:'current',privacyVersion:'current',legalAcceptedAt:acceptedAt,acceptedAt});
+            payload.consent={...(payload.consent&&typeof payload.consent==='object'?payload.consent:{}),terms:true,privacy:true,acceptedAt};
+            init={...init,body:JSON.stringify(payload)};
+          }
         }
-      }
+      }catch{}
       return nativeFetch(input,init);
     };
   }

@@ -1,0 +1,26 @@
+name: ZOVRO Source Backup
+
+on:
+  push:
+    branches:
+      - zovro-unified-latest
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  package-source:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout unified source
+        uses: actions/checkout@v4
+      - name: Package complete source
+        run: zip -r ZOVRO-unified-latest.zip . -x '.git/*' 'ZOVRO-unified-latest.zip'
+      - name: Upload source backup
+        uses: actions/upload-artifact@v4
+        with:
+          name: ZOVRO-unified-latest-source
+          path: ZOVRO-unified-latest.zip
+          if-no-files-found: error
+          retention-days: 90

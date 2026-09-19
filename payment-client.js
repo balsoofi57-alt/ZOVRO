@@ -2,7 +2,7 @@
   'use strict';
   const cfg=()=>window.ZOVRO_CONFIG||{};
   const apiBase=()=>String(cfg().apiBase||'https://zovro-api-final.onrender.com').replace(/\/$/,'');
-  const token=()=>window.ZOVRO_SESSION_TOKEN||'';
+  const token=()=>window.ZOVRO_SESSION_TOKEN||localStorage.getItem('zovroToken')||localStorage.getItem('zovro_token')||localStorage.getItem('token')||'';
   const stripePlugin=()=>window.Capacitor?.Plugins?.Stripe||window.Capacitor?.Plugins?.StripePlugin||null;
 
   async function api(path,options={}){
@@ -55,36 +55,6 @@
     return result;
   }
 
-  async function tipRequest(requestId,amountCents){
-    if(!requestId) throw new Error('requestId is required');
-    const amount=Math.round(Number(amountCents));
-    if(!Number.isInteger(amount)||amount<100||amount>100000) throw new Error('Tip must be between $1 and $1,000');
-    const {plugin,config}=await initializeStripe();
-    const intent=await api('/api/requests/'+encodeURIComponent(requestId)+'/tip-intent',{method:'POST',body:JSON.stringify({amountCents:amount})});
-    const opts={
-      paymentIntentClientSecret:intent.clientSecret,
-      merchantDisplayName:'ZOVRO',
-      returnURL:'zovro://stripe-redirect',
-      countryCode:'US'
-    };
-    if(intent.customerId&&intent.customerEphemeralKeySecret){
-      opts.customerId=intent.customerId;
-      opts.customerEphemeralKeySecret=intent.customerEphemeralKeySecret;
-    }
-    if(config.applePayEnabled&&config.applePayMerchantId){
-      opts.enableApplePay=true;
-      opts.applePayMerchantId=config.applePayMerchantId;
-    }
-    if(config.googlePayEnabled){
-      opts.enableGooglePay=true;
-      opts.GooglePayIsTesting=!!config.googlePayTestEnv;
-    }
-    await plugin.createPaymentSheet(opts);
-    const result=await plugin.presentPaymentSheet();
-    if(result?.paymentResult&&String(result.paymentResult).toLowerCase().includes('cancel')) throw new Error('Tip payment cancelled');
-    return result;
-  }
-
   async function capabilities(){
     const c=await getPaymentConfig().catch(()=>({}));
     return {
@@ -97,5 +67,5 @@
     };
   }
 
-  window.ZOVRO_PAYMENTS={getPaymentConfig,initializeStripe,payRequest,tipRequest,capabilities};
+  window.ZOVRO_PAYMENTS={getPaymentConfig,initializeStripe,payRequest,capabilities};
 })();

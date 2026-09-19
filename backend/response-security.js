@@ -20,7 +20,7 @@ function headersFor(req){
     h['access-control-allow-origin']=origin;
     h['vary']='Origin';
     h['access-control-allow-methods']='GET,POST,PATCH,DELETE,OPTIONS';
-    h['access-control-allow-headers']='Content-Type, Authorization, X-ZOVRO-Ops-Token, Stripe-Signature';
+    h['access-control-allow-headers']='Content-Type, Authorization, X-ZOVRO-Ops-Token, Stripe-Signature, X-ZOVRO-Terms-Version, X-ZOVRO-Privacy-Version, X-ZOVRO-Request-Consent, X-ZOVRO-Request-Kind';
     h['access-control-max-age']='600';
   }
   return h;
