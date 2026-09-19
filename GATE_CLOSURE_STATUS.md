@@ -2,6 +2,17 @@
 
 Checkpoint: 2026-09-12
 
+## Latest continuation — Twilio SMS fallback gateway (2026-09-19)
+
+- Added the production-capable Twilio Messaging Service adapter without committing credentials or sending a live message.
+- New service requests can create short-lived, provider-specific SMS offers only for active, available, phone-verified providers who explicitly opted in.
+- Added the signed inbound webhook route `/api/webhooks/twilio/sms` with Twilio signature verification, message-SID idempotency, masked phone logging, and bounded request bodies.
+- Replies `1`, `موافق`, or equivalent accept an available job only after the same service, availability, and location checks used by the app. Replies `2`/`رفض` decline; `STOP`/Arabic equivalents opt the provider out; `HELP` returns concise instructions.
+- Added authenticated provider SMS preferences with versioned consent. SMS offer internals are removed from API request views.
+- Launch readiness now blocks only when `ZOVRO_SMS_MODE=live` is requested without valid Twilio credentials or a public HTTPS webhook base URL.
+- Full local `npm run qa:all` passed after the gateway changes; focused SMS, request-privacy, syntax, and final checks also passed. Tests used mocked transport only and sent no real SMS.
+- Live activation remains blocked until Twilio A2P approval, the Render secrets are installed, the webhook is configured, and a real opt-in/accept/decline/STOP test is recorded. Keep `ZOVRO_SMS_MODE=disabled` until then.
+
 ## Latest continuation — provider history and handoff privacy
 
 - Resumed release candidate `store-release-prep` at `f3a4e8750a8376042afafe78acbb7a365fe5fcb7`.

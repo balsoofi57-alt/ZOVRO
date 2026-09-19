@@ -4,6 +4,7 @@ const http = require('http');
 const { dbInfo } = require('./database');
 const payments = require('./payments');
 const push = require('./push');
+const sms = require('./sms-fallback');
 
 const originalCreateServer = http.createServer.bind(http);
 const present = name => Boolean(String(process.env[name] || '').trim());
@@ -21,6 +22,10 @@ function snapshot() {
   const oneSignalAppIdPresent = present('ONESIGNAL_APP_ID');
   const oneSignalRestKeyPresent = present('ONESIGNAL_REST_API_KEY');
   const oneSignalServerConfigured = push.configured();
+  const smsMode = String(process.env.ZOVRO_SMS_MODE || 'disabled').trim().toLowerCase();
+  const smsLiveRequested = smsMode === 'live';
+  const twilioConfigured = sms.configured();
+  const smsPublicUrlPresent = /^https:\/\//.test(String(process.env.PUBLIC_API_BASE_URL || '').trim());
   const productionSecretPresent = Boolean(
     process.env.ZOVRO_SECRET &&
     String(process.env.ZOVRO_SECRET).length >= 32 &&
@@ -43,6 +48,8 @@ function snapshot() {
   if (!productionSecretPresent) blockers.push('production_secret');
   if (!allowedOriginsPresent) blockers.push('allowed_origins');
   if (!profileEncryptionConfigured) blockers.push('profile_encryption_key');
+  if (smsLiveRequested && !twilioConfigured) blockers.push('twilio_credentials');
+  if (smsLiveRequested && !smsPublicUrlPresent) blockers.push('twilio_public_url');
   if (applePayRequested && !applePayMerchantPresent) blockers.push('apple_pay_merchant');
 
   return {
@@ -62,6 +69,10 @@ function snapshot() {
       oneSignalAppIdPresent,
       oneSignalRestKeyPresent,
       oneSignalServerConfigured,
+      smsMode,
+      smsLiveRequested,
+      twilioConfigured,
+      smsPublicUrlPresent,
       productionSecretPresent,
       allowedOriginsPresent,
       profileEncryptionConfigured,

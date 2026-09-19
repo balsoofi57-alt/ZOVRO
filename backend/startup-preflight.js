@@ -1,5 +1,6 @@
 'use strict';
 const payments=require('./payments');
+const sms=require('./sms-fallback');
 
 function moduleAvailable(name){
   try { require.resolve(name); return true; } catch { return false; }
@@ -27,6 +28,9 @@ const status = {
   googlePayRequested: enabled('ZOVRO_GOOGLE_PAY_ENABLED'),
   oneSignalAppIdPresent: present('ONESIGNAL_APP_ID'),
   oneSignalRestKeyPresent: present('ONESIGNAL_REST_API_KEY'),
+  smsMode: String(process.env.ZOVRO_SMS_MODE||'disabled').trim().toLowerCase(),
+  twilioConfigured: sms.configured(),
+  smsPublicUrlPresent: /^https:\/\//.test(String(process.env.PUBLIC_API_BASE_URL||'').trim()),
   productionSecretPresent: Boolean(process.env.ZOVRO_SECRET && !String(process.env.ZOVRO_SECRET).includes('dev-only')),
   allowedOriginsPresent: present('ZOVRO_ALLOWED_ORIGINS'),
   profileEncryptionConfigured: profileEncryptionKeyLength>=32
@@ -44,6 +48,8 @@ if(!status.stripeWebhookPresent) status.blockers.push('stripe_webhook');
 if(status.applePayRequested&&!status.applePayMerchantConfigured) status.blockers.push('apple_pay_merchant');
 if(!status.oneSignalRestKeyPresent) status.blockers.push('onesignal_rest_key');
 if(!status.profileEncryptionConfigured) status.blockers.push('profile_encryption_key');
+if(status.smsMode==='live'&&!status.twilioConfigured) status.blockers.push('twilio_credentials');
+if(status.smsMode==='live'&&!status.smsPublicUrlPresent) status.blockers.push('twilio_public_url');
 status.externalLaunchReady=status.blockers.length===0;
 
 console.log(JSON.stringify(status));

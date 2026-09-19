@@ -29,6 +29,8 @@ assert(launch.includes("onesignal_rest_key"), 'OneSignal REST-key blocker must b
 assert(launch.includes("oneSignalServerConfigured"), 'OneSignal server configuration state must be reported');
 assert(launch.includes("production_secret"), 'production secret blocker must be enforced');
 assert(launch.includes("allowed_origins"), 'allowed-origins blocker must be enforced');
+assert(launch.includes("twilio_credentials"), 'Twilio credentials must block launch when live SMS is requested');
+assert(launch.includes("twilio_public_url"), 'Twilio public webhook URL must block launch when live SMS is requested');
 
 // Execute the real snapshot and HTTP handler with healthy external dependencies.
 const vm = require('vm');
@@ -48,6 +50,7 @@ for (const key of [undefined, '', 'x'.repeat(31), 'x'.repeat(32), 'é'.repeat(16
     if (name === './database') return { dbInfo: () => ({ postgresConfigured: true, postgresOperational: true }) };
     if (name === './payments') return { configured: () => true, webhookConfigured: () => true };
     if (name === './push') return { configured: () => true };
+    if (name === './sms-fallback') return { configured: () => true };
     throw Error('Unexpected dependency: ' + name);
   }};
   vm.runInNewContext(launch, context, { filename: launchPath });
