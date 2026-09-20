@@ -5,11 +5,12 @@ const MODE=String(process.env.ZOVRO_SMS_MODE||'disabled').trim().toLowerCase();
 const OFFER_TTL_MS=Math.max(60000,Number(process.env.ZOVRO_SMS_OFFER_TTL_MS||300000));
 const ACCEPT=new Set(['1','yes','accept','موافق','نعم']);
 const DECLINE=new Set(['2','no','decline','رفض','لا','لا أريد']);
-const STOP=new Set(['stop','unsubscribe','cancel','end','quit','إيقاف','الغاء','إلغاء']);
+const STOP=new Set(['stop','stopall','revoke','optout','unsubscribe','cancel','end','quit','إيقاف','الغاء','إلغاء']);
+const START=new Set(['start','unstop']);
 const HELP=new Set(['help','مساعدة']);
 
 function normalizeReply(value){return String(value||'').normalize('NFKC').trim().replace(/\s+/g,' ').toLowerCase();}
-function classifyReply(value){const v=normalizeReply(value);if(ACCEPT.has(v))return 'accept';if(DECLINE.has(v))return 'decline';if(STOP.has(v))return 'stop';if(HELP.has(v))return 'help';return 'unknown';}
+function classifyReply(value){const v=normalizeReply(value);if(ACCEPT.has(v))return 'accept';if(DECLINE.has(v))return 'decline';if(STOP.has(v))return 'stop';if(HELP.has(v))return 'help';if(START.has(v))return 'start';return 'unknown';}
 function normalizeE164(value){const v=String(value||'').trim().replace(/[\s().-]/g,'');return /^\+[1-9]\d{7,14}$/.test(v)?v:null;}
 function maskPhone(value){const p=normalizeE164(value);return p?`***${p.slice(-4)}`:'[redacted-phone]';}
 function configured(){return /^AC[0-9a-f]{32}$/i.test(String(process.env.TWILIO_ACCOUNT_SID||''))&&String(process.env.TWILIO_AUTH_TOKEN||'').length>=20&&/^MG[0-9a-f]{32}$/i.test(String(process.env.TWILIO_MESSAGING_SERVICE_SID||''));}
