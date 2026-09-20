@@ -5,6 +5,8 @@ CREATE TABLE IF NOT EXISTS meta (
   value TEXT NOT NULL
 );
 
+CREATE TABLE IF NOT EXISTS sms_receipts (id TEXT PRIMARY KEY, data JSONB NOT NULL);
+
 CREATE TABLE IF NOT EXISTS users (
   id TEXT PRIMARY KEY,
   data JSONB NOT NULL
@@ -90,7 +92,7 @@ CREATE INDEX IF NOT EXISTS idx_workflows_user_type ON workflow_records(user_id, 
 CREATE INDEX IF NOT EXISTS idx_workflows_provider_type ON workflow_records(provider_id, type);
 CREATE INDEX IF NOT EXISTS idx_workflows_request ON workflow_records(request_id);
 
-INSERT INTO meta(key,value) VALUES('schemaVersion','6')
+INSERT INTO meta(key,value) VALUES('schemaVersion','7')
 ON CONFLICT (key) DO UPDATE SET value=EXCLUDED.value;
 
 COMMIT;

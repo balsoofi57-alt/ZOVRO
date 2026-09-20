@@ -19,7 +19,7 @@
     "push:check": "node scripts/push-check.js",
     "mobile-push:check": "node scripts/mobile-push-check.js",
     "native-push:check": "node scripts/native-push-readiness-check.js",
-    "sms:check": "node scripts/sms-fallback-test.js",
+    "sms:check": "node scripts/sms-fallback-test.js && node scripts/sms-inbound-safety-test.js",
     "cors:check": "node scripts/cors-security-check.js",
     "production:check": "node scripts/production-check.js",
     "production:env": "node scripts/production-env-check.js",

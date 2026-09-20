@@ -6,7 +6,7 @@ if (!DATABASE_URL) {
   process.exit(1);
 }
 const REQUIRED_TABLES = [
-  'meta','users','service_requests','messages','ratings','audit_log',
+  'meta','sms_receipts','workflow_records','users','service_requests','messages','ratings','audit_log',
   'verification_requests','provider_locations','device_sessions','notifications'
 ];
 (async()=>{
@@ -29,7 +29,7 @@ const REQUIRED_TABLES = [
       counts[table] = q.rows[0].n;
     }
     const result = {
-      ok: missing.length === 0 && schema.rows[0]?.value === '5',
+      ok: missing.length === 0 && schema.rows[0]?.value === '7',
       engine: 'postgres',
       server: version.rows[0]?.version || null,
       schemaVersion: schema.rows[0]?.value || null,

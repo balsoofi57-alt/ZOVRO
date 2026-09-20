@@ -21,6 +21,8 @@ const sqlite = new DatabaseSync(sqlitePath, { readOnly: true });
 const pg = new Client({ connectionString: DATABASE_URL, ssl: process.env.PGSSLMODE === 'disable' ? false : { rejectUnauthorized: false } });
 
 const tables = [
+  ['sms_receipts', ['id', 'data']],
+  ['workflow_records', ['id','type','user_id','provider_id','request_id','status','created_at','updated_at','data']],
   ['users', ['id', 'data']],
   ['service_requests', ['id', 'customer_id', 'provider_id', 'status', 'created_at', 'data']],
   ['messages', ['id', 'request_id', 'user_id', 'created_at', 'data']],
@@ -64,7 +66,7 @@ async function insertRows(table, columns, data) {
       const data = rows(table);
       summary[table] = await insertRows(table, columns, data);
     }
-    await pg.query("INSERT INTO meta(key,value) VALUES('schemaVersion','5') ON CONFLICT (key) DO UPDATE SET value=EXCLUDED.value");
+    await pg.query("INSERT INTO meta(key,value) VALUES('schemaVersion','7') ON CONFLICT (key) DO UPDATE SET value=EXCLUDED.value");
     await pg.query('COMMIT');
 
     console.log(JSON.stringify({ ok: true, migrated: summary }, null, 2));

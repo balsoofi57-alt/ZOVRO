@@ -13,7 +13,7 @@ async function runPostgresWriteProbe(){
  try{
   const schema=await c.query("SELECT value FROM meta WHERE key='schemaVersion'");
   result.schemaVersion=schema.rows[0]?.value||null;
-  if(result.schemaVersion!=='6')throw Error('Expected PostgreSQL schemaVersion 6');
+  if(result.schemaVersion!=='7')throw Error('Expected PostgreSQL schemaVersion 7');
   await c.query('BEGIN');
   const record={id,kind:'workflow:postgres-probe',user:null,requestId:null,providerId:null,status:'probe',at:new Date().toISOString(),updatedAt:new Date().toISOString(),data:{probe:true}};
   await c.query('INSERT INTO workflow_records(id,type,user_id,provider_id,request_id,status,created_at,updated_at,data) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9)',[record.id,record.kind,null,null,null,record.status,record.at,record.updatedAt,record]);
