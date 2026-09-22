@@ -65,20 +65,17 @@ Canonical production API: `https://zovro-api-final.onrender.com`
 - Operational metrics endpoint remains protected by operations token.
 - Store metadata and submitted binaries use the canonical production API, not `https://zovro-api.onrender.com`.
 
-## PostgreSQL mirror validation and cutover
+## PostgreSQL durable production validation
 - Render Build Command is `cd backend && npm install`.
 - `DATABASE_URL` points to `zovro-production-db` through Render's secret configuration.
-- Initial verification runs with `ZOVRO_DB_MIRROR_MODE=mirror`.
-- Schema creation completes successfully.
-- Migration completes without a partial transaction.
-- Row counts are validated for users, requests, messages, ratings, notifications, sessions, locations, verification, and audit data.
-- Critical account/request records are manually spot-checked.
-- Before cutover, readiness reports `databaseUrlPresent=true`, `pgModuleAvailable=true`, `postgresRuntimeReady=true`, and `mirrorOperational=true`.
-- New writes are confirmed in both the safe source and PostgreSQL.
-- Restart/redeploy preserves data.
-- Backup/restore procedure is tested before public launch.
-- Only after all mirror checks pass, switch to durable mode.
-- After cutover, `/api/health` reports PostgreSQL, and `/api/ready` returns HTTP 200 with `ready=true` and `durableOperational=true`.
+- Production is running in durable PostgreSQL mode; mirror mode is no longer the current launch state.
+- Startup preflight reports `databaseUrlPresent=true`, `pgModuleAvailable=true`, `postgresRuntimeReady=true`, `durableOperational=true`, and no startup blockers.
+- The latest verified production startup restore recovered 13 records with `verified=true`.
+- Schema creation and migration complete without a partial transaction.
+- Critical account/request records are manually spot-checked when performing release acceptance.
+- Restart/redeploy preserves durable PostgreSQL data.
+- Isolated backup/restore and rollback procedure is tested before public launch.
+- `/api/health` reports PostgreSQL, and `/api/ready` returns HTTP 200 with `ready=true` and `durableOperational=true`.
 
 ## Payments
 Only after live payment integration is installed:
