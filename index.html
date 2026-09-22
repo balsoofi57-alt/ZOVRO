@@ -15,7 +15,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="ZOVRO">
 <link rel="icon" href="assets/zovro-icon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="website-final.css">
+<link rel="stylesheet" href="website-final.css?v=7">
 </head>
 <body>
 <div class="shell">
@@ -31,9 +31,9 @@
 <div id="chatModal" class="modal"><div class="sheet"><div id="chatIdentity" class="card" style="margin-bottom:12px"></div><h2>Job chat</h2><div id="chatList"></div><div class="row"><input id="chatText" style="flex:1;border:1px solid var(--line);border-radius:13px;padding:12px" placeholder="Message"><button id="chatSendBtn" class="btn primary" onclick="sendMessage()">Send</button></div><button class="btn ghost" style="margin-top:10px" onclick="closeModal('chatModal')">Close</button></div></div>
 <div id="trackingModal" class="modal"><div class="sheet"><h2>Live job tracking</h2><div id="trackingStatus" class="card">Loading location…</div><div id="trackingMap" style="margin-top:12px;min-height:260px;border-radius:18px;background:#d7dde4;display:grid;place-items:center;color:#10243a;padding:18px;text-align:center"></div><div class="bar" style="margin-top:12px"><button class="btn ghost" onclick="refreshTracking()">Refresh</button><button class="btn ghost" onclick="closeTracking()">Close</button></div></div></div>
 <div id="toast" class="toast"></div><div id="requestSuccessModal" class="modal"><div class="sheet" style="text-align:center;max-width:520px"><div style="font-size:58px;line-height:1;margin-bottom:12px">✓</div><h2 style="margin-bottom:8px">Request sent successfully</h2><p id="requestSuccessText" class="muted" style="font-size:16px;line-height:1.55;margin:0 0 18px">Your request has been received.</p><button class="btn primary" style="width:100%" onclick="closeModal('requestSuccessModal');show('jobs')">View my request</button><button class="btn ghost" style="width:100%;margin-top:10px" onclick="closeModal('requestSuccessModal')">Done</button></div></div>
-<script src="src/service-catalog.js"></script>
-<script src="src/provider-services.js"></script>
-<script src="provider-service-picker.js"></script>
+<script src="src/service-catalog.js?v=7"></script>
+<script src="src/provider-services.js?v=7"></script>
+<script src="provider-service-picker.js?v=7"></script>
 <script>
 const API=(window.ZOVRO_CONFIG?.apiBase||'https://zovro-api-final.onrender.com'),services=['Roadside Assistance','Mobile Mechanic','Plumbing','Electrical','HVAC','Appliance Repair','Moving','Lawn & Snow','Pest & Rodent Control','Painting','Flooring Installation & Repair'],serviceSubcategories={'Pest & Rodent Control':['General Pest Inspection & Prevention','Cockroaches','Ants','Bed Bugs','Termites','Fleas & Ticks','Spiders','Wasps & Hornets','Mice','Rats','Rodent Removal & Exclusion','Entry-Point Sealing & Prevention']},smartMatchRules=[
 {service:'Pest & Rodent Control',sub:'Bed Bugs',words:['bed bug','bedbug','bed bugs','bedbugs']},{service:'Pest & Rodent Control',sub:'Cockroaches',words:['cockroach','cockroaches','roach','roaches']},{service:'Pest & Rodent Control',sub:'Termites',words:['termite','termites']},{service:'Pest & Rodent Control',sub:'Ants',words:['ant infestation','ants']},{service:'Pest & Rodent Control',sub:'Fleas & Ticks',words:['flea','fleas','ticks','tick bite']},{service:'Pest & Rodent Control',sub:'Spiders',words:['spider','spiders']},{service:'Pest & Rodent Control',sub:'Wasps & Hornets',words:['wasp','wasps','hornet','hornets','yellow jacket','yellowjackets']},{service:'Pest & Rodent Control',sub:'Mice',words:['mouse','mice']},{service:'Pest & Rodent Control',sub:'Rats',words:['rat infestation','rats']},{service:'Pest & Rodent Control',sub:'Rodent Removal & Exclusion',words:['rodent','rodents','droppings','gnaw marks']},{service:'Pest & Rodent Control',sub:'Entry-Point Sealing & Prevention',words:['seal entry','entry point','holes in wall','prevent rodents']},{service:'Pest & Rodent Control',sub:'General Pest Inspection & Prevention',words:['pest inspection','pest prevention','bugs in house','insects in house']},
@@ -94,12 +94,19 @@ async function shareProviderLocation(){if(providerLocationWatch!==null){stopProv
 function handleStripeConnectReturn(){const q=new URLSearchParams(location.search),state=q.get('stripe_connect');if(!state)return;if(state==='return'){toast('Payout setup returned to ZOVRO. Checking status…');setTimeout(()=>{if(me?.role==='provider')loadPayoutStatus()},600)}else if(state==='refresh'){toast('Payout setup link expired. Open Profile and continue payout setup.')}q.delete('stripe_connect');const next=location.pathname+(q.toString()?'?'+q.toString():'')+location.hash;history.replaceState({},'',next)}
 async function logout(){stopProviderLiveLocation(true);try{if(token)await api('/auth/logout',{method:'POST',body:'{}'})}catch{}token='';me=null;localStorage.removeItem('zovroToken');renderAccount();toast('Signed out')}async function deleteAccount(){if(!confirm('Permanently delete your ZOVRO account?'))return;try{await api('/me',{method:'DELETE',body:JSON.stringify({confirm:'DELETE'})});token='';me=null;localStorage.removeItem('zovroToken');renderAccount();toast('Account deleted')}catch(e){toast(e.message)}}boot();if(new URLSearchParams(location.search).get('sms-opt-in')==='1')setTimeout(openSmsOptIn,900);setTimeout(handleStripeConnectReturn,900);setInterval(()=>{if(me)loadJobs()},10000);
 </script>
-<script src="website-final.js"></script>
-<script src="profile-security-client.js"></script>
+<script src="website-final.js?v=7"></script>
+<script src="profile-security-client.js?v=7"></script>
 <script>
 if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./service-worker.js?v=5',{updateViaCache:'none'}).then(reg=>reg.update()).catch(() => {});
+  window.addEventListener('load', async () => {
+    try {
+      const regs = await navigator.serviceWorker.getRegistrations();
+      await Promise.all(regs.map(reg => reg.unregister()));
+      if ('caches' in window) {
+        const keys = await caches.keys();
+        await Promise.all(keys.filter(key => key.startsWith('zovro-web-')).map(key => caches.delete(key)));
+      }
+    } catch (_) {}
   });
 }
 </script>
