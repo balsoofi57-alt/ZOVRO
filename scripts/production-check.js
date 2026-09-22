@@ -26,6 +26,7 @@ const releaseFiles=['index.html','payment-client.js','payment-ui.js','push-clien
 for(const file of releaseFiles){if(!fs.existsSync(path.join(root,file))){console.error('Missing release-critical source:',file);bad=true}}
 const paymentClient=fs.readFileSync(path.join(root,'payment-client.js'),'utf8'),paymentUi=fs.readFileSync(path.join(root,'payment-ui.js'),'utf8'),html=fs.readFileSync(path.join(root,'index.html'),'utf8');
 if(!paymentClient.includes('tipRequest')||!paymentUi.includes('tipJob')||paymentUi.includes('window.jobHtml=function')){console.error('Current payment/tip client release source is not locked');bad=true}
-for(const token of ['securityCode','Change Order','Request again'])if(!html.includes(token)){console.error('Current service lifecycle UX missing:',token);bad=true}
+for(const token of ['securityCode','Request again'])if(!html.includes(token)){console.error('Current service lifecycle UX missing:',token);bad=true}
+if(!html.includes('changeOrderJob')||!html.includes('approveChangeOrder')){console.error('Current service lifecycle UX missing: change-order workflow');bad=true}
 const pkg=JSON.parse(fs.readFileSync(path.join(root,'package.json'),'utf8'));if(pkg.version!=='1.0.0'){console.error('Unexpected app version');bad=true}
 if(bad)process.exit(1);console.log('ZOVRO production configuration check passed.');
