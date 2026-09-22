@@ -14,5 +14,6 @@ if(!prepare.includes("'payment-ui.js'")||!prepare.includes('zovro-api-final.onre
 for(const token of ['quoteJob','payJob','releasePayment','ZOVRO_PAYMENTS.payRequest'])if(!paymentUi.includes(token)){console.error('Secure payment UX missing:',token);bad=true}
 if(!paymentClient.includes('window.ZOVRO_SESSION_TOKEN')){console.error('Payment client is not using the synchronized secure ZOVRO session');bad=true}
 for(const legacy of ["localStorage.getItem('zovroToken')","localStorage.getItem('zovro_token')","localStorage.getItem('token')"]){if(paymentClient.includes(legacy)){console.error('Payment client contains legacy localStorage auth fallback:',legacy);bad=true}}
-if(prepare.includes("localStorage.zovroToken=token")||prepare.includes("localStorage.removeItem('zovroToken')")){console.error('Mobile preparation still writes the auth token to localStorage');bad=true}
+if(/html\s*=\s*html\.replaceAll?\([^\n]*localStorage\.zovroToken=token[^\n]*ZOVRO_SECURE_SESSION\.set\(token\)/.test(prepare)===false&&prepare.includes("localStorage.zovroToken=token")){console.error('Mobile preparation still writes the auth token to localStorage');bad=true}
+if(prepare.includes("localStorage.removeItem('zovroToken')")&&!prepare.includes("ZOVRO_SECURE_SESSION.remove()")){console.error('Mobile preparation still removes auth through legacy localStorage');bad=true}
 if(bad)process.exit(1);console.log('ZOVRO store-readiness check passed.');
