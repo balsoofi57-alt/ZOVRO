@@ -4,7 +4,8 @@
   if(typeof module!=='undefined'&&module.exports)module.exports=api;
   if(root)root.ZOVRO_PROVIDER_SERVICES=api;
 })(typeof window!=='undefined'?window:null,function(catalog){
-  const groups=catalog.SERVICE_CATALOG.map(g=>({id:g.id,label:g.label.en,services:g.services.map(s=>({id:s.id,label:s.label.en}))}));
+  const serviceCatalog=catalog&&Array.isArray(catalog.SERVICE_CATALOG)?catalog.SERVICE_CATALOG:[];
+  const groups=serviceCatalog.map(g=>({id:g.id,label:g.label.en,services:g.services.map(s=>({id:s.id,label:s.label.en}))}));
   groups.push({id:'additional-services',label:'Additional services',services:[{id:'lawn-snow',label:'Lawn & Snow'},{id:'pest-rodent-control',label:'Pest & Rodent Control'}]});
   const all=[...new Map(groups.flatMap(g=>g.services).map(s=>[s.id,s])).values()];
   const names=new Map(all.flatMap(s=>[[s.id.toLowerCase(),s.label],[s.label.toLowerCase(),s.label]]));
