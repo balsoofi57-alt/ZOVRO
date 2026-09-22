@@ -3,7 +3,7 @@
 Version: 1.0.0
 App ID / Bundle ID: com.zovro.app
 Canonical production API: https://zovro-api-final.onrender.com
-Public support email: support@zovro.net
+Public support email: support@zovro.work
 
 This document defines the final configuration gates without storing secrets.
 
@@ -98,7 +98,7 @@ Current CI already builds an unsigned iOS simulator release candidate. Final pub
 
 ## Support / legal
 Before commercial launch:
-- Activate and monitor `support@zovro.net` and prove send/receive/reply operation.
+- Activate and monitor `support@zovro.work` and prove send/receive/reply operation.
 - Publish and verify public Privacy, Terms, and Support URLs.
 - Confirm privacy policy and terms match actual production integrations.
 - Complete legal review for launch jurisdictions and provider/payment model.
