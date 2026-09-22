@@ -7,7 +7,7 @@ async function frontend(){
  const script=html.match(/<script>([\s\S]*?)<\/script>/)[1].replace(/boot\(\);setInterval\([\s\S]*$/, '');
  const nodes=new Map(),node=id=>{if(!nodes.has(id))nodes.set(id,{textContent:'',innerHTML:'',disabled:false,style:{},classList:{add(){},remove(){},toggle(){}},insertAdjacentHTML(){},querySelectorAll(){return []}});return nodes.get(id)};
  let geoCount=0,calls=[],mode='ok',release;
- const context=vm.createContext({crypto,AbortController,setTimeout,clearTimeout,setInterval:()=>0,clearInterval(){},window:{},localStorage:{getItem(){return null},setItem(){},removeItem(){}},navigator:{},document:{getElementById:node,querySelectorAll(){return []}},console});
+ const context=vm.createContext({crypto,AbortController,setTimeout,clearTimeout,setInterval:()=>0,clearInterval(){},window:{},localStorage:{getItem(){return null},setItem(){},removeItem(){}},navigator:{},document:{getElementById:node,querySelectorAll(){return []}},ZOVRO_SERVICE_PICKER:{options(){return ''},subOptions(){return ''}},console});
  vm.runInContext(script,context);
  context.testGeo=async()=>{geoCount++;if(mode==='deny')throw {code:1};if(mode==='wait')await new Promise(r=>release=r);return {lat:42.315,lng:-83.19,accuracy:10,capturedAt:new Date().toISOString()}};
  context.testApi=async(p,o)=>{calls.push(JSON.parse(o.body));if(mode==='network')throw Error('Offline');return {request:{id:'request-1'},dispatch:{notifiedProviders:0}}};
