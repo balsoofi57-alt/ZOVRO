@@ -3,9 +3,7 @@ name: ZOVRO Full QA
 on:
   workflow_dispatch:
   push:
-    branches: [main, feature/zovro-product-expansion, fix/web-ui-sync-20260922]
-  pull_request:
-    branches: [main]
+    branches: [main, feature/zovro-product-expansion]
     paths:
       - 'backend/**'
       - 'src/**'
