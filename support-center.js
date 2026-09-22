@@ -1,6 +1,6 @@
 'use strict';
 (function(){
-const SUPPORT_EMAIL='support@zovro.net';
+const SUPPORT_EMAIL='support@zovro.work';
 const CATEGORIES={general:'General support',account:'Account help',service:'Service request',complaint:'Complaint',payment:'Payment / refund dispute',safety:'Safety report'};
 function esc2(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 function ticketNo(id){return 'ZV-'+String(id||'').replace(/-/g,'').slice(0,8).toUpperCase()}

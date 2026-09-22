@@ -32,7 +32,7 @@ for (const token of ['deleteAccount()', 'privacy.html', 'terms.html', 'support.h
 const support = fs.readFileSync(path.join(root, 'support.html'), 'utf8');
 const privacy = fs.readFileSync(path.join(root, 'privacy.html'), 'utf8');
 for (const [name, text] of [['support.html', support], ['privacy.html', privacy]]) {
-  if (!text.includes('support@zovro.net')) fail('Approved support email missing from ' + name);
+  if (!text.includes('support@zovro.work')) fail('Approved support email missing from ' + name);
   else console.log('OK approved support email in', name);
 }
 
@@ -74,7 +74,7 @@ for (const token of ['quoteJob', 'payJob', 'tipJob', 'releasePayment', 'ZOVRO_PA
   assert(paymentUi.includes(token), 'Secure payment UX missing: ' + token);
 }
 assert(!paymentUi.includes('window.jobHtml=function'), 'Payment UI must not override the shared job renderer');
-assert(html.includes('Request again') && html.includes('securityCode') && html.includes('Change Order'), 'Current service lifecycle UX is missing from release source');
+assert(html.includes('Request again') && html.includes('securityCode') && html.includes('changeOrderJob') && html.includes('approveChangeOrder'), 'Current service lifecycle UX is missing from release source');
 assert(
   paymentClient.includes("window.ZOVRO_SESSION_TOKEN") &&
   !paymentClient.includes("localStorage.getItem('zovroToken')") &&
@@ -99,7 +99,7 @@ if (fs.existsSync(listingPath)) {
 
     assert(listing.app?.name === 'ZOVRO', 'Store app name must be ZOVRO');
     assert(listing.app?.bundleId === 'com.zovro.app', 'Store bundle ID mismatch');
-    assert(listing.supportEmail === 'support@zovro.net', 'Store support email mismatch');
+    assert(listing.supportEmail === 'support@zovro.work', 'Store support email mismatch');
 
     for (const [name, url] of Object.entries(listing.urls || {})) {
       assert(isHttps(url), 'Store URL must use HTTPS: ' + name);

@@ -7,8 +7,8 @@ const root=path.resolve(__dirname,'..');
 
 async function frontend(){
  const vm=require('node:vm'),nodes=new Map();
- const node=id=>{if(!nodes.has(id))nodes.set(id,{value:'',textContent:'',innerHTML:'',disabled:false,classList:{add(){},remove(){},toggle(){}},querySelectorAll(){return []}});return nodes.get(id)};
- const context=vm.createContext({console,document:{getElementById:node},localStorage:{},setTimeout,clearTimeout});context.window=context;
+ const node=id=>{if(!nodes.has(id))nodes.set(id,{value:'',textContent:'',innerHTML:'',disabled:false,style:{},classList:{add(){},remove(){},toggle(){}},querySelectorAll(){return []},insertAdjacentHTML(){}});return nodes.get(id)};
+ const context=vm.createContext({console,document:{getElementById:node,querySelectorAll(){return []}},localStorage:{getItem(){return null},setItem(){},removeItem(){}},setTimeout:(fn,ms)=>ms>=500?0:setTimeout(fn,ms),clearTimeout,setInterval:()=>0,clearInterval(){},crypto:require('node:crypto'),AbortController,navigator:{}});context.window=context;
  for(const file of ['src/service-catalog.js','src/provider-services.js','provider-service-picker.js'])vm.runInContext(fs.readFileSync(path.join(root,file),'utf8'),context);
  const html=fs.readFileSync(path.join(root,'index.html'),'utf8');
  vm.runInContext(html.match(/<script>([\s\S]*?)<\/script>/)[1].replace(/boot\(\);setInterval\([\s\S]*$/,''),context);

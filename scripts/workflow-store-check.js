@@ -17,5 +17,5 @@ const a=store.upsertUnique({type:'notification-preferences',userId:'c1',key:'def
 const b=store.upsertUnique({type:'notification-preferences',userId:'c1',key:'default',data:{push:false}});
 assert(a.id===b.id&&b.data.push===false,'Workflow upsert failed');
 assert(store.remove(created.id)===true&&store.list({type:'favorite-provider'}).length===0,'Workflow remove failed');
-assert(database.dbInfo().schemaVersion===6,'Expected schema v6');
-console.log(JSON.stringify({ok:true,durableWorkflowStore:true,dedicatedWorkflowTable:true,schemaVersion:6}));
+assert(database.dbInfo().schemaVersion===7,'Expected schema v7');
+console.log(JSON.stringify({ok:true,durableWorkflowStore:true,dedicatedWorkflowTable:true,schemaVersion:7}));
