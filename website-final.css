@@ -19,3 +19,14 @@
 .modal .sheet input::placeholder,.modal .sheet textarea::placeholder{color:#66788b!important}
 .modal .sheet .btn.ghost{background:#d7dde4!important;color:#10243a!important;border-color:#9aa8b7!important}
 .modal .sheet .btn.primary{background:var(--z-gold)!important;color:#142238!important;border-color:transparent!important}
+
+
+/* ZOVRO WEB BETA SAFETY: keep public beta focused on request coordination until payment release gates are closed. */
+#payoutStatusBox,
+#payoutSetupButton,
+button[onclick^="payJob("],
+button[onclick^="releasePayment("],
+button[onclick^="tipJob("],
+button[onclick^="quoteJob("],
+button[onclick^="changeOrderJob("],
+button[onclick^="approveChangeOrder("]{display:none!important}
