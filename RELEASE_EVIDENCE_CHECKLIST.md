@@ -14,11 +14,11 @@ Release PR: [#1](https://github.com/balsoofi57-alt/ZOVRO/pull/1), Draft. Source 
 
 | Check | Result | Evidence and scope |
 | --- | --- | --- |
-| Full QA | PASS | [Run #341](https://github.com/balsoofi57-alt/ZOVRO/actions/runs/34631253817) completed successfully for `store-release-prep` head `e981d3bfeb3b89bfa7ab02208a5942fcadab8edc`. |
+| Full QA | PASS | `ZOVRO Full QA` run `35781496291` completed successfully on 2026-09-22 for production runtime source `7ce40e787d4ca01ccb724ade93fa72a2ddd7a3c4`. |
 | Store listing metadata | PASS in source | `store/listing.en-US.json` contains the en-US Apple/Google listing copy, public URLs, screenshot story, and reviewer notes. `npm run store:check` validates identifiers, HTTPS URLs, support identity, character limits, safety language, and Play feature-graphic dimensions. Final signed-build screenshots are still required. |
-| Android compilation | PASS, unsigned | Android build run #5 succeeded for source `6009cc6d4896887e54b83adb3e0af8e487d61ffd`. Artifacts `zovro-android-debug-apk` and `zovro-android-release-unsigned-aab` were present at the last check. This does not prove signing, Play acceptance, or device behavior. |
-| iOS verification | PASS, simulator only | iOS Release Verification run #39 succeeded for source `6009cc6d4896887e54b83adb3e0af8e487d61ffd`. Artifact `zovro-ios-simulator-unsigned` is not a signed archive or TestFlight build. |
-| Production profile encryption readiness | PASS in production | Production branch `zovro-final-deploy` is at `c95e6dc1640b9c649b889bbcce41fe57088adc57` with profile-encryption readiness hardening deployed. |
+| Android compilation | PASS, unsigned | `Build ZOVRO Android` run `35781496420` and `ZOVRO Android Release Verification` run `35781496474` completed successfully on 2026-09-22 for `7ce40e787d4ca01ccb724ade93fa72a2ddd7a3c4`. Debug APK and unsigned release AAB artifacts were produced; signing, Play acceptance, and physical-device behavior remain external gates. |
+| iOS verification | PASS, simulator only | `ZOVRO iOS Release Verification` run `35781496413` completed successfully on 2026-09-22 for `7ce40e787d4ca01ccb724ade93fa72a2ddd7a3c4`. The simulator artifact is unsigned; App Store signing, TestFlight, and physical-device behavior remain external gates. |
+| Production profile encryption readiness | PASS in production | Current runtime startup preflight on production source `7ce40e787d4ca01ccb724ade93fa72a2ddd7a3c4` reports `profileEncryptionConfigured=true`. |
 
 ## Live production observations
 
