@@ -1,4 +1,4 @@
-const CACHE='zovro-web-v4';
+const CACHE='zovro-web-v5';
 const CORE=['./','./index.html','./privacy.html','./terms.html','./support.html','./manifest.webmanifest','./assets/zovro-icon.svg','./website-final.css','./website-final.js'];
 
 self.addEventListener('install',event=>{
