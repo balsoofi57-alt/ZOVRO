@@ -7,6 +7,10 @@ on:
     paths:
       - 'backend/**'
       - 'src/**'
+      - 'biometric-client.js'
+      - 'push-client.js'
+      - 'payment-client.js'
+      - 'payment-ui.js'
       - 'scripts/**'
       - 'index.html'
       - 'privacy.html'
