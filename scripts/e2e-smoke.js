@@ -20,7 +20,7 @@ const nearby=await call('GET','/api/providers/nearby?lat=42.315&lng=-83.19&servi
 const created=await call('POST','/api/requests',{service:'Roadside Assistance',details:'ZOVRO 1.0 Final end-to-end smoke test',address:'Dearborn, MI',location:{lat:42.315,lng:-83.19}},c.token);const id=created.request.id;
 await call('POST',`/api/requests/${id}/accept`,{},p.token);
 await call('POST',`/api/requests/${id}/messages`,{text:'On my way for ZOVRO 1.0 Final test.'},p.token);
-for(const status of ['On the way','Arrived','In progress','Completed'])await call('POST',`/api/requests/${id}/status`,{status},p.token);
+for(const status of ['On the way','Arrived','In progress','Completed'])await call('POST',`/api/requests/${id}/status`,status==='In progress'?{status,securityCode:created.request.securityCode}:{status},p.token);
 await call('POST',`/api/requests/${id}/rating`,{stars:5},c.token);
 const reqs=await call('GET','/api/requests',null,c.token);const final=reqs.requests.find(x=>x.id===id);if(!final||final.status!=='Completed'||final.rating!==5)throw new Error('Final request state/rating failed');
 const notes=await call('GET','/api/notifications',null,c.token);if(!notes.notifications.length)throw new Error('Customer notifications failed');
