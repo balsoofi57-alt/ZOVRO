@@ -1,4 +1,4 @@
-const CACHE='zovro-web-v2';
+const CACHE='zovro-web-v3';
 const CORE=['./','./index.html','./privacy.html','./terms.html','./support.html','./manifest.webmanifest','./assets/zovro-icon.svg','./website-final.css','./website-final.js'];
 
 self.addEventListener('install',event=>{
