@@ -3,7 +3,7 @@
   function ready(fn){document.readyState==='loading'?document.addEventListener('DOMContentLoaded',fn):fn()}
   function call(name,...args){if(typeof window[name]==='function')return window[name](...args)}
   function openHelp(prefill){
-    call('newRequest');
+    call('startRequestWithLocation');
     setTimeout(()=>{
       const d=document.getElementById('reqDetails');
       if(d&&prefill)d.value=prefill;
@@ -84,7 +84,7 @@
       const h1=hero.querySelector('h1');if(h1)h1.innerHTML='Tell us what you need. <span>We’ll help you find it nearby.</span>';
       const p=h1?.nextElementSibling;if(p&&p.tagName==='P')p.textContent='Roadside, auto, home, moving and everyday services — one simple request, matched to nearby local professionals.';
       const bar=hero.querySelector('.bar');if(bar)bar.innerHTML='<button class="btn primary" id="zHeroHelp">Get Help Now</button><button class="btn ghost" id="zHeroProvider">Join as a Provider</button><button class="btn danger" id="sosButton">SOS<br><span style="font-size:9px;font-weight:800">EMERGENCY HELP</span></button>';
-      document.getElementById('zHeroHelp')?.addEventListener('click',()=>document.getElementById('smartMatch')?.scrollIntoView({behavior:'smooth'}));
+      document.getElementById('zHeroHelp')?.addEventListener('click',()=>openHelp(''));
       document.getElementById('zHeroProvider')?.addEventListener('click',()=>{document.getElementById('providerJoin')?.scrollIntoView({behavior:'smooth'});setTimeout(()=>call('openAuth'),350)});
       document.getElementById('sosButton')?.addEventListener('click',()=>call('quickSOS'));
     }
@@ -138,7 +138,7 @@
     const account=document.getElementById('accountBox');
     if(account&&!document.getElementById('zSupportStrip')){const s=document.createElement('div');s.id='zSupportStrip';s.className='z-support-strip';s.innerHTML='<div><strong>ZOVRO Support</strong><span>AI-guided help, complaints, payment disputes, safety reports and account support.</span></div><div class="z-support-actions"><a href="support.html">Help Center</a><a href="support.html#complaints">File a Complaint</a><a href="mailto:contact@zovro.work">Email Support</a></div>';account.insertAdjacentElement('afterend',s)}
 
-    if(!document.getElementById('zMobileHelp')){const m=document.createElement('button');m.id='zMobileHelp';m.className='z-mobile-help';m.textContent='Get Help Now';m.onclick=()=>document.getElementById('smartMatch')?.scrollIntoView({behavior:'smooth'});document.body.appendChild(m)}
+    if(!document.getElementById('zMobileHelp')){const m=document.createElement('button');m.id='zMobileHelp';m.className='z-mobile-help';m.textContent='Get Help Now';m.onclick=()=>openHelp('');document.body.appendChild(m)}
 
     const shell=document.querySelector('.shell');
     if(shell&&!document.querySelector('.z-site-footer')){const f=document.createElement('footer');f.className='z-site-footer';f.innerHTML='<div>© 2026 ZOVRO LLC · Anywhere, Anytime, Near to You.</div><div><a href="privacy.html">Privacy</a><a href="terms.html">Terms</a><a href="support.html">Support</a></div>';shell.appendChild(f)}
