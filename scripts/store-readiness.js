@@ -32,7 +32,7 @@ for (const token of ['deleteAccount()', 'privacy.html', 'terms.html', 'support.h
 const support = fs.readFileSync(path.join(root, 'support.html'), 'utf8');
 const privacy = fs.readFileSync(path.join(root, 'privacy.html'), 'utf8');
 for (const [name, text] of [['support.html', support], ['privacy.html', privacy]]) {
-  if (!text.includes('support@zovro.net')) fail('Approved support email missing from ' + name);
+  if (!text.includes('support@zovro.work')) fail('Approved support email missing from ' + name);
   else console.log('OK approved support email in', name);
 }
 
@@ -99,7 +99,7 @@ if (fs.existsSync(listingPath)) {
 
     assert(listing.app?.name === 'ZOVRO', 'Store app name must be ZOVRO');
     assert(listing.app?.bundleId === 'com.zovro.app', 'Store bundle ID mismatch');
-    assert(listing.supportEmail === 'support@zovro.net', 'Store support email mismatch');
+    assert(listing.supportEmail === 'support@zovro.work', 'Store support email mismatch');
 
     for (const [name, url] of Object.entries(listing.urls || {})) {
       assert(isHttps(url), 'Store URL must use HTTPS: ' + name);
