@@ -4,4 +4,4 @@ The verified ZOVRO 1.0.0 build includes customer and provider accounts, nearby-p
 
 Automated release, security, operations, dispatch, lifecycle, cancellation, reputation, deployment and Render blueprint checks pass in the verified release artifact.
 
-Public commercial launch still depends on external production services and credentials for persistent data, live payments, push/SMS delivery, maps/routing where required, final support contact details, and iOS/Android store signing.
+Production durable PostgreSQL is operational with a verified startup restore, and the connected live Stripe account has verified charge/payout readiness plus successful live payment and linked refund evidence. Public commercial launch still depends on successful signed live Stripe webhook delivery evidence, isolated database backup/restore and rollback evidence, real push/SMS delivery on signed physical devices, final GPS/SOS/device acceptance, monitored `support@zovro.work` operations, final legal/store declarations, and iOS/Android distribution signing and store submission.
