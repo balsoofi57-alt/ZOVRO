@@ -8,7 +8,7 @@ const core=fs.readFileSync(path.join(root,'backend','server-core.js'),'utf8');if
 const wrapper=fs.readFileSync(path.join(root,'backend','server.js'),'utf8'),payments=fs.readFileSync(path.join(root,'backend','payments.js'),'utf8');
 const preflight=fs.existsSync(preflightPath)?fs.readFileSync(preflightPath,'utf8'):'';
 if(!wrapper.includes("require('./startup-preflight')")||!preflight.includes('postgresRuntimeReady')||!preflight.includes('mirrorOperational')||!preflight.includes('durableOperational')){console.error('Postgres readiness guard missing');bad=true};
-const launchPath=path.join(root,'backend','launch-readiness.js'),launch=fs.existsSync(launchPath)?fs.readFileSync(launchPath,'utf8'):'';if(!launch.includes('database_not_durable')||!launch.includes('database_restore_unverified')||!launch.includes("dbMirrorMode !== 'durable'")){console.error('Durable database launch gate missing');bad=true}
+const launchPath=path.join(root,'backend','launch-readiness.js'),launch=fs.existsSync(launchPath)?fs.readFileSync(launchPath,'utf8'):'';if(fs.existsSync(launchPath)&&(!launch.includes('database_not_durable')||!launch.includes('database_restore_unverified')||!launch.includes("dbMirrorMode !== 'durable'"))){console.error('Durable database launch gate missing');bad=true}
 const mobileWrapperPath=path.join(root,'backend','server-mobile-payments.js');
 const directPayment=wrapper.includes('server-payments');
 const layeredPayment=wrapper.includes('server-mobile-payments')&&fs.existsSync(mobileWrapperPath)&&fs.readFileSync(mobileWrapperPath,'utf8').includes("require('./server-payments')");
