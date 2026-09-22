@@ -136,7 +136,7 @@
     }
 
     const account=document.getElementById('accountBox');
-    if(account&&!document.getElementById('zSupportStrip')){const s=document.createElement('div');s.id='zSupportStrip';s.className='z-support-strip';s.innerHTML='<div><strong>ZOVRO Support</strong><span>AI-guided help, complaints, payment disputes, safety reports and account support.</span></div><div class="z-support-actions"><a href="support.html">Help Center</a><a href="support.html#complaints">File a Complaint</a><a href="mailto:contact@zovro.work">Email Support</a></div>';account.insertAdjacentElement('afterend',s)}
+    if(account&&!document.getElementById('zSupportStrip')){const s=document.createElement('div');s.id='zSupportStrip';s.className='z-support-strip';s.innerHTML='<div><strong>ZOVRO Support</strong><span>AI-guided help, complaints, payment disputes, safety reports and account support.</span></div><div class="z-support-actions"><a href="support.html">Help Center</a><a href="support.html#complaints">File a Complaint</a><a href="mailto:support@zovro.work">Email Support</a></div>';account.insertAdjacentElement('afterend',s)}
 
     if(!document.getElementById('zMobileHelp')){const m=document.createElement('button');m.id='zMobileHelp';m.className='z-mobile-help';m.textContent='Get Help Now';m.onclick=()=>openHelp('');document.body.appendChild(m)}
 
