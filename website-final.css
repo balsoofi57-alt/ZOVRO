@@ -30,3 +30,10 @@ button[onclick^="tipJob("],
 button[onclick^="quoteJob("],
 button[onclick^="changeOrderJob("],
 button[onclick^="approveChangeOrder("]{display:none!important}
+
+
+/* Mobile interaction hardening */
+.hero:after{pointer-events:none!important}
+.hero .bar,.hero .eyebrow,.hero h1,.hero p,.hero button{position:relative;z-index:5}
+.hero button,.bottom button,.z-mobile-help,.btn{pointer-events:auto!important;touch-action:manipulation}
+@media(max-width:760px){.z-mobile-help{z-index:50!important}}
