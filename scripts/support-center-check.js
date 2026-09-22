@@ -6,6 +6,7 @@ const prep=fs.readFileSync(path.join(root,'scripts','prepare-mobile.js'),'utf8')
 const publicSupport=fs.readFileSync(path.join(root,'support.html'),'utf8');
 const workflow=fs.readFileSync(path.join(root,'backend','workflow-api.js'),'utf8');
 const checks={
+ legacyEmailRemoved: !support.includes('support@zovro.net')&&!publicSupport.includes('support@zovro.net'),
  email: support.includes('support@zovro.work')&&publicSupport.includes('support@zovro.work'),
  aiTriage: support.includes('aiReply')&&support.includes('humanReviewRequired'),
  complaint: support.includes("complaint:'Complaint'"),
