@@ -16,7 +16,7 @@ Required production settings:
 - `ZOVRO_SECRET` must be a unique production secret of at least 32 characters.
 - `ZOVRO_OPS_TOKEN` must be a unique operations token of at least 24 characters.
 - `DATABASE_URL` must point to `zovro-production-db` before PostgreSQL mirror validation begins.
-- Keep `ZOVRO_DB_MIRROR_MODE=mirror` until PostgreSQL writes, reads, content parity, restart persistence, backup/restore and rollback behavior pass verification.
+- Production currently runs with `ZOVRO_DB_MIRROR_MODE=durable`; current startup/readiness evidence reports `postgresRuntimeReady=true` and `durableOperational=true`.
 
 Health gates:
 - `GET https://zovro-api-final.onrender.com/api/health` returns HTTP 200.
@@ -25,12 +25,12 @@ Health gates:
 - After cutover, health/readiness report the expected durable PostgreSQL engine and `durableOperational=true`.
 
 ## Database
-Current release state:
+Current release state (verified September 22, 2026):
 - PostgreSQL service: `zovro-production-db`.
-- SQLite remains the safe source/fallback.
-- Production remains in `ZOVRO_DB_MIRROR_MODE=mirror`.
-- Empty 0/0 row counts are not durability evidence.
-- Do not claim durable PostgreSQL is active until the checks below pass.
+- Production is currently in `ZOVRO_DB_MIRROR_MODE=durable`.
+- Current production startup evidence reports `postgresRuntimeReady=true`, `durableOperational=true`, and no startup blockers.
+- The latest verified PostgreSQL restore on September 22, 2026 restored 13 records and reported `verified=true`.
+- Keep backup/restore and rollback procedures available and re-verify persistence after material database or deployment changes.
 
 Safe production cutover:
 1. Confirm the PostgreSQL service is available on a permanent plan with backup/restore capability.
