@@ -6,7 +6,7 @@ const port=Number(process.env.ZOVRO_TEST_PORT||18919), base=`http://127.0.0.1:${
 const files=['zovro.sqlite','zovro.sqlite-wal','zovro.sqlite-shm'];
 const backups=[];
 function sleep(ms){return new Promise(r=>setTimeout(r,ms))}
-async function call(method,url,body,token){const r=await fetch(base+url,{method,headers:{'content-type':'application/json',...(token?{authorization:`Bearer ${token}`}:{})},body:body?JSON.stringify(body):undefined});let j={};try{j=await r.json()}catch{};if(!r.ok)throw new Error(`${method} ${url} -> ${r.status} ${JSON.stringify(j)}`);return j}
+async function call(method,url,body,token){const r=await fetch(base+url,{method,headers:{'content-type':'application/json','x-zovro-terms-version':'2026-09-09','x-zovro-privacy-version':'2026-09-09','x-zovro-request-consent':'service-request-v1',...(token?{authorization:`Bearer ${token}`}:{})},body:body?JSON.stringify(body):undefined});let j={};try{j=await r.json()}catch{};if(!r.ok)throw new Error(`${method} ${url} -> ${r.status} ${JSON.stringify(j)}`);return j}
 function backup(){fs.mkdirSync(data,{recursive:true});for(const f of files){const p=path.join(data,f);if(fs.existsSync(p)){const b=p+'.final-test-backup';fs.copyFileSync(p,b);backups.push([p,b]);fs.rmSync(p,{force:true})}}}
 function restore(){for(const f of files)fs.rmSync(path.join(data,f),{force:true});for(const [p,b] of backups){fs.copyFileSync(b,p);fs.rmSync(b,{force:true})}}
 (async()=>{backup();const child=spawn(process.execPath,['server.js'],{cwd:backend,env:{...process.env,PORT:String(port),ZOVRO_SECRET:'final-e2e-secret-not-production',ZOVRO_APP_VERSION:'1.0.0'},stdio:['ignore','pipe','pipe']});
