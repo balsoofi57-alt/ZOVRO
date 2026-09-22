@@ -4,8 +4,10 @@ const backend=path.resolve(__dirname,'../backend'),port=18923,base=`http://127.0
 (async()=>{
  const env={...process.env,NODE_ENV:'production',PORT:String(port),ZOVRO_SECRET:crypto.randomBytes(32).toString('hex'),ZOVRO_OPS_TOKEN:crypto.randomBytes(24).toString('hex'),ZOVRO_ALLOWED_ORIGINS:'capacitor://localhost,http://localhost'};
  const child=spawn(process.execPath,['server.js'],{cwd:backend,env,stdio:['ignore','pipe','pipe']});
+ let stderr=''; child.stderr.on('data',d=>{stderr+=d.toString()});
  try{
-  for(let i=0;i<60;i++){try{if((await fetch(base+'/api/health')).ok)break}catch{}await sleep(100)}
+  let ready=false; for(let i=0;i<120;i++){if(child.exitCode!==null)throw new Error('Server exited before CORS test: '+stderr.slice(-2000));try{if((await fetch(base+'/api/health')).ok){ready=true;break}}catch{}await sleep(100)}
+  if(!ready)throw new Error('Server did not become ready: '+stderr.slice(-2000));
   let r=await fetch(base+'/api/payments/config',{headers:{origin:'capacitor://localhost'}});
   if(!r.ok)throw new Error('Payment config did not respond');
   if(r.headers.get('access-control-allow-origin')!=='capacitor://localhost')throw new Error('Capacitor CORS header missing');
