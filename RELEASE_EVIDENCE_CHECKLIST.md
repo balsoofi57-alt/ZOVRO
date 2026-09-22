@@ -1,6 +1,6 @@
 # ZOVRO release evidence checklist
 
-Verified checkpoint: 2026-09-17. Repository evidence refreshed after production-source reconciliation. Owner: ZOVRO release maintainer (automated checks performed by Codex).
+Verified checkpoint: 2026-09-22. Repository evidence refreshed after production-source reconciliation. Owner: ZOVRO release maintainer (automated checks performed by Codex).
 Release PR: [#1](https://github.com/balsoofi57-alt/ZOVRO/pull/1), Draft. Source and production branches remain separate; no store launch is claimed.
 
 ## Evidence rules
@@ -22,26 +22,26 @@ Release PR: [#1](https://github.com/balsoofi57-alt/ZOVRO/pull/1), Draft. Source 
 
 ## Live production observations
 
-Source: Render service/deploy tools and read-only endpoint/log checks performed on 2026-09-11.
+Source: Render service/deploy tools and read-only endpoint/log checks refreshed on 2026-09-22.
 
 - Primary service: `zovro-api-final`; branch `zovro-final-deploy`.
 - Live URL: https://zovro-api-final.onrender.com
-- Latest verified deployed source: `c95e6dc1640b9c649b889bbcce41fe57088adc57`.
-- Latest observed startup preflight: `dbMirrorMode=mirror`, `databaseUrlPresent=true`, `pgModuleAvailable=true`, `stripePublishablePresent=true`, `stripeSecretPresent=true`, `stripeWebhookPresent=true`, `oneSignalAppIdPresent=true`, `oneSignalRestKeyPresent=true`, `productionSecretPresent=true`, `allowedOriginsPresent=true`, `profileEncryptionConfigured=true`, `postgresRuntimeReady=true`, `mirrorOperational=true`, `blockers=[]`, and `externalLaunchReady=true`.
-- PostgreSQL remains intentionally in mirror mode. A connected mirror does not prove durable recovery or authorize cutover.
+- Latest runtime-verified deployed source: `7ce40e787d4ca01ccb724ade93fa72a2ddd7a3c4`.
+- Latest observed startup preflight reports `dbMirrorMode=durable`, `postgresRuntimeReady=true`, `durableOperational=true`, `blockers=[]`, and `externalLaunchReady=true`.
+- PostgreSQL is running in durable mode. The latest verified startup restore recovered 13 records and reported `verified=true`; isolated backup/restore and rollback evidence remains a separate operational gate.
 - Public [Privacy](https://zovro-web.onrender.com/privacy.html), [Terms](https://zovro-web.onrender.com/terms.html), and [Support](https://zovro-web.onrender.com/support.html) pages returned HTTP 200 during the latest verification. Inbox monitoring and legal approval are separate gates.
 
 ## Live Stripe observations
 
-Source: connected Zovro Stripe account, US live mode, checked 2026-09-11.
+Source: connected Zovro Stripe account, US live mode, refreshed 2026-09-22.
 
 - `charges_enabled=true`, `payouts_enabled=true`, and `details_submitted=true`.
 - `card_payments=active` and `transfers=active`.
 - The live webhook endpoint is enabled at https://zovro-api-final.onrender.com/api/payments/webhook using API version `2026-08-26.dahlia`, with events `payment_intent.succeeded`, `payment_intent.payment_failed`, `charge.refunded`, and `transfer.reversed`.
 - Render has the webhook signing secret configured.
 - No real signed Stripe POST delivery was observed in the reviewed Render logs; only unauthenticated GET/HEAD probes returned the expected 401. The payment lifecycle gate therefore remains open.
-- `requirements.currently_due` still contains `company.tax_id` with `verification_failed_tax_id_match`. Stripe reports that the document EIN does not match the EIN recorded on the account.
-- Current reported deadline: 2026-10-09. No identity data, EIN, documents, payment, refund, or payout was modified by this verification.
+- Stripe account requirements currently report `currently_due=[]`, `eventually_due=[]`, `past_due=[]`, `pending_verification=[]`, with no current deadline or disabled reason.
+- Live account evidence confirms `charges_enabled=true`, `payouts_enabled=true`, and a successful $1.00 PaymentIntent plus successful linked refund. No new payment or refund was created for this documentation refresh.
 
 ## OneSignal observations
 
@@ -53,19 +53,19 @@ Source: connected Zovro Stripe account, US live mode, checked 2026-09-11.
 
 | ID | Gate | Status | Exact next evidence |
 | --- | --- | --- | --- |
-| TAX-01 | Company verification | BLOCKED | Authorized owner provides IRS-matching legal name/EIN evidence or corrects the account EIN; Stripe clears `company.tax_id` before 2026-10-09. |
-| PAY-01 | Payment/webhook lifecycle | BLOCKED | Record authorized success, decline, refund/cancel, replay-protection, and provider-transfer tests with Stripe event/delivery IDs and successful signature verification. |
+| TAX-01 | Company verification | PASS | Stripe currently reports no due, past-due, or pending-verification account requirements; charges and payouts are enabled. |
+| PAY-01 | Payment/webhook lifecycle | PARTIAL | Live payment and linked refund are verified; webhook endpoint/configuration and signature/idempotency code are present. Remaining evidence: successful signed live webhook POST receipt/delivery. |
 | PUSH-01 | Real mobile delivery | BLOCKED | Configure APNs/FCM, register signed iOS/Android devices, and record request/acceptance/status delivery plus notification-tap routing. |
 | AND-01 | Android distribution | BLOCKED | Produce a release-signed AAB, record its source SHA and SHA-256, obtain Play test-track acceptance, and pass physical-device tests. |
 | IOS-01 | iOS distribution | BLOCKED | Produce a signed archive/IPA, complete TestFlight processing, and pass physical-device GPS, Face ID, payment, and push tests. |
 | DB-01 | Durable storage | PARTIAL/PASS FOR CURRENT STARTUP | Production has been moved to durable mode and startup restore reported 7 restored records with per-table count verification. Remaining external evidence: isolated backup/restore and rollback drill without destructive production changes. |
-| SUPPORT-01 | Support operations | BLOCKED | Record monitored `support@zovro.net` send, receive, and reply evidence. |
+| SUPPORT-01 | Support operations | BLOCKED | Record monitored `support@zovro.work` send, receive, and reply evidence. |
 | STORE-01 | Store submission | PARTIAL | en-US listing metadata and public URLs are prepared. Remaining: signed-build screenshots/graphics, authorized Apple/Google records, completed privacy/data-safety forms, content rating, and legal review. |
 | LIVE-01 | Integrated launch | BLOCKED | Identify final deployed backend SHA and signed mobile builds, then pass customer/provider/request/SOS/payment/push/privacy/consent/support/deletion lifecycle tests. |
 
 ## Next execution order
 
-1. Resolve the Stripe EIN mismatch and complete a controlled live payment/webhook proof.
+1. Complete the remaining Stripe signed live webhook delivery proof; account verification, live payment, refund, and payout readiness are already verified.
 2. Sign Android/iOS builds and complete physical-device push, GPS, SOS, biometric, and payment tests.
 3. Capture truthful screenshots from those signed builds and upload the prepared store listing metadata.
 4. Preserve durable mode; complete isolated backup/restore and rollback evidence without destructive production changes.
