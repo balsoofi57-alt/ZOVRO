@@ -63,6 +63,7 @@
     };
   }
   ready(()=>{
+    try {
     installRegistrationConsentTransport();
     document.title='ZOVRO — Anywhere, Anytime, Near to You.';
     const brand=document.querySelector('.brand');
@@ -165,6 +166,10 @@
         return originalSubmitAuth.apply(this,arguments);
       };
       wrappedSubmitAuth.__zovroNames=true;window.submitAuth=wrappedSubmitAuth;
+    }
+    } catch (error) {
+      console.error('ZOVRO enhancement failed', error);
+      document.documentElement.classList.add('z-enhancement-fallback');
     }
   })
 })();
