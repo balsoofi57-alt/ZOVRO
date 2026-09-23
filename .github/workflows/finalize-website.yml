@@ -28,7 +28,7 @@ jobs:
           grep -q 'website-final.css' index.html
           grep -q 'website-final.js' index.html
           grep -q 'Anywhere, Anytime, Near to You.' website-final.js
-          grep -q 'support@zovro.net' website-final.js
+          grep -Fq 'support@zovro.work' website-final.js
       - name: Commit generated index
         run: |
           if git diff --quiet -- index.html; then exit 0; fi
