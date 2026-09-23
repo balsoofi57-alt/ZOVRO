@@ -1,7 +1,8 @@
 (function(){
   'use strict';
   const APP_ID=String(window.ZOVRO_CONFIG?.oneSignalAppId||'7992b022-6c11-4a66-bad4-8cbd114266d0');
-  let initialized=false,lastUserId=null,busy=false,listenersReady=false;
+  // Undefined means the native SDK identity has not been reconciled this session.
+  let initialized=false,lastUserId=undefined,busy=false,listenersReady=false;
   const plugin=()=>window.Capacitor?.Plugins?.OneSignalCapacitor||null;
   const unwrapPermission=x=>typeof x==='boolean'?x:!!x?.permission;
   const unwrapId=x=>typeof x==='string'?x:(x?.id||null);
@@ -42,19 +43,19 @@
       const userId=typeof me!=='undefined'&&me?.id?String(me.id):null;
       if(userId&&userId!==lastUserId){
         await p.login({externalId:userId});lastUserId=userId;
-      }else if(!userId&&lastUserId){
+      }else if(!userId&&lastUserId!==null){
         await p.logout();lastUserId=null;
       }
       await requestInitialPermission(p,userId);
     }catch(e){console.warn('ZOVRO push sync unavailable:',e?.message||e)}finally{busy=false}
   }
   async function status(){
-    const p=await ensureInitialized();if(!p)return {native:false,initialized:false,permission:false,subscriptionId:null,externalUserId:lastUserId};
+    const p=await ensureInitialized();if(!p)return {native:false,initialized:false,permission:false,subscriptionId:null,externalUserId:lastUserId??null};
     const permission=await p.getPermission().catch(()=>({permission:false}));
     const subscription=await p.getPushSubscriptionId().catch(()=>({id:null}));
     const token=await p.getPushSubscriptionToken?.().catch(()=>({token:null}));
     const optedIn=await p.getPushSubscriptionOptedIn?.().catch(()=>({optedIn:false}));
-    return {native:true,initialized,permission:unwrapPermission(permission),subscriptionId:unwrapId(subscription),token:token?.token||null,optedIn:!!optedIn?.optedIn,externalUserId:lastUserId};
+    return {native:true,initialized,permission:unwrapPermission(permission),subscriptionId:unwrapId(subscription),token:token?.token||null,optedIn:!!optedIn?.optedIn,externalUserId:lastUserId??null};
   }
   async function requestPermission(){
     const p=await ensureInitialized();if(!p)return false;
