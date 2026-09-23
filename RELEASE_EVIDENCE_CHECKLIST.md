@@ -92,3 +92,13 @@ Production secrets and signing identities cannot be reconstructed from source. M
 - Production/store/final checks now gate the reconciled release-critical client features and reject the legacy payment UI renderer override.
 - SMS transport remains disabled by default; no real SMS is part of automated release evidence.
 - Real payment, real push, signed-device, store-account, support-inbox, and signing evidence remain external gates and must not be marked PASS from source inspection alone.
+
+## 2026-09-23 merged mobile recovery packaging verification
+
+- [PR #32](https://github.com/balsoofi57-alt/ZOVRO/pull/32) merged into `zovro-final-deploy` as `b6b1a2972c977b1434e0ada2ee962ece7c428c99`. It copies the missing password-recovery client into mobile output, checks referenced local scripts exist, includes all 11 recovery tests in full QA, and triggers QA for recovery-client edits. Recovery/SMS activation is unchanged.
+- [Full QA #637](https://github.com/balsoofi57-alt/ZOVRO/actions/runs/35854197414) passed on that exact merged SHA.
+- [Build ZOVRO Android #50](https://github.com/balsoofi57-alt/ZOVRO/actions/runs/35854197412) and [Android Release Verification #137](https://github.com/balsoofi57-alt/ZOVRO/actions/runs/35854197395) passed on that SHA. The signing preparation succeeded but signed-build/upload steps were skipped, and the unsigned path ran: Android signing inputs remain incomplete. AND-01 stays BLOCKED.
+- Build #50 produced `zovro-android-debug-apk` (artifact 10746877905; archive digest `sha256:0dbd59c1047dd5f0421d6972b9e4c1b8e8b210fda339c89ebc97be1321e4e6de`) and `zovro-android-release-unsigned-aab` (artifact 10746858116; archive digest `sha256:3768127e4502ca096a26fdd11571f21a9746f501bf065eada0dc78b5238820f8`). These digests are GitHub artifact metadata, not independently computed APK/AAB hashes. Artifacts expire October 7, 2026. Direct archive retrieval into the verification worker returned HTTP 403, so binary contents were not independently inspected.
+- [iOS Release Verification](https://github.com/balsoofi57-alt/ZOVRO/actions/runs/35854197454) was still building the unsigned simulator app at this checkpoint. No iOS success, signed IPA, TestFlight upload, or device acceptance is claimed.
+- Latest read-only Render observation still showed API source `9f3de94e00f1c3a8f8faae9c3e83e35b074abb86` live; no production deployment of the packaging-only change was observed. The web source remains separately tracked. This merge is source/build evidence, not public launch evidence.
+- PAY-01, PUSH-01, IOS-01, DB-01 recovery drill, SUPPORT-01, STORE-01, and LIVE-01 keep their previously recorded external requirements. No real messages or payments were sent during this verification.
