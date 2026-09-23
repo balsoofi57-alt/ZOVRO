@@ -1,0 +1,23 @@
+name: Support mailbox bridge checks
+on:
+  push:
+    branches: [zovro-final-deploy]
+    paths: ['workers/support-mail/**', 'support-policy.js', 'backend/support-email-draft.js', '.github/workflows/support-mail-bridge.yml']
+  pull_request:
+    branches: [zovro-final-deploy]
+    paths: ['workers/support-mail/**', 'support-policy.js', 'backend/support-email-draft.js', '.github/workflows/support-mail-bridge.yml']
+permissions:
+  contents: read
+jobs:
+  bridge:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '22'
+      - run: npm ci --no-audit --no-fund
+        working-directory: workers/support-mail
+      - run: npm test
+        working-directory: workers/support-mail
+      - run: node workers/support-mail/worker.js
