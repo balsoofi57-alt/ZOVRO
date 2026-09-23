@@ -1,6 +1,6 @@
 # Policy-based support replies
 
-Prepared 2026-09-23; local implementation only. Not deployed; support mailbox is not connected.
+Prepared 2026-09-23; uploaded in PR #44. Not deployed; support mailbox is not connected.
 
 `support-policy.js` supplies the app and the future email adapter with the same versioned responses. English, Arabic and Spanish are supported. In the app, the user can select a reply language or use automatic detection. Detection is heuristic; explicit selection takes precedence.
 
@@ -21,13 +21,17 @@ This is a deterministic policy responder, not a connected generative AI model. O
 
 Before activating that transport: authenticate inbound events; deduplicate message IDs durably; exclude bulk, delivery-error and automatic replies to avoid loops; verify reply recipients; apply rate limits; create a durable human-review ticket when required; record policy version and answer ID; and verify send/receive/reply behavior with controlled test mail. App ticket policy metadata is informational, supplied by the client, and must not be trusted by a future server-side automation worker. Such a worker must recompute the policy decision from the submitted question.
 
-No mailbox credentials, external model keys, live email sends, repository push or deployment were performed for this implementation.
+No mailbox credentials, external model keys, live email sends or deployment were performed. After explicit owner authorization, the source was uploaded through the connected GitHub integration and draft PR #44 was opened.
 
 ## Gate closure checkpoint — 2026-09-23
 
 | Gate | Completed locally | Still required |
 | --- | --- | --- |
-| Policy-based multilingual support | Shared EN/AR/ES FAQ responder, explicit language selector, source references, unknown/payment/safety human-review decisions, disabled email draft adapter; support checks and full QA passed | Explicit authorization to push to balsoofi57-alt/ZOVRO after automatic approval review rejected the push; PR/CI/deployment verification; authenticated support mailbox transport and real controlled receive/reply test |
+| Policy-based multilingual support | Shared EN/AR/ES FAQ responder, explicit language selector, source references, unknown/payment/safety human-review decisions, disabled email draft adapter; support checks and full QA passed | Deployment verification; authenticated support mailbox transport and real controlled receive/reply test |
 | Licensing policy | No blanket registration license requirement; service/location-specific legal duties explained in registration help and support FAQ in three languages; existing optional registration license field preserved; relevant checks passed | Publish and verify visible wording. This change does not implement or prove a nationwide licensing rules database or jurisdiction-specific enforcement |
 
 Outlook Email was declined for this request; do not require or re-suggest it. The connected Gmail identity observed was zovro.llc@gmail.com, which does not establish access to support@zovro.work. A different verified transport or mailbox connection is still needed. Do not send customer mail or treat either deployment or live mailbox operation as complete based on local QA.
+
+## Upload and CI update
+
+The owner explicitly authorized uploading to balsoofi57-alt/ZOVRO. PR #44 contains source commit `4b4a3784d6dbaf309e6b41c0cb66d7c58e1802f9`; ZOVRO Full QA run 35906448156 (run 659) completed successfully. This supersedes the earlier upload authorization blocker. A follow-up adds the shared policy and support client to both PR and push QA path filters, so future FAQ edits trigger checks. Merge, deployment and live mailbox operation are not claimed.
