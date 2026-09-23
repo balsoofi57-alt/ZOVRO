@@ -3,7 +3,7 @@ const crypto = require('node:crypto');
 const digest = value => crypto.createHash('sha256').update(value).digest('hex');
 const TYPE = 'password_recovery';
 const TTL = 10 * 60 * 1000;
-const unavailable = {error:'Password recovery is not available yet. Contact contact@zovro.work for help.'};
+const unavailable = {error:'Password recovery is not available yet. Contact support@zovro.work for help.'};
 
 function verifyProvider(env=process.env, fetcher=fetch) {
   const configured = () => env.ZOVRO_PASSWORD_RECOVERY_ENABLED === 'true' &&
