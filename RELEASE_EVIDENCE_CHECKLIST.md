@@ -47,6 +47,7 @@ Source: connected Zovro Stripe account, US live mode, refreshed 2026-09-22.
 
 - Render's current web deploy is live at `b9b55d5bbc1ee258fa80fb3a7e790e45214f1fc2` (2026-09-23 03:09 UTC). [PR #30](https://github.com/balsoofi57-alt/ZOVRO/pull/30) merged the iPhone CTA/sign-in spacing fix; live GPS permission and SOS behavior still require iPhone acceptance evidence.
 - The latest API deploy is live at `9f3de94e00f1c3a8f8faae9c3e83e35b074abb86`; no full QA or signed mobile build is claimed for that exact SHA here.
+- A fresh read of the connected live Zovro Stripe account confirms `charges_enabled=true`, `payouts_enabled=true`, `details_submitted=true`, active `card_payments` and `transfers`, and empty `currently_due`, `eventually_due`, `past_due`, and `pending_verification` requirements. TAX-01 remains PASS as of this read.
 - The connected Zovro live Stripe account still lists an enabled endpoint for the four configured payment events at `/api/payments/webhook`. Render's path-filtered log query from 2026-09-22 onward returned no webhook requests. This log search alone cannot prove that Stripe has never attempted delivery; retain PAY-01 as partial until an event ID, delivery result, and application signature verification are recorded.
 - Render error-level log query returned no entries in the queried window. This is a scoped observation, not an integrated acceptance pass.
 - [PR #29](https://github.com/balsoofi57-alt/ZOVRO/pull/29) is an open draft documenting four Apple signing secret names; it does not produce a signed IPA or TestFlight acceptance.
