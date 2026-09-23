@@ -16,7 +16,9 @@
       if(typeof renderAccount==='function')renderAccount();
       if(typeof loadJobs==='function')loadJobs();
       if(window.ZOVRO_PUSH?.syncUser)window.ZOVRO_PUSH.syncUser();
-    }catch{
+    }catch(e){
+      // Network/server failures do not establish that saved credentials are invalid.
+      if(e?.status!==401)return;
       setRuntime('');localStorage.removeItem(KEY);await remove();
       try{me=null}catch{}
       if(typeof renderAccount==='function')renderAccount();
