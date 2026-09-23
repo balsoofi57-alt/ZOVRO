@@ -13,13 +13,19 @@ html=html.replace("const API='https://zovro-api.onrender.com'","const API=(windo
 html=html.replace("let token=localStorage.zovroToken||''","let token='' ");
 html=html.replaceAll('localStorage.zovroToken=token','ZOVRO_SECURE_SESSION.set(token)');
 html=html.replaceAll("localStorage.removeItem('zovroToken')",'ZOVRO_SECURE_SESSION.remove()');
-html=html.replace('boot();setInterval(()=>{if(me)loadJobs()},10000);',"ZOVRO_SECURE_SESSION.initialize().then(()=>{token=window.ZOVRO_SESSION_TOKEN||'';boot();setInterval(()=>{if(me)loadJobs()},10000)});");
+// Remove the website startup before injecting a mobile startup after all clients.
+// Fail closed when the source changes instead of silently shipping an early boot.
+const websiteStartup='boot();setTimeout(handleStripeConnectReturn,900);setInterval(()=>{if(me)loadJobs()},10000);';
+if(html.split(websiteStartup).length!==2)throw Error('Expected exactly one website startup sequence');
+html=html.replace(websiteStartup,'');
 const state='<div id="state" class="state">Checking API…</div>';
 const chooser='<div style="display:flex;align-items:center;gap:8px"><select id="zovroLanguage" class="state" aria-label="Language" onchange="ZOVRO_I18N.setLanguage(this.value)"><option value="en">English</option><option value="es">Español</option></select><div id="state" class="state">Checking API…</div></div>';
 if(html.includes(state))html=html.replace(state,chooser);
 // The website already includes private-profile UI; inject it only once in mobile.
 html=html.replace('<script src="profile-security-client.js"></script>','');
 if(!html.includes('<script src="i18n.js"></script>'))html=html.replace('</body>','<link rel="stylesheet" href="leaflet.css">\n<script src="leaflet.js"></script>\n<script src="biometric-client.js"></script>\n<script src="secure-session.js"></script>\n<script src="i18n.js"></script>\n<script src="consent-client.js"></script>\n<script src="profile-security-client.js"></script>\n<script src="payment-client.js"></script>\n<script src="push-client.js"></script>\n<script src="payment-ui.js"></script>\n<script src="live-map.js"></script>\n<script src="support-center.js"></script>\n</body>');
+const mobileStartup="<script>document.addEventListener('DOMContentLoaded',()=>{ZOVRO_SECURE_SESSION.initialize().then(()=>{token=window.ZOVRO_SESSION_TOKEN||'';boot();setTimeout(handleStripeConnectReturn,900);setInterval(()=>{if(me)loadJobs()},10000)});},{once:true});</script>";
+html=html.replace('</body>',mobileStartup+'\n</body>');
 fs.writeFileSync(path.join(out,'index.html'),html);
 for(const name of ['manifest.webmanifest','service-worker.js','privacy.html','terms.html','support.html','biometric-client.js','secure-session.js','i18n.js','consent-client.js','profile-security-client.js','payment-client.js','push-client.js','payment-ui.js','live-map.js','support-center.js','website-final.css','website-final.js','password-recovery-client.js','provider-service-picker.js'])fs.copyFileSync(path.join(root,name),path.join(out,name));
 fs.mkdirSync(path.join(out,'src'),{recursive:true});

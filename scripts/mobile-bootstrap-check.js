@@ -1,0 +1,34 @@
+"use strict";
+const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),vm=require('node:vm'),cp=require('node:child_process');
+const root=path.resolve(__dirname,'..');
+cp.execFileSync(process.execPath,[path.join(root,'scripts/prepare-mobile.js')],{cwd:root,stdio:'pipe'});
+const html=fs.readFileSync(path.join(root,'www/index.html'),'utf8');
+const inline=[...html.matchAll(/<script>([\s\S]*?)<\/script>/g)].map(x=>x[1]);
+const tick=()=>new Promise(r=>setImmediate(r));
+async function scenario(unlock){
+ const events=[],intervals=[],timeouts=[],boots=[],requests=[];
+ const nodes=new Map(),node=id=>{if(!nodes.has(id))nodes.set(id,{style:{},classList:{add(){},remove(){},toggle(){}},insertAdjacentHTML(){},querySelectorAll(){return []}});return nodes.get(id)};
+ const context=vm.createContext({console,URLSearchParams,AbortController,localStorage:{getItem(){return null},removeItem(){}},sessionStorage:{getItem(){return null},removeItem(){},setItem(){}},navigator:{},document:{readyState:'loading',getElementById:node,querySelectorAll(){return []},addEventListener(name,fn){if(name==='DOMContentLoaded')events.push(fn)}},setInterval(fn,ms){intervals.push({fn,ms})},setTimeout(fn,ms){timeouts.push({fn,ms})},clearTimeout(){},clearInterval(){},ZOVRO_SERVICE_PICKER:{options(){return ''},subOptions(){return ''}},fetch(){requests.push('early fetch');return Promise.resolve({ok:true,json:async()=>({ok:true})})}});
+ context.window=context;
+ for(const script of inline)vm.runInContext(script,context);
+ assert.equal(requests.length,0,'Generated mobile app must not boot before secure-session scripts load');
+ assert.equal(intervals.filter(x=>x.ms===10000).length,0,'Job polling must wait for session initialization');
+ let finishUnlock;
+ context.Capacitor={Plugins:{SecureStoragePlugin:{get:async()=>({value:'saved-session'}),set:async()=>{},remove:async()=>{}}}};
+ context.ZOVRO_BIOMETRIC={shouldProtect:()=>true,authenticate:()=>new Promise(resolve=>{finishUnlock=resolve})};
+ context.recordBoot=value=>boots.push(value);
+ context.recordRequest=value=>requests.push(value);
+ vm.runInContext("boot=()=>recordBoot(token);api=async()=>{recordRequest(token);return {user:{id:'test-user'}}};renderAccount=()=>{};loadJobs=()=>{}",context);
+ vm.runInContext(fs.readFileSync(path.join(root,'secure-session.js'),'utf8'),context);
+ for(const event of events)event();
+ await tick();
+ assert.equal(typeof finishUnlock,'function','Mobile startup must invoke biometric-gated session restoration');
+ assert.equal(boots.length,0,'Boot must wait for biometric decision');
+ assert.equal(requests.length,0,'Saved token must not reach API before unlock');
+ finishUnlock(unlock);await tick();
+ assert.deepEqual(boots,[unlock?'saved-session':''],'Mobile boot must run once with authorized session only');
+ assert.deepEqual(requests,unlock?['saved-session']:[],'Denied biometric must not authenticate requests');
+ assert.equal(intervals.filter(x=>x.ms===10000).length,1,'Register job refresh exactly once');
+ assert.equal(timeouts.filter(x=>x.ms===900).length,1,'Preserve Stripe return callback');
+}
+(async()=>{await scenario(true);await scenario(false);console.log('Mobile bootstrap: generated bundle waits for plugin load and biometric unlock; denied unlock remains signed out; polling and Stripe return preserved.');})().catch(e=>{console.error(e);process.exitCode=1});
