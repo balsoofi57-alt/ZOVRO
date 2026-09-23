@@ -103,3 +103,11 @@ Production secrets and signing identities cannot be reconstructed from source. M
 - Read-only inspection of GitHub Actions secrets settings showed no repository secrets and no environment secrets on September 23. This corroborates missing signing inputs; no secret values were entered or changed. Google Play account inspection was blocked by automatic browser approval review, so current Play account/app status was not verified.
 - Latest read-only Render observation still showed API source `9f3de94e00f1c3a8f8faae9c3e83e35b074abb86` live; no production deployment of the packaging-only change was observed. The web source remains separately tracked. This merge is source/build evidence, not public launch evidence.
 - PAY-01, PUSH-01, IOS-01, DB-01 recovery drill, SUPPORT-01, STORE-01, and LIVE-01 keep their previously recorded external requirements. No real messages or payments were sent during this verification.
+
+## 2026-09-23 12:06 UTC live web GPS verification
+
+- PR #34 merged into main as `32522b95c8854a5049da8df5cba7a9ff63fffe79`. GPS now has callback deadlines, validates coordinate bounds and timestamp freshness, and retries an imprecise SOS position with high accuracy. Full QA passed before merge (run 35858009691) and on the merged source (run 35858060345).
+- Render zovro-web deploy `dep-daps0uc9v7es739noivg` is LIVE on that exact SHA, finished at `2026-09-23T12:06:01.35888Z`. The service had autoDeploy enabled but no new deployment queued or running when checked; a manual trigger deployed the reviewed current source. The underlying missed auto-deploy cause remains unverified.
+- A fresh successful HTTP fetch of https://zovro-web.onrender.com/ contained all three expected fixes: `options.timeout+1000`, `Date.now()-timestamp>60000`, and `geo({maxAccuracy:250})`.
+- Browser reload rendered the service page; clicking Get Help Now opened Sign in/Create account with Continue/Cancel controls. The inspected error-log sample contained browser-extension metadata errors only. This is a scoped UI check, not a full authenticated lifecycle pass. No location, real SOS request, payment, or message was submitted.
+- Physical iPhone GPS/SOS acceptance remains OPEN. These web changes target main; mobile source is separately tracked on zovro-final-deploy and must not be assumed to contain this GPS change.
