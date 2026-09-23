@@ -30,7 +30,7 @@
     "mobile:prepare": "node scripts/prepare-mobile.js",
     "mobile:init": "node scripts/init-mobile.js",
     "maps:check": "node scripts/maps-check.js",
-    "support:check": "node scripts/support-center-check.js",
+    "support:check": "node scripts/support-center-check.js && node scripts/support-policy-check.js",
     "profile-privacy:check": "node scripts/profile-privacy-check.js",
     "private-profile-api:check": "node scripts/private-profile-api-check.js",
     "gps:check": "node scripts/gps-runtime-check.js",
