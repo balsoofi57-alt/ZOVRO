@@ -119,6 +119,25 @@ function scan(directory) {
   }
 }
 
+// Execute the actual early upload guard with dummy values, never real credentials.
+const { spawnSync } = require('node:child_process');
+for (const [name, workflow, flag] of [['Android', android, 'upload_google_play'], ['iOS', ios, 'upload_testflight']]) {
+  const step = workflow.match(/      - name: Require credentials for requested store upload\n([\s\S]*?)(?=\n      - )/);
+  if (!step) { fail(name + ' must reject incomplete explicitly requested uploads'); continue; }
+  requireTokens(name + ' upload preflight', step[1], ["github.event_name == 'workflow_dispatch'", 'inputs.' + flag + ' == true']);
+  const names = [...step[1].matchAll(/          (ZOVRO_[A-Z0-9_]+):/g)].map(m => m[1]);
+  const body = step[1].split('        run: |\n')[1].split('\n').map(line => line.replace(/^          /, '')).join('\n');
+  const complete = Object.fromEntries(names.map(key => [key, 'private-test-value']));
+  for (const missing of [null, ...names, 'ALL']) {
+    const env = {PATH: process.env.PATH, ...complete};
+    if (missing === 'ALL') for (const key of names) delete env[key];
+    else if (missing) delete env[missing];
+    const result = spawnSync('bash', ['-c', body], {env, encoding: 'utf8'});
+    if ((result.status === 0) !== (missing === null)) fail(name + ' upload guard accepted missing credentials or rejected complete credentials');
+    if ((result.stdout + result.stderr).includes('private-test-value')) fail(name + ' upload guard exposed a credential value');
+  }
+}
+
 scan(root);
 
 if (bad) process.exit(1);
