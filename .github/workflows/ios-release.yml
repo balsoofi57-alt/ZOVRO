@@ -31,6 +31,28 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Require credentials for requested store upload
+        if: github.event_name == 'workflow_dispatch' && inputs.upload_testflight == true
+        env:
+          ZOVRO_IOS_CERTIFICATE_P12_BASE64: ${{ secrets.ZOVRO_IOS_CERTIFICATE_P12_BASE64 }}
+          ZOVRO_IOS_CERTIFICATE_PASSWORD: ${{ secrets.ZOVRO_IOS_CERTIFICATE_PASSWORD }}
+          ZOVRO_IOS_PROVISIONING_PROFILE_BASE64: ${{ secrets.ZOVRO_IOS_PROVISIONING_PROFILE_BASE64 }}
+          ZOVRO_APPLE_TEAM_ID: ${{ secrets.ZOVRO_APPLE_TEAM_ID }}
+          ZOVRO_APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.ZOVRO_APP_STORE_CONNECT_API_KEY_ID }}
+          ZOVRO_APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.ZOVRO_APP_STORE_CONNECT_ISSUER_ID }}
+          ZOVRO_APP_STORE_CONNECT_API_PRIVATE_KEY_BASE64: ${{ secrets.ZOVRO_APP_STORE_CONNECT_API_PRIVATE_KEY_BASE64 }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          missing=0
+          for name in ZOVRO_IOS_CERTIFICATE_P12_BASE64 ZOVRO_IOS_CERTIFICATE_PASSWORD ZOVRO_IOS_PROVISIONING_PROFILE_BASE64 ZOVRO_APPLE_TEAM_ID ZOVRO_APP_STORE_CONNECT_API_KEY_ID ZOVRO_APP_STORE_CONNECT_ISSUER_ID ZOVRO_APP_STORE_CONNECT_API_PRIVATE_KEY_BASE64; do
+            if [[ -z "${!name:-}" ]]; then
+              echo "::error::Required store-upload credential is missing: $name"
+              missing=1
+            fi
+          done
+          if [[ "$missing" != 0 ]]; then exit 1; fi
+
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
