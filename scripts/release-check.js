@@ -7,4 +7,11 @@ let bad=false;for(const f of required){const p=path.join(root,f);if(!fs.existsSy
 const iconCandidates=['assets/zovro-icon-1024.png','assets/zovro-icon.svg'];if(!iconCandidates.some(f=>fs.existsSync(path.join(root,f)))){console.error('MISSING store icon source');bad=true}else console.log('OK store icon source');
 const cap=JSON.parse(fs.readFileSync(path.join(root,'capacitor.config.json'),'utf8'));if(cap.appId!=='com.zovro.app'||cap.appName!=='ZOVRO'||cap.webDir!=='www'){console.error('Invalid Capacitor identity');bad=true}
 const html=fs.readFileSync(path.join(root,'www/index.html'),'utf8');if(!html.includes('ZOVRO_CONFIG')||!html.includes('zovroLanguage')||!html.includes('i18n.js')){console.error('Mobile runtime configuration or localization missing');bad=true}
+// Every local script referenced by the generated app must ship in the bundle.
+// Strip query strings so versioned assets are checked against their actual file.
+for(const match of html.matchAll(/<script\b[^>]*\bsrc=["']([^"']+)["']/gi)){
+ const src=match[1];if(/^(?:[a-z][a-z0-9+.-]*:|\/\/)/i.test(src))continue;
+ const file=src.split(/[?#]/)[0].replace(/^\//,'');
+ if(!fs.existsSync(path.join(root,'www',file))){console.error('MISSING bundled script',src);bad=true}
+}
 if(bad)process.exit(1);console.log('ZOVRO release preflight passed.');
