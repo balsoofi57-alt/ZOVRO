@@ -1,0 +1,19 @@
+name: Support policy web verification
+on:
+  push:
+    branches: [main]
+    paths: ['support-policy.js', 'support-policy-page.js', 'support.html', 'provider-service-picker.js', 'scripts/support-web-check.js', '.github/workflows/support-policy.yml']
+  pull_request:
+    branches: [main]
+    paths: ['support-policy.js', 'support-policy-page.js', 'support.html', 'provider-service-picker.js', 'scripts/support-web-check.js', '.github/workflows/support-policy.yml']
+permissions:
+  contents: read
+jobs:
+  support:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '22'
+      - run: node scripts/support-web-check.js
