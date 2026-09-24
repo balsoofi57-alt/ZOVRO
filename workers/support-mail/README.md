@@ -102,3 +102,11 @@ With owner approval, Render's existing support-mail service was switched to `fea
 - Final cumulative database receipt totals: 6 sent (3 before these guards and 3 after deployment), 1 human-review receipt (resolved separately), and 1 rate-limited receipt. The persistent scheduled mode remains `disabled`; manual tests used temporary process-local `test` mode only.
 
 Limits: these results verify Gmail-to-Spacemail owner mail, normal fresh-process replay prevention, sender-hour denial, and the operator workflow. They do not establish other-provider acceptance, global-budget production stress, ambiguous SMTP crash recovery, backup/restore, external monitoring alerts or general customer readiness. Customer mode is still unsupported and no customer sending was activated.
+
+## Isolated process recovery validation — 2026-09-24
+
+`npm test` now includes six recovery scenarios that execute the real `processMessage` in separate Node processes. Four terminate the process with SIGKILL: before reservation, after reservation, after simulated remote acceptance, and after saving the sent receipt. Two simulate lost SMTP acknowledgement and failure to persist the send result. Each starts two fresh processes against the retained test receipt and checks the total simulated remote acceptances. All 36 tests pass.
+
+A crash before reservation permits the next process to send once. Once reserved, replay never sends again: a crash before SMTP can therefore leave an unsent message requiring human review. Acceptance followed by an interrupted or failed status update leaves a reserved or delivery-unconfirmed receipt, also requiring review. This is at-most-once sending after a durable reservation, not guaranteed delivery.
+
+The harness uses a temporary filesystem receipt adapter and simulated SMTP acceptance, with no production credentials or network calls. It verifies bridge process recovery under the durable-store contract, not PostgreSQL server failure, disk/power loss, worker cursor integration, real SMTP transport crashes, concurrency or backup restoration. The fixture is single-process and must not be used as a production store. No runtime code, Render configuration or customer-send setting changed for this validation.
