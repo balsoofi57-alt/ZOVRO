@@ -51,3 +51,24 @@ This checkpoint supersedes the earlier statements that no scheduler was provisio
 The follow-up source change validates PostgreSQL URL structure before integrations open. It rejects malformed URLs without including credentials in the error. All 14 local bridge tests pass. This change is proposed separately and is not yet deployed.
 
 Outstanding before general customer use: implement/review customer mode, trusted inbound sender validation and appropriate sender rate limits, an actionable operator review workflow and monitoring, and controlled crash/recovery evidence. Customer activation needs owner approval after these safeguards are ready. Do not enable customer traffic by changing `test` mode or removing its recipient restriction.
+
+## Proposed operator review workflow (not deployed)
+
+The follow-up review CLI provides a private operator queue. It does not turn on replies, create a dashboard, notify an operator, or mark messages read. After deploying this code, the next explicitly authorized non-disabled worker run creates the additive `zovro_support_mail_reviews` table. Existing receipts and cursors are preserved. There is no automatic schema change while the worker is disabled; review commands themselves do not migrate the database.
+
+From `workers/support-mail` in a protected operator shell:
+
+```sh
+npm run review -- summary
+npm run review -- list
+npm run review -- inspect RECEIPT_KEY
+npm run review -- resolve RECEIPT_KEY --resolution answered_manually --confirm RECEIPT_KEY
+```
+
+`summary` reports counts and oldest pending dates; `list` returns the oldest 100 unresolved records. Repeat after resolving that page to reach later records. The queue includes human review, unconfirmed sends, skipped messages, oversized messages and reservations older than ten minutes. Skipped messages include automated/list mail and need operator triage; not every skipped item requires a reply. Fresh reservations are excluded from the queue and cannot be resolved while a normal bounded worker run could still be active. Oversized new mail now receives a durable receipt before the cursor advances; historical oversized messages without receipts are not backfilled.
+
+`inspect` retrieves only the IMAP envelope (subject, sender and Message-ID), with a read-only mailbox lock and UID-validity check. Find the original message in the support inbox and review/reply there. Its output is private customer metadata: use only a protected interactive shell, never scheduled logs, public reports or shared screenshots. It does not fetch bodies, render HTML or open attachments. A missing original message or changed mailbox identity stops inspection.
+
+Resolve only after manual handling, selecting `answered_manually`, `no_action` or `verified_delivered`. The same receipt key must be repeated after `--confirm`. Resolution is idempotent and stored separately from the immutable delivery receipt; it never resets the cursor, erases history or retries SMTP. A false `resolved` result means the record was already resolved or is not eligible. Operator identity currently relies on host/account access auditing; there is no application-level operator identity or role-management layer yet.
+
+This completes a code-level operator workflow, not a staffed or deployed support service. An owner still needs to assign monitoring responsibility, deploy/verify the additive schema and CLI, and arrange notifications if desired. Customer mode, trusted inbound authentication, per-sender rate limits and crash/recovery validation remain separate launch gates.

@@ -1,5 +1,6 @@
 'use strict';
 const {config,processMessage,SUPPORT}=require('./bridge');
+const {ensureSchema}=require('./schema');
 async function run(){
  const cfg=config();if(cfg.mode==='disabled'){console.log('Support mail bridge disabled; no connections opened.');return;}
  const {ImapFlow}=require('imapflow'),{simpleParser}=require('mailparser'),nodemailer=require('nodemailer'),{Client}=require('pg');
@@ -11,8 +12,7 @@ async function run(){
  try{
   await db.connect();
   const locked=await db.query('SELECT pg_try_advisory_lock(9262301) AS acquired');if(!locked.rows[0].acquired)throw Error('Another support mail run is active');
-  await db.query(`CREATE TABLE IF NOT EXISTS zovro_support_mail_cursor(mailbox text PRIMARY KEY,uid_validity text NOT NULL,last_uid bigint NOT NULL);
-CREATE TABLE IF NOT EXISTS zovro_support_mail_receipts(message_key text PRIMARY KEY,mailbox text NOT NULL,uid_validity text NOT NULL,uid bigint NOT NULL,status text NOT NULL,answer_id text,policy_version text,created_at timestamptz NOT NULL DEFAULT now(),updated_at timestamptz NOT NULL DEFAULT now(),UNIQUE(mailbox,uid_validity,uid));`);
+  await ensureSchema(db);
   await imap.connect();lock=await imap.getMailboxLock('INBOX',{readOnly:true});
   const validity=String(imap.mailbox.uidValidity),latest=Number(imap.mailbox.uidNext)-1;
   const saved=await db.query('SELECT * FROM zovro_support_mail_cursor WHERE mailbox=$1',[SUPPORT]);
@@ -37,6 +37,9 @@ CREATE TABLE IF NOT EXISTS zovro_support_mail_receipts(message_key text PRIMARY 
     const message=await imap.fetchOne(uid,{source:true},{uid:true});if(!message)continue;
     const mail=await simpleParser(message.source,{skipHtmlToText:true,skipTextToHtml:true,skipImageLinks:true,maxHtmlLengthToParse:262144});
     result=await processMessage({mail,uid,uidValidity:validity,mode:cfg.mode,store,send:async data=>{const out=await smtp.sendMail(data);if(!out.accepted?.includes(data.to))throw Error('Recipient was not accepted');}});
+   }else{
+    const key=require('node:crypto').createHash('sha256').update(SUPPORT+'\0oversized:'+validity+':'+uid).digest('hex');
+    await store.reserve({key,uid,uidValidity:validity,status:'oversized',answerId:null,policyVersion:null});
    }
    await db.query('UPDATE zovro_support_mail_cursor SET last_uid=$2 WHERE mailbox=$1',[SUPPORT,uid]);
    // No sender addresses, subjects, message bodies, credentials or raw errors in logs.
