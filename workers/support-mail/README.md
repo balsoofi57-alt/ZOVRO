@@ -1,6 +1,6 @@
 # Spacemail policy reply bridge
 
-Current status: owner-only sending was deployed and verified on 2026-09-24. Persistent scheduled sending is disabled. This candidate branch adds a separately gated customer mode; it is not deployed or activated. Later sections retain historical checkpoints; use the latest dated validation and the operational recovery instructions below for current limits.
+Current status: customer policy replies were explicitly approved and activated on 2026-09-24. The service runs the PR #50 branch at commit 20c8f3c79dc20c0aa3520fc438c10b74b0dccb2a with mode=customer and customer approval=yes. Company review alerts remain enabled. Earlier disabled/not-deployed statements below are historical checkpoints; the latest activation checkpoint governs current status.
 
 ## Company support alerts — approved 2026-09-24
 
@@ -20,7 +20,7 @@ This separate, one-shot process reads **new** INBOX messages over TLS IMAP and c
 - `disabled` (default): no connections or sends.
 - `preview`: records decisions in a dedicated PostgreSQL receipt table without SMTP sending. Previewed messages will not later be sent automatically; send a new test message for the test stage.
 - `test`: only messages from `zovro.llc@gmail.com`, addressed to `support@zovro.work`, can receive a policy reply. The recipient must also be explicitly configured. Other senders never receive mail in test mode.
-- `customer` (candidate, not deployed): requires the additional exact configuration `ZOVRO_SUPPORT_MAIL_CUSTOMER_APPROVED=yes`. Only authenticated, eligible senders with exact approved FAQ matches can receive a reply at their original From address. All durable reservation, review, rate and loop guards apply. Selecting this mode alone fails before opening connections. Configuration is an operator control, not a substitute for owner approval or operational readiness.
+- `customer` (explicitly approved and activated): requires the additional exact configuration `ZOVRO_SUPPORT_MAIL_CUSTOMER_APPROVED=yes`. Only authenticated, eligible senders with exact approved FAQ matches can receive a reply at their original From address. All durable reservation, review, rate and loop guards apply. Selecting this mode alone fails before opening connections. Configuration is an operator control, not a substitute for owner approval or operational readiness.
 
 Only exact approved FAQ matches can send an answer in an explicitly enabled sending mode. Other questions, including refunds and safety, are recorded for manual review, with the original message left untouched in INBOX. The protected review CLI and company alert checks cover the recorded queue. Notification delivery does not mean a human has reviewed the case.
 
@@ -161,3 +161,11 @@ The ten-minute command still runs the disabled worker only; monitoring is availa
 ## Combined candidate checkpoint — 2026-09-24
 
 The candidate now incorporates the deployed company-alert branch, preserving the separately gated customer mode. The README merge retained both the customer-mode limits and delivered-alert evidence. The combined test suite contains 47 tests; the PostgreSQL integration exercises customer routing, approval denial, cursor recovery, concurrent send/alert reservations, monitor exit states and backup/restore together. Deploying this candidate and activating customer mode remain separate from this source update.
+
+## Explicit customer activation — 2026-09-24
+
+After automatic approval review rejected an ambiguous continue instruction, the owner explicitly approved publishing PR #50 and activating approved customer replies. Render was switched to `feature/support-mail-customer-candidate-20260924`; commit `20c8f3c79dc20c0aa3520fc438c10b74b0dccb2a` built successfully at 12:29 UTC. The persistent settings `ZOVRO_SUPPORT_MAIL_MODE=customer` and `ZOVRO_SUPPORT_MAIL_CUSTOMER_APPROVED=yes` were then saved with rebuild/apply-on-next-run; that build succeeded at 12:31 UTC. The ten-minute `cycle.js` command and company-only alert recipient were retained. No cursor reset, history deletion or budget override occurred.
+
+A fresh deployed shell confirmed `{mode:customer, customerApproved:true}` and ran the actual cycle. A new company-origin FAQ test (Gmail sent id `1a0d367057c7b35c`) was authenticated and recorded as `rate_limited`, because three previous company replies still occupied the rolling-hour allowance. Queue health showed two rate-limited company tests and the alert check was healthy. This proves activation, real intake and durable budget denial; it is not evidence of a newly delivered customer-mode reply. The test receipt will not auto-replay after the window expires. Prior real SMTP deliveries and the combined 47-test/PostgreSQL CI evidence remain separately documented.
+
+Customer activation does not close unrelated app/store/payment release gates. Only exact approved FAQs may send; other requests remain for human handling under the existing review and notification thresholds.
