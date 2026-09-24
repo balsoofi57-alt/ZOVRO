@@ -1,7 +1,7 @@
 name: Support mailbox bridge checks
 on:
   push:
-    branches: [zovro-final-deploy]
+    branches: [zovro-final-deploy, feature/support-mail-sender-guards-20260924]
     paths: ['workers/support-mail/**', 'support-policy.js', 'backend/support-email-draft.js', '.github/workflows/support-mail-bridge.yml']
   pull_request:
     branches: [zovro-final-deploy]
@@ -21,3 +21,32 @@ jobs:
       - run: npm test
         working-directory: workers/support-mail
       - run: node workers/support-mail/worker.js
+  postgres-recovery:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: support_fixture
+          POSTGRES_PASSWORD: disposable_fixture_only
+          POSTGRES_DB: zovro_support_test
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '22'
+      - run: npm ci --no-audit --no-fund
+        working-directory: workers/support-mail
+      - name: Install matching PostgreSQL client
+        run: sudo apt-get update -qq && sudo apt-get install -y postgresql-client-16
+      - name: Worker crash, concurrency and backup recovery
+        run: node workers/support-mail/integration/postgres.cjs
+        env:
+          ZOVRO_TEST_DATABASE_URL: postgresql://support_fixture:disposable_fixture_only@127.0.0.1:5432/zovro_support_test

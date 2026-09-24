@@ -1,6 +1,9 @@
 'use strict';
 const {config,processMessage,SUPPORT}=require('./bridge');
 const {ensureSchema}=require('./schema');
+const {reserveReceipt}=require('./receipt-store');
+const {verifySender}=require('./sender-auth');
+const {summary}=require('./review');
 async function run(){
  const cfg=config();if(cfg.mode==='disabled'){console.log('Support mail bridge disabled; no connections opened.');return;}
  const {ImapFlow}=require('imapflow'),{simpleParser}=require('mailparser'),nodemailer=require('nodemailer'),{Client}=require('pg');
@@ -22,10 +25,10 @@ async function run(){
   }
   if(process.argv.includes('--initialize'))throw Error('Mailbox already initialized; cursor was not changed');
   if(saved.rows[0].uid_validity!==validity)throw Error('Mailbox UID validity changed; manual review required');
-  const cursor=Number(saved.rows[0].last_uid);if(latest<=cursor)return;
+  const cursor=Number(saved.rows[0].last_uid);if(latest<=cursor){console.log(JSON.stringify({event:'support_mail_health',pending:await summary(db)}));return;}
   const ids=(await imap.search({uid:(cursor+1)+':'+latest},{uid:true})).filter(uid=>uid>cursor&&uid<=latest).sort((a,b)=>a-b).slice(0,25);
   const store={
-   reserve:async r=>(await db.query('INSERT INTO zovro_support_mail_receipts(message_key,mailbox,uid_validity,uid,status,answer_id,policy_version) VALUES($1,$2,$3,$4,$5,$6,$7) ON CONFLICT DO NOTHING RETURNING message_key',[r.key,SUPPORT,r.uidValidity,r.uid,r.status,r.answerId,r.policyVersion])).rowCount===1,
+   reserve:r=>reserveReceipt(db,r),
    finish:async(key,status)=>db.query('UPDATE zovro_support_mail_receipts SET status=$2,updated_at=now() WHERE message_key=$1',[key,status])
   };
   for(const uid of ids){
@@ -36,7 +39,8 @@ async function run(){
    if(meta.size<=262144){
     const message=await imap.fetchOne(uid,{source:true},{uid:true});if(!message)continue;
     const mail=await simpleParser(message.source,{skipHtmlToText:true,skipTextToHtml:true,skipImageLinks:true,maxHtmlLengthToParse:262144});
-    result=await processMessage({mail,uid,uidValidity:validity,mode:cfg.mode,store,send:async data=>{const out=await smtp.sendMail(data);if(!out.accepted?.includes(data.to))throw Error('Recipient was not accepted');}});
+    const auth=await verifySender(message.source,mail.from?.value?.[0]?.address);
+    result=await processMessage({mail,uid,uidValidity:validity,mode:cfg.mode,store,senderVerified:auth.verified,send:async data=>{const out=await smtp.sendMail(data);if(!out.accepted?.includes(data.to))throw Error('Recipient was not accepted');}});
    }else{
     const key=require('node:crypto').createHash('sha256').update(SUPPORT+'\0oversized:'+validity+':'+uid).digest('hex');
     await store.reserve({key,uid,uidValidity:validity,status:'oversized',answerId:null,policyVersion:null});
@@ -45,6 +49,7 @@ async function run(){
    // No sender addresses, subjects, message bodies, credentials or raw errors in logs.
    console.log(JSON.stringify({event:'support_mail_processed',status:result}));
   }
+  console.log(JSON.stringify({event:'support_mail_health',pending:await summary(db)}));
  }finally{
   if(lock)lock.release();await imap.logout().catch(()=>{});smtp.close();await db.end().catch(()=>{});process.off('SIGTERM',shutdown);process.off('SIGINT',shutdown);
  }
