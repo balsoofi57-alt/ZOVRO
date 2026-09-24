@@ -10,6 +10,7 @@ const {ensureSchema}=require('../schema');
 const {reserveReceipt}=require('../receipt-store');
 const {summary,resolve}=require('../review');
 const {SUPPORT,TEST_RECIPIENT}=require('../bridge');
+const {ensureAlerts,notify}=require('../alerts');
 const source=process.env.ZOVRO_TEST_DATABASE_URL;
 const url=new URL(source);
 // Destructive restore tests are permitted only against this disposable local DB.
@@ -80,6 +81,14 @@ async function main(){
   assert.equal(JSON.parse(healthy.stdout).attentionRequired,false);
   assert.equal(acceptances(),1);
   console.log('PASS read-only monitor detects stale reservation and clears after operator resolution while sender disabled');
+  await ensureAlerts(db);await ensureAlerts(db);
+  const alertDb=new Client({connectionString:testUrl});await alertDb.connect();
+  let alertSends=0;
+  try{
+   const results=await Promise.all([db,alertDb].map(client=>notify({db:client,result:{attentionRequired:false},test:true,send:async()=>{alertSends++;}})));
+   assert.deepEqual(results.sort(),['sent','throttled']);assert.equal(alertSends,1);
+  }finally{await alertDb.end();}
+  console.log('PASS concurrent alert jobs persist one reservation and send only one company notification');
   // Logical backup includes cursor, reservations and review dispositions together.
   const env={...process.env,PGHOST:url.hostname,PGPORT:url.port||'5432',PGDATABASE:'zovro_support_test',PGUSER:decodeURIComponent(url.username),PGPASSWORD:decodeURIComponent(url.password),PGOPTIONS:''};
   const dumpPath=path.join(directory,'support.sql');
@@ -92,6 +101,7 @@ async function main(){
   assert.deepEqual(await state(),{receipts:[{status:'reserved'}],cursor:0});
   assert.deepEqual(await summary(db),[]);
   assert.equal((await db.query('SELECT resolution FROM zovro_support_mail_reviews')).rows[0].resolution,'verified_delivered');
+  assert.equal((await db.query('SELECT count(*)::int AS count FROM zovro_support_mail_alerts')).rows[0].count,1);
   const afterRestore=run('normal');assert.ifError(afterRestore.error);assert.equal(afterRestore.status,0,afterRestore.stderr);
   assert.equal((await state()).cursor,1);assert.equal(acceptances(),1);
   console.log('PASS PostgreSQL dump/restore preserves reservations, cursor, dispositions and replay prevention');
