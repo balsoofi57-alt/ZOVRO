@@ -5,7 +5,16 @@ const email=(text='What is ZOVRO?',sender=TEST_RECIPIENT)=>({from:{value:[{addre
 function fixture(){const records=new Map(),sent=[];return {records,sent,store:{reserve:async r=>{if(records.has(r.key))return false;records.set(r.key,{...r});return true},finish:async(k,status)=>{records.get(k).status=status}},send:async m=>{sent.push(m)}}}
 const process=(mail,f,mode='test')=>processMessage({mail,uid:22,uidValidity:'17',mode,store:f.store,send:f.send});
 test('disabled opens no integration and rejects unknown/live mode',async()=>{assert.deepEqual(config({}),{mode:'disabled'});assert.throws(()=>config({ZOVRO_SUPPORT_MAIL_MODE:'live'}));assert.equal(await process(email(),fixture(),'disabled'),'disabled');assert.throws(()=>config({ZOVRO_SUPPORT_MAIL_MODE:'test'}));});
-test('requires explicit owner recipient',()=>{const env={ZOVRO_SUPPORT_MAIL_MODE:'test',ZOVRO_SUPPORT_MAIL_USER:SUPPORT,ZOVRO_SUPPORT_MAIL_PASSWORD:'fixture',ZOVRO_SUPPORT_MAIL_DATABASE_URL:'fixture'};assert.throws(()=>config(env));assert.equal(config({...env,ZOVRO_SUPPORT_MAIL_TEST_RECIPIENT:TEST_RECIPIENT}).mode,'test')});
+const validConfig={ZOVRO_SUPPORT_MAIL_MODE:'test',ZOVRO_SUPPORT_MAIL_USER:SUPPORT,ZOVRO_SUPPORT_MAIL_PASSWORD:'fixture',ZOVRO_SUPPORT_MAIL_DATABASE_URL:'postgresql://fixture:fixture@localhost/support_test',ZOVRO_SUPPORT_MAIL_TEST_RECIPIENT:TEST_RECIPIENT};
+test('requires explicit owner recipient',()=>{assert.throws(()=>config({...validConfig,ZOVRO_SUPPORT_MAIL_TEST_RECIPIENT:undefined}));assert.equal(config(validConfig).mode,'test')});
+test('invalid database settings fail locally without disclosing credentials',()=>{
+ const secret='private-fixture-value';
+ for(const url of ['database-password-only','https://fixture:'+secret+'@localhost/db','postgresql://localhost/db','postgresql://fixture:'+secret+'@localhost/',' postgresql://fixture:'+secret+'@localhost/db','postgresql://fixture:'+secret+'@localhost/db\n','postgresql://fixture:'+secret+'@localhost/db#fragment']){
+  assert.throws(()=>config({...validConfig,ZOVRO_SUPPORT_MAIL_DATABASE_URL:url}),error=>error.message.includes('complete PostgreSQL URL')&&!error.message.includes(secret)&&!error.message.includes(url));
+ }
+ for(const protocol of ['postgres','postgresql'])assert.equal(config({...validConfig,ZOVRO_SUPPORT_MAIL_DATABASE_URL:protocol+'://fixture:p%40ss@localhost:5432/db?sslmode=require'}).mode,'test');
+ assert.deepEqual(config({...validConfig,ZOVRO_SUPPORT_MAIL_MODE:'disabled',ZOVRO_SUPPORT_MAIL_DATABASE_URL:'invalid'}),{mode:'disabled'});
+});
 test('owner test reply uses company policy and loop headers',async()=>{const f=fixture();assert.equal(await process(email(),f),'sent');assert.equal(f.sent.length,1);assert.equal(f.sent[0].to,TEST_RECIPIENT);assert.equal(f.sent[0].headers['Auto-Submitted'],'auto-replied');assert.match(f.sent[0].text,/terms.html/)});
 test('preview and customer mail never send',async()=>{for(const [mode,sender] of [['preview',TEST_RECIPIENT],['test','customer@example.test']]){const f=fixture();await process(email(undefined,sender),f,mode);assert.equal(f.sent.length,0)}});
 test('duplicate and restart do not send again',async()=>{const f=fixture();await process(email(),f);assert.equal(await process(email(),{...f,sent:[]}), 'duplicate');assert.equal(f.sent.length,1)});
