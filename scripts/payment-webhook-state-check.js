@@ -74,5 +74,39 @@ const event=(id,type,obj)=>({id,type,data:{object:obj}});
   assert.equal((await send(retry)).status,200,'Retry succeeds after storage recovery');
   assert.equal((await send(retry)).body.duplicate,true);
   assert.equal((await send(event('','payment_intent.succeeded',{id:'pi_1'}))).status,400);
+  // A failed transfer must not consume the event receipt or prevent a retry.
+  state.requests.push({id:'req_tip_retry',providerId:'provider_fixture',stripeTipPaymentIntentId:'pi_tip_retry',paymentState:'released',tipState:'payment_pending'});
+  state.users.push({id:'provider_fixture',stripeRecipientAccountId:'acct_fixture'});
+  const originalTransfer=payments.createTipTransfer, transferCalls=[];
+  let transferUnavailable=true;
+  payments.createTipTransfer=async args=>{
+    transferCalls.push(structuredClone(args));
+    if(transferUnavailable)throw new Error('Simulated transfer outage');
+    return {id:'tr_tip_retry'};
+  };
+  try {
+    const tipEvent=event('evt_tip_retry','payment_intent.succeeded',{id:'pi_tip_retry',amount_received:100,latest_charge:'ch_tip_retry',metadata:{zovro_payment_type:'tip'}});
+    const beforeFailure=JSON.stringify(state), commitsBeforeFailure=commits;
+    assert.equal((await send(tipEvent)).status,500,'Failed tip transfer must ask Stripe to retry');
+    assert.equal(receipts.has(tipEvent.id),false,'Failure must not record a processed receipt');
+    assert.equal(commits,commitsBeforeFailure);
+    assert.equal(JSON.stringify(state),beforeFailure,'Failed transfer must not publish success state or notifications');
+    // Simulate restart from committed state, then simultaneous successful retries.
+    state=JSON.parse(JSON.stringify(state));
+    transferUnavailable=false;
+    const retried=await Promise.all(Array.from({length:10},()=>send(tipEvent)));
+    assert.equal(retried.every(r=>r.status===200),true);
+    assert.equal(retried.filter(r=>r.body.duplicate).length,9);
+    assert.equal(transferCalls.length,2,'One failed attempt and one successful retry');
+    assert.deepEqual(transferCalls[0],transferCalls[1],'Retry must preserve transfer parameters and the existing idempotency identity');
+    assert.equal(commits,commitsBeforeFailure+1);
+    const tipRequest=state.requests.find(r=>r.id==='req_tip_retry');
+    assert.equal(tipRequest.tipState,'released');
+    assert.equal(tipRequest.stripeTipTransferId,'tr_tip_retry');
+    assert.equal(state.notifications.filter(n=>n.meta?.requestId==='req_tip_retry').length,1);
+    assert.equal((await send(tipEvent)).body.duplicate,true);
+    assert.equal(transferCalls.length,2,'Replay after success must not repeat the transfer');
+  } finally {payments.createTipTransfer=originalTransfer;}
+  console.log('PASS: tip transfer failure, retry after serialized-state reload, concurrent retry deduplication and single success notification.');
   console.log('PASS: signed HTTP webhook, invalid signature, metadata-free refund, duplicate replay, reloaded-state replay, late success/partial/failure, tip mapping, conflicting identifiers.');
 })().catch(e=>{console.error(e);process.exitCode=1}).finally(()=>server.close());
