@@ -1,6 +1,6 @@
-# Spacemail policy reply bridge — owner test only
+# Spacemail policy reply bridge
 
-Current status: owner-only sending was deployed and verified on 2026-09-24. Persistent scheduled sending is disabled. Later sections retain historical checkpoints; use the latest dated validation and the operational recovery instructions below for current limits. General customer mode is not implemented.
+Current status: owner-only sending was deployed and verified on 2026-09-24. Persistent scheduled sending is disabled. This candidate branch adds a separately gated customer mode; it is not deployed or activated. Later sections retain historical checkpoints; use the latest dated validation and the operational recovery instructions below for current limits.
 
 This separate, one-shot process reads **new** INBOX messages over TLS IMAP and can send policy replies over TLS SMTP. It uses the existing deterministic EN/AR/ES policy responder; it is not a generative AI model. It is not imported by the production API and does not run automatically when the app deploys.
 
@@ -9,7 +9,7 @@ This separate, one-shot process reads **new** INBOX messages over TLS IMAP and c
 - `disabled` (default): no connections or sends.
 - `preview`: records decisions in a dedicated PostgreSQL receipt table without SMTP sending. Previewed messages will not later be sent automatically; send a new test message for the test stage.
 - `test`: only messages from `zovro.llc@gmail.com`, addressed to `support@zovro.work`, can receive a policy reply. The recipient must also be explicitly configured. Other senders never receive mail from this version.
-- Customer/live sending is deliberately unsupported pending real test evidence and review.
+- `customer` (candidate, not deployed): requires the additional exact configuration `ZOVRO_SUPPORT_MAIL_CUSTOMER_APPROVED=yes`. Only authenticated, eligible senders with exact approved FAQ matches can receive a reply at their original From address. All durable reservation, review, rate and loop guards apply. Selecting this mode alone fails before opening connections. Configuration is an operator control, not a substitute for owner approval or operational readiness.
 
 Only exact approved FAQ matches send a test answer. Other questions, including refunds and safety, are recorded for manual review, with the original message left untouched in INBOX. No automated human notification or support dashboard queue is implemented yet. Query the receipt statuses and review the inbox; do not claim an escalation was delivered to an operator.
 
@@ -129,4 +129,12 @@ To operate this check, the owner must explicitly choose its schedule and verify 
 4. Inspect stale `reserved` and `delivery_unconfirmed` cases individually. If delivery is proven, resolve `verified_delivered`; otherwise manually decide whether a reply is appropriate. Never delete a reservation to force a retry. A manual reply is recorded as `answered_manually` only after the operator has sent it.
 5. Verify the restored worker with company-only new test messages and review health output. Resuming a restored production service requires an explicit reviewed decision; this runbook does not authorize restore or customer activation.
 
-Remaining operational decisions: assign a person to review the support inbox and urgent queue; verify external alert delivery; establish actual Render backup recovery/reconciliation evidence; implement and review customer mode before separately approving activation. The existing owner-only deployment is not a general customer autoresponder.
+Remaining operational decisions: assign a person to review the support inbox and urgent queue; verify external alert delivery; establish actual Render backup recovery/reconciliation evidence; review the candidate customer mode before separately approving activation. The existing owner-only deployment is not a general customer autoresponder.
+
+## Verified CI recovery checkpoint and customer-mode candidate — 2026-09-24
+
+Both jobs in [CI run 35997151302](https://github.com/balsoofi57-alt/ZOVRO/actions/runs/35997151302) passed at commit `3e010c875df6b82b09a5c9b0796ea8824187ba7d`: 38 tests plus PostgreSQL 16 integration. The integration verified actual worker cursor recovery after SIGKILL, uncertain-delivery replay prevention, concurrent database budget serialization, dump/restore preserving receipt/review/cursor data, and read-only monitoring exit states. Mail transports were fake; the database was real and disposable. No Render settings or production data changed.
+
+The subsequent candidate customer mode retains disabled-by-default behavior and the exact owner-only recipient restriction in test mode. It requires both `ZOVRO_SUPPORT_MAIL_MODE=customer` and `ZOVRO_SUPPORT_MAIL_CUSTOMER_APPROVED=yes`. The worker passes this approval explicitly to the message processor, which also refuses a missing or non-boolean approval. It sends the existing approved AR/EN/ES policy text to the verified sender, uses a non-test support subject, and keeps unknown/sensitive requests for human review. There is no generative answer path or automatic replay of earlier preview/non-test receipts.
+
+Local validation covers 43 tests, including candidate configuration denial, three-language customer replies through a fake transport, recipient redirection/authentication/budget denial, unchanged disabled/preview/test behavior and uncertain-delivery deduplication. The PostgreSQL suite additionally exercises candidate activation denial and the actual worker's recipient routing using simulated mail. This code does not authorize customer sending. Before production activation, review the candidate, deploy with sending disabled, verify the operator/notification process and recovery plan, then obtain explicit approval for the two activation settings. Rollback is to set mode back to `disabled`, stop any active sender process and retain all cursor/receipt/review records; disabling does not undo an email already accepted by SMTP.

@@ -20,7 +20,7 @@ const testUrl=url.toString();
 const directory=fs.mkdtempSync(path.join(os.tmpdir(),'zovro-postgres-'));
 const accepted=path.join(directory,'accepted.txt');
 const db=new Client({connectionString:testUrl});
-const run=scenario=>spawnSync(process.execPath,[path.join(__dirname,'../fixtures/worker-integration.cjs')],{encoding:'utf8',timeout:20000,env:{...process.env,ZOVRO_SUPPORT_MAIL_DATABASE_URL:testUrl,ZOVRO_SUPPORT_MAIL_MODE:'test',ZOVRO_SUPPORT_MAIL_USER:SUPPORT,ZOVRO_SUPPORT_MAIL_PASSWORD:'isolated-fixture',ZOVRO_SUPPORT_MAIL_TEST_RECIPIENT:TEST_RECIPIENT,ZOVRO_FIXTURE_SCENARIO:scenario,ZOVRO_FIXTURE_ACCEPTANCES:accepted}});
+const run=scenario=>spawnSync(process.execPath,[path.join(__dirname,'../fixtures/worker-integration.cjs')],{encoding:'utf8',timeout:20000,env:{...process.env,ZOVRO_SUPPORT_MAIL_DATABASE_URL:testUrl,ZOVRO_SUPPORT_MAIL_MODE:scenario.startsWith('customer')?'customer':'test',ZOVRO_SUPPORT_MAIL_CUSTOMER_APPROVED:scenario==='customer'?'yes':'no',ZOVRO_SUPPORT_MAIL_USER:SUPPORT,ZOVRO_SUPPORT_MAIL_PASSWORD:'isolated-fixture',ZOVRO_SUPPORT_MAIL_TEST_RECIPIENT:TEST_RECIPIENT,ZOVRO_FIXTURE_SCENARIO:scenario,ZOVRO_FIXTURE_ACCEPTANCES:accepted}});
 const monitor=()=>spawnSync(process.execPath,[path.join(__dirname,'../monitor.js')],{encoding:'utf8',timeout:20000,env:{...process.env,ZOVRO_SUPPORT_MAIL_DATABASE_URL:testUrl,ZOVRO_SUPPORT_MAIL_MODE:'disabled',ZOVRO_SUPPORT_MAIL_USER:SUPPORT,ZOVRO_SUPPORT_MAIL_PASSWORD:'isolated-fixture'}});
 const acceptances=()=>fs.existsSync(accepted)?fs.readFileSync(accepted,'utf8').trim().split('\n').length:0;
 async function state(){return {receipts:(await db.query('SELECT status FROM zovro_support_mail_receipts')).rows,cursor:Number((await db.query('SELECT last_uid FROM zovro_support_mail_cursor')).rows[0].last_uid)};}
@@ -46,6 +46,13 @@ async function main(){
    assert.equal(acceptances(),1);
   }
   console.log('PASS real worker: durable reservation, SIGKILL, ambiguous SMTP, cursor recovery, no duplicate acceptance');
+  await reset();
+  const unapproved=run('customer-unapproved');assert.ifError(unapproved.error);assert.equal(unapproved.status,1);
+  assert.deepEqual(await state(),{receipts:[],cursor:0});assert.equal(acceptances(),0);
+  const customer=run('customer');assert.ifError(customer.error);assert.equal(customer.status,0,customer.stderr);
+  assert.deepEqual(await state(),{receipts:[{status:'sent'}],cursor:1});assert.equal(acceptances(),1);
+  const customerReplay=run('customer');assert.ifError(customerReplay.error);assert.equal(customerReplay.status,0,customerReplay.stderr);assert.equal(acceptances(),1);
+  console.log('PASS candidate customer worker requires approval and preserves correct recipient and replay protection with fake transport');
   await reset();
   const changed=run('changed-validity');assert.ifError(changed.error);assert.equal(changed.status,1);
   assert.deepEqual(await state(),{receipts:[],cursor:0});assert.equal(acceptances(),0);

@@ -40,7 +40,7 @@ async function run(){
     const message=await imap.fetchOne(uid,{source:true},{uid:true});if(!message)continue;
     const mail=await simpleParser(message.source,{skipHtmlToText:true,skipTextToHtml:true,skipImageLinks:true,maxHtmlLengthToParse:262144});
     const auth=await verifySender(message.source,mail.from?.value?.[0]?.address);
-    result=await processMessage({mail,uid,uidValidity:validity,mode:cfg.mode,store,senderVerified:auth.verified,send:async data=>{const out=await smtp.sendMail(data);if(!out.accepted?.includes(data.to))throw Error('Recipient was not accepted');}});
+    result=await processMessage({mail,uid,uidValidity:validity,mode:cfg.mode,customerApproved:cfg.customerApproved,store,senderVerified:auth.verified,send:async data=>{const out=await smtp.sendMail(data);if(!out.accepted?.includes(data.to))throw Error('Recipient was not accepted');}});
    }else{
     const key=require('node:crypto').createHash('sha256').update(SUPPORT+'\0oversized:'+validity+':'+uid).digest('hex');
     await store.reserve({key,uid,uidValidity:validity,status:'oversized',answerId:null,policyVersion:null});
