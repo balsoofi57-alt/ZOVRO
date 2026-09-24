@@ -104,4 +104,6 @@ CREATE INDEX IF NOT EXISTS idx_workflows_request ON workflow_records(request_id)
 INSERT INTO meta(key,value) VALUES('schemaVersion','7')
 ON CONFLICT (key) DO UPDATE SET value=EXCLUDED.value;
 
+CREATE TABLE IF NOT EXISTS stripe_webhook_receipts(event_id TEXT PRIMARY KEY,data JSONB NOT NULL);
+
 COMMIT;

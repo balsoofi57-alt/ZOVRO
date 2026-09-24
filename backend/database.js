@@ -10,6 +10,7 @@ let postgresOperational=false,postgresError=null,mirrorWriteSafe=false;
 fs.mkdirSync(DATA,{recursive:true});
 const db=new DatabaseSync(SQLITE);
 db.exec(`PRAGMA journal_mode=WAL; PRAGMA foreign_keys=ON;
+CREATE TABLE IF NOT EXISTS stripe_webhook_receipts(event_id TEXT PRIMARY KEY,data TEXT NOT NULL);
 CREATE TABLE IF NOT EXISTS meta(key TEXT PRIMARY KEY,value TEXT NOT NULL);
 CREATE TABLE IF NOT EXISTS users(id TEXT PRIMARY KEY,data TEXT NOT NULL);
 CREATE TABLE IF NOT EXISTS service_requests(id TEXT PRIMARY KEY,customer_id TEXT,provider_id TEXT,status TEXT,created_at TEXT,data TEXT NOT NULL);
@@ -47,6 +48,7 @@ function writeDb(input,options={}){const d=shape(input),existingNotificationIds=
  replace('device_sessions',d.deviceSessions,'INSERT INTO device_sessions(id,user_id,data) VALUES(?,?,?)',x=>[x.id||x.token||require('crypto').randomUUID(),x.userId||null,JSON.stringify(x)]);
  replace('notifications',d.notifications,'INSERT INTO notifications(id,user_id,created_at,data) VALUES(?,?,?,?)',x=>[x.id,x.userId||null,x.createdAt||null,JSON.stringify(x)]);
  replace('sms_outbox',d.smsOutbox,'INSERT INTO sms_outbox(id,user_id,request_id,status,created_at,data) VALUES(?,?,?,?,?,?)',x=>[x.id,x.userId||null,x.requestId||null,x.status||null,x.createdAt||null,JSON.stringify(x)]);
+ if(options.paymentReceipt)db.prepare('INSERT OR IGNORE INTO stripe_webhook_receipts(event_id,data) VALUES(?,?)').run(options.paymentReceipt.eventId,JSON.stringify(options.paymentReceipt));
  db.prepare("INSERT OR REPLACE INTO meta(key,value) VALUES('schemaVersion',?)").run(String(SCHEMA_VERSION));db.exec('COMMIT');
  if(!options.suppressPush){const newlyCreated=d.notifications.filter(n=>n?.id&&!existingNotificationIds.has(n.id));if(newlyCreated.length)push.deliverMany(newlyCreated)}
  if(!options.suppressMirror&&MIRROR_MODE!=='off'&&mirror.enabled()){if(!postgresOperational||!mirrorWriteSafe){console.warn(JSON.stringify({event:'postgres_mirror_write_skipped',reason:!postgresOperational?'mirror_not_initialized':'local_remote_state_not_safe'}));}else mirror.enqueue(d);}
@@ -63,4 +65,22 @@ function migrateLegacy(){const count=db.prepare('SELECT COUNT(*) n FROM users').
 migrateLegacy();migrateWorkflowAudit();db.prepare("INSERT OR REPLACE INTO meta(key,value) VALUES('schemaVersion',?)").run(String(SCHEMA_VERSION));
 function closeDb(){try{db.exec('PRAGMA wal_checkpoint(TRUNCATE)')}catch{}try{db.close()}catch{}}
 function dbInfo(){return {engine:MIRROR_MODE==='off'?'sqlite':postgresOperational?'sqlite+postgres-mirror':'sqlite',schemaVersion:SCHEMA_VERSION,file:SQLITE,mirrorMode:MIRROR_MODE,postgresConfigured:mirror.enabled(),postgresOperational,postgresError,mirrorWriteSafe}}
-module.exports={readDb,writeDb,closeDb,dbInfo,initDurable,SCHEMA_VERSION};
+// Receipts are append-only and deliberately outside replace-all application snapshots.
+async function findPaymentEventReceipt(eventId){
+ if(MIRROR_MODE==='durable'){
+  if(!postgresOperational||!mirrorWriteSafe)throw new Error('Durable payment storage unavailable');
+  return mirror.findPaymentReceipt(eventId);
+ }
+ const row=db.prepare('SELECT data FROM stripe_webhook_receipts WHERE event_id=?').get(eventId);
+ return row?JSON.parse(row.data):null;
+}
+async function writePaymentEvent(state,receipt){
+ if(MIRROR_MODE==='durable'&&(!postgresOperational||!mirrorWriteSafe))throw new Error('Durable payment storage unavailable');
+ writeDb(state,{suppressMirror:true,paymentReceipt:receipt});
+ if(MIRROR_MODE!=='off'&&postgresOperational&&mirrorWriteSafe){
+  // The PostgreSQL transaction includes both request changes and receipt.
+  // Fail the delivery on persistence failure so Stripe can retry.
+  await mirror.enqueue(state,receipt);
+ }
+}
+module.exports={readDb,writeDb,closeDb,dbInfo,initDurable,SCHEMA_VERSION,findPaymentEventReceipt,writePaymentEvent};
