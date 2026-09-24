@@ -8,6 +8,11 @@ function config(env=process.env){
  if(!['disabled','preview','test'].includes(mode))throw Error('Only disabled, preview or owner-test mode is supported');
  if(mode==='disabled')return {mode};
  if(env.ZOVRO_SUPPORT_MAIL_USER!==SUPPORT||!env.ZOVRO_SUPPORT_MAIL_PASSWORD||!env.ZOVRO_SUPPORT_MAIL_DATABASE_URL)throw Error('Support mailbox and durable database configuration required');
+ const databaseUrl=env.ZOVRO_SUPPORT_MAIL_DATABASE_URL;
+ try{
+  const url=new URL(databaseUrl);
+  if(databaseUrl!==databaseUrl.trim()||/[\r\n\t]/.test(databaseUrl)||!['postgres:','postgresql:'].includes(url.protocol)||!url.hostname||!url.username||!url.password||url.pathname.length<=1||url.hash)throw Error();
+ }catch{throw Error('ZOVRO_SUPPORT_MAIL_DATABASE_URL must be a complete PostgreSQL URL with host, database and credentials');}
  if(mode==='test'&&env.ZOVRO_SUPPORT_MAIL_TEST_RECIPIENT!==TEST_RECIPIENT)throw Error('Owner test recipient must be explicitly configured');
  return {mode,user:SUPPORT,password:env.ZOVRO_SUPPORT_MAIL_PASSWORD,databaseUrl:env.ZOVRO_SUPPORT_MAIL_DATABASE_URL};
 }

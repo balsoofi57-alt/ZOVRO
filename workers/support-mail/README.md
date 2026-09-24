@@ -36,3 +36,18 @@ Each run considers at most 25 messages; raw messages over 256 KiB are not parsed
 ## Remaining launch gates
 
 Local fake-transport tests do not prove real IMAP/SMTP connectivity, PostgreSQL durability or mail delivery. Before customer mode is implemented: verify the secure deployment configuration; run an isolated real PostgreSQL crash/restart test; verify three-language owner-test delivery and received headers; implement operator review/notifications and operational monitoring; agree on scheduling costs and permissions; add sender authentication/rate limits appropriate to customer traffic. Browser login and past manual mailbox verification are separate evidence.
+
+## Verified owner-test checkpoint — 2026-09-24
+
+This checkpoint supersedes the earlier statements that no scheduler was provisioned or real delivery was verified. Render service `zovro-support-mail` exists on the Ohio Starter plan with a ten-minute schedule. Its persistent mode remains `disabled`. Tests used a temporary process-local `test` mode, restricted to the owner's company Gmail account. Customer sending remains unsupported.
+
+- IMAP authentication and SMTP verification succeeded with the saved support mailbox credentials.
+- Corrected the malformed bridge database URL using the existing production database's internal connection URL. A rebuild of the same deployed commit `3bc11d83824e11a2accae195444a25a759379f9b` succeeded with all 13 original tests. A fresh shell returned `DATABASE_CONNECT_OK` from a real `SELECT 1`.
+- Initialized the mailbox cursor once; historical messages were not answered, moved, deleted or marked read.
+- Received three real license-policy replies in the owner's Gmail inbox: Arabic at 11:29 UTC and English/Spanish at 11:31 UTC. Inspected the complete reply bodies and receiving Gmail authentication headers: SPF and DKIM passed for all three.
+- An unmatched owner question produced one durable `human_review` receipt and no automatic reply. This is a database status, not delivery of an operator notification or creation of a staffed ticket.
+- A subsequent fresh worker process left the totals at three `sent` receipts and one `human_review` receipt, with no duplicate reply. This verifies normal process-restart behavior; it does not prove crash recovery during SMTP or database outage, or backup/restore.
+
+The follow-up source change validates PostgreSQL URL structure before integrations open. It rejects malformed URLs without including credentials in the error. All 14 local bridge tests pass. This change is proposed separately and is not yet deployed.
+
+Outstanding before general customer use: implement/review customer mode, trusted inbound sender validation and appropriate sender rate limits, an actionable operator review workflow and monitoring, and controlled crash/recovery evidence. Customer activation needs owner approval after these safeguards are ready. Do not enable customer traffic by changing `test` mode or removing its recipient restriction.
