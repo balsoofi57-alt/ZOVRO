@@ -1,5 +1,13 @@
 # Spacemail policy reply bridge — owner test only
 
+## Company support alerts — approved 2026-09-24
+
+The owner explicitly requested support alerts at `zovro.llc@gmail.com`. `alerts.js --notify` sends aggregate queue alerts from the existing support mailbox to that fixed company address only. No customer content or sender identities are included. Stale reservations/unconfirmed deliveries alert immediately once eligible for the review queue, limited to one attempted urgent alert per rolling hour; other overdue categories alert at most once per six hours. `--test` sends a separately throttled connection test (once per 24 hours). Reservations are committed before SMTP in the additive `zovro_support_mail_alerts` table; uncertain delivery consumes the window and is not immediately retried.
+
+`cycle.js` runs the existing independently gated worker, then checks alerts even when the worker fails. Its child processes have timeouts. The intended ten-minute command is `timeout --signal=TERM --kill-after=15s 180s node workers/support-mail/cycle.js`. Sending mode remains `disabled`; this enables notifications about the recorded review queue, not customer replies or ingestion of new inbox messages. PostgreSQL/SMTP outages may prevent notification; a failed cycle still exits nonzero for the existing hosting failure notifications. This is not an independent uptime monitor.
+
+The alert check creates only its dedicated table/index if missing. It does not modify receipts, review dispositions or the mailbox cursor. Disable company notifications by restoring the original worker-only cron command; retain alert history. Customer mode remains absent from this deployed owner-test branch.
+
 Current status: owner-only sending was deployed and verified on 2026-09-24. Persistent scheduled sending is disabled. Later sections retain historical checkpoints; use the latest dated validation and the operational recovery instructions below for current limits. General customer mode is not implemented.
 
 This separate, one-shot process reads **new** INBOX messages over TLS IMAP and can send policy replies over TLS SMTP. It uses the existing deterministic EN/AR/ES policy responder; it is not a generative AI model. It is not imported by the production API and does not run automatically when the app deploys.
