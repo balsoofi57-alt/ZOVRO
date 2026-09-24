@@ -1,5 +1,7 @@
 # Spacemail policy reply bridge — owner test only
 
+Current status: owner-only sending was deployed and verified on 2026-09-24. Persistent scheduled sending is disabled. Later sections retain historical checkpoints; use the latest dated validation and the operational recovery instructions below for current limits. General customer mode is not implemented.
+
 This separate, one-shot process reads **new** INBOX messages over TLS IMAP and can send policy replies over TLS SMTP. It uses the existing deterministic EN/AR/ES policy responder; it is not a generative AI model. It is not imported by the production API and does not run automatically when the app deploys.
 
 ## Modes
@@ -110,3 +112,21 @@ Limits: these results verify Gmail-to-Spacemail owner mail, normal fresh-process
 A crash before reservation permits the next process to send once. Once reserved, replay never sends again: a crash before SMTP can therefore leave an unsent message requiring human review. Acceptance followed by an interrupted or failed status update leaves a reserved or delivery-unconfirmed receipt, also requiring review. This is at-most-once sending after a durable reservation, not guaranteed delivery.
 
 The harness uses a temporary filesystem receipt adapter and simulated SMTP acceptance, with no production credentials or network calls. It verifies bridge process recovery under the durable-store contract, not PostgreSQL server failure, disk/power loss, worker cursor integration, real SMTP transport crashes, concurrency or backup restoration. The fixture is single-process and must not be used as a production store. No runtime code, Render configuration or customer-send setting changed for this validation.
+
+## PostgreSQL integration and read-only monitoring
+
+The support workflow now runs on the isolated sender-guard branch as well as the deployment branch. Its separate PostgreSQL 16 service contains only disposable fixture data. `integration/postgres.cjs` exercises the actual worker with real PostgreSQL and fake IMAP/SMTP/authentication adapters: a killed sender process, lost SMTP acknowledgement, cursor replay, changed UID validity, simultaneous reservations, and logical dump/restore of receipts, cursor and operator dispositions. The suite only accepts a localhost database named `zovro_support_test`, creates a random private schema and drops only that fixture schema. It never targets Render or reads production credentials. A CI run must succeed before this is treated as verified integration evidence; it does not test provider SMTP or a PostgreSQL server/power failure.
+
+`node workers/support-mail/monitor.js` is an explicit read-only check, usable even when the scheduled sender remains disabled. It reports aggregate counts only. Exit 0 means no urgent/overdue items; exit 2 means an uncertain delivery/stale reservation or an unresolved category whose oldest item is at least one hour old; exit 1 means monitoring failed. `overdue` counts all records in an overdue category, not individually aged messages. It does not inspect inbox backlog that has not yet been processed, send notifications, resolve reviews or migrate schema. A successful empty result does not prove that the worker is scheduled or reading new mail.
+
+To operate this check, the owner must explicitly choose its schedule and verify the hosting provider's failure notification destination and actual delivery. Do not append it to the deployed command and assume somebody was notified. No monitoring schedule or external alert destination was changed by this code update.
+
+## Recovery procedure
+
+1. Keep the sender disabled during any database recovery. Stop active sender processes before restoring. Retain the failed database and its receipts for reconciliation; do not clear tables or reinitialize the mailbox cursor.
+2. Restore the cursor, receipts and reviews from the same consistent backup into an isolated database first. Verify mailbox UID validity, counts and review dispositions. A changed UID validity requires manual reconciliation, not resetting the watermark.
+3. A backup older than an accepted email can omit its reservation. Replaying from that backup can send a duplicate. Reconcile all messages after the backup boundary against retained receipts and provider/inbox evidence before allowing processing. The automatic no-retry guarantee depends on preserving committed reservations; it does not survive loss of that history.
+4. Inspect stale `reserved` and `delivery_unconfirmed` cases individually. If delivery is proven, resolve `verified_delivered`; otherwise manually decide whether a reply is appropriate. Never delete a reservation to force a retry. A manual reply is recorded as `answered_manually` only after the operator has sent it.
+5. Verify the restored worker with company-only new test messages and review health output. Resuming a restored production service requires an explicit reviewed decision; this runbook does not authorize restore or customer activation.
+
+Remaining operational decisions: assign a person to review the support inbox and urgent queue; verify external alert delivery; establish actual Render backup recovery/reconciliation evidence; implement and review customer mode before separately approving activation. The existing owner-only deployment is not a general customer autoresponder.
