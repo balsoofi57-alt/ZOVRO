@@ -21,6 +21,7 @@ const directory=fs.mkdtempSync(path.join(os.tmpdir(),'zovro-postgres-'));
 const accepted=path.join(directory,'accepted.txt');
 const db=new Client({connectionString:testUrl});
 const run=scenario=>spawnSync(process.execPath,[path.join(__dirname,'../fixtures/worker-integration.cjs')],{encoding:'utf8',timeout:20000,env:{...process.env,ZOVRO_SUPPORT_MAIL_DATABASE_URL:testUrl,ZOVRO_SUPPORT_MAIL_MODE:'test',ZOVRO_SUPPORT_MAIL_USER:SUPPORT,ZOVRO_SUPPORT_MAIL_PASSWORD:'isolated-fixture',ZOVRO_SUPPORT_MAIL_TEST_RECIPIENT:TEST_RECIPIENT,ZOVRO_FIXTURE_SCENARIO:scenario,ZOVRO_FIXTURE_ACCEPTANCES:accepted}});
+const monitor=()=>spawnSync(process.execPath,[path.join(__dirname,'../monitor.js')],{encoding:'utf8',timeout:20000,env:{...process.env,ZOVRO_SUPPORT_MAIL_DATABASE_URL:testUrl,ZOVRO_SUPPORT_MAIL_MODE:'disabled',ZOVRO_SUPPORT_MAIL_USER:SUPPORT,ZOVRO_SUPPORT_MAIL_PASSWORD:'isolated-fixture'}});
 const acceptances=()=>fs.existsSync(accepted)?fs.readFileSync(accepted,'utf8').trim().split('\n').length:0;
 async function state(){return {receipts:(await db.query('SELECT status FROM zovro_support_mail_receipts')).rows,cursor:Number((await db.query('SELECT last_uid FROM zovro_support_mail_cursor')).rows[0].last_uid)};}
 async function reset(){
@@ -63,9 +64,15 @@ async function main(){
   const killed=run('kill-after-acceptance');assert.ifError(killed.error);assert.equal(killed.signal,'SIGKILL');
   await db.query("UPDATE zovro_support_mail_receipts SET updated_at=now()-interval '20 minutes'");
   assert.equal((await summary(db))[0].status,'reserved');
+  const alert=monitor();assert.ifError(alert.error);assert.equal(alert.status,2,alert.stderr);
+  assert.equal(JSON.parse(alert.stdout).urgent,1);
   const key=(await db.query('SELECT message_key FROM zovro_support_mail_receipts')).rows[0].message_key;
   assert.deepEqual(await resolve(db,key,'verified_delivered'),{resolved:true});
   assert.deepEqual(await summary(db),[]);
+  const healthy=monitor();assert.ifError(healthy.error);assert.equal(healthy.status,0,healthy.stderr);
+  assert.equal(JSON.parse(healthy.stdout).attentionRequired,false);
+  assert.equal(acceptances(),1);
+  console.log('PASS read-only monitor detects stale reservation and clears after operator resolution while sender disabled');
   // Logical backup includes cursor, reservations and review dispositions together.
   const env={...process.env,PGHOST:url.hostname,PGPORT:url.port||'5432',PGDATABASE:'zovro_support_test',PGUSER:decodeURIComponent(url.username),PGPASSWORD:decodeURIComponent(url.password),PGOPTIONS:''};
   const dumpPath=path.join(directory,'support.sql');
