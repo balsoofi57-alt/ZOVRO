@@ -5,7 +5,7 @@
     if(!login||document.getElementById('forgotPasswordButton'))return;
     const trigger=document.createElement('button');
     trigger.id='forgotPasswordButton';trigger.type='button';trigger.className='btn ghost';
-    trigger.textContent='Forgot password? / نسيت كلمة السر؟';
+    trigger.textContent='Forgot password?';
     trigger.style.marginTop='14px';login.querySelector('.sheet').appendChild(trigger);
     const modal=document.createElement('div');modal.className='modal';modal.id='passwordRecoveryModal';
     modal.setAttribute('role','dialog');modal.setAttribute('aria-modal','true');modal.setAttribute('aria-labelledby','recoveryTitle');
