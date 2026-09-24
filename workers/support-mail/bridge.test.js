@@ -3,7 +3,9 @@ const {test}=require('node:test'),assert=require('node:assert/strict');
 const {config,classify,processMessage,SUPPORT,TEST_RECIPIENT}=require('./bridge');
 const email=(text='What is ZOVRO?',sender=TEST_RECIPIENT)=>({from:{value:[{address:sender}]},to:{value:[{address:SUPPORT}]},headers:new Map(),text,messageId:'<test-1@example.test>',attachments:[]});
 function fixture(){const records=new Map(),sent=[];return {records,sent,store:{reserve:async r=>{if(records.has(r.key))return false;records.set(r.key,{...r});return true},finish:async(k,status)=>{records.get(k).status=status}},send:async m=>{sent.push(m)}}}
-const process=(mail,f,mode='test')=>processMessage({mail,uid:22,uidValidity:'17',mode,store:f.store,send:f.send});
+const process=(mail,f,mode='test')=>processMessage({mail,uid:22,uidValidity:'17',mode,store:f.store,send:f.send,senderVerified:true});
+test('missing sender verification never sends even to the owner',async()=>{const f=fixture();assert.equal(await processMessage({mail:email(),uid:22,uidValidity:'17',mode:'test',store:f.store,send:f.send}),'authentication_review');assert.equal(f.sent.length,0)});
+test('a durable rate-limited reservation cannot reach SMTP',async()=>{const f=fixture();f.store.reserve=async r=>{r.status='rate_limited';return true};assert.equal(await process(email(),f),'rate_limited');assert.equal(f.sent.length,0)});
 test('disabled opens no integration and rejects unknown/live mode',async()=>{assert.deepEqual(config({}),{mode:'disabled'});assert.throws(()=>config({ZOVRO_SUPPORT_MAIL_MODE:'live'}));assert.equal(await process(email(),fixture(),'disabled'),'disabled');assert.throws(()=>config({ZOVRO_SUPPORT_MAIL_MODE:'test'}));});
 const validConfig={ZOVRO_SUPPORT_MAIL_MODE:'test',ZOVRO_SUPPORT_MAIL_USER:SUPPORT,ZOVRO_SUPPORT_MAIL_PASSWORD:'fixture',ZOVRO_SUPPORT_MAIL_DATABASE_URL:'postgresql://fixture:fixture@localhost/support_test',ZOVRO_SUPPORT_MAIL_TEST_RECIPIENT:TEST_RECIPIENT};
 test('requires explicit owner recipient',()=>{assert.throws(()=>config({...validConfig,ZOVRO_SUPPORT_MAIL_TEST_RECIPIENT:undefined}));assert.equal(config(validConfig).mode,'test')});

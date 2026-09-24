@@ -30,12 +30,14 @@ function classify(mail){
  if(mail.attachments?.length||!mail.text||mail.text.length>10000)return {skip:'requires_manual_reading'};
  return {recipient,decision:prepareSupportEmail({text:mail.text.trim()})};
 }
-async function processMessage({mail,uid,uidValidity,mode,store,send}){
+async function processMessage({mail,uid,uidValidity,mode,store,send,senderVerified=false}){
  if(mode==='disabled')return 'disabled';
  if(!['preview','test'].includes(mode))throw Error('Invalid mode');
  const decision=classify(mail);
  const key=crypto.createHash('sha256').update(SUPPORT+'\0'+(mail.messageId||uidValidity+':'+uid)).digest('hex');
  const record={key,uid,uidValidity:String(uidValidity),answerId:decision.decision?.answerId||null,policyVersion:decision.decision?.policyVersion||null,status:decision.skip?'skipped':decision.decision.humanReviewRequired?'human_review':mode==='preview'?'preview':decision.recipient!==TEST_RECIPIENT?'not_test_recipient':'reserved'};
+ if(record.status==='reserved'&&!senderVerified)record.status='authentication_review';
+ if(decision.recipient)record.senderHash=crypto.createHash('sha256').update(decision.recipient).digest('hex');
  // Reservation is committed before SMTP. Uncertain delivery is never retried automatically.
  if(!await store.reserve(record))return 'duplicate';
  if(record.status!=='reserved')return record.status;

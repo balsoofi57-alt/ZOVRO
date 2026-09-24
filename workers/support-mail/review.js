@@ -1,6 +1,6 @@
 'use strict';
 const {config,SUPPORT}=require('./bridge');
-const pending=['human_review','delivery_unconfirmed','reserved','oversized','skipped'];
+const pending=['human_review','delivery_unconfirmed','reserved','oversized','skipped','authentication_review','rate_limited'];
 const resolutions=['answered_manually','no_action','verified_delivered'];
 const keyPattern=/^[a-f0-9]{64}$/;
 function parseArgs(args){
