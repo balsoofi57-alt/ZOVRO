@@ -190,3 +190,30 @@ body:not(.z-authenticated) #home:after{color:#fff!important}
  body:not(.z-authenticated) .sectionHead p{color:#aebed0!important}
  body:not(.z-authenticated) .accountWrap:before{right:5vw!important;top:116px!important}
 }
+
+/* Desktop classic structural fix: override legacy app-like presentation */
+@media(min-width:901px){
+ html,body{background:#020d1c!important}
+ body:not(.z-authenticated) .shell{max-width:none!important;padding:0 0 80px!important}
+ body:not(.z-authenticated) .top{margin:0!important;width:100%!important}
+ body:not(.z-authenticated) .top .brand{min-width:300px!important}
+ body:not(.z-authenticated) .top .mark{display:none!important}
+ body:not(.z-authenticated) .top .state{margin-left:auto!important}
+ body:not(.z-authenticated) #home{display:grid!important;grid-template-columns:minmax(0,1.25fr) minmax(360px,.75fr)!important;column-gap:38px!important;align-items:start!important}
+ body:not(.z-authenticated) #home>.hero{grid-column:1!important;grid-row:1!important;margin-top:0!important;min-height:390px!important;border-radius:22px!important;background:radial-gradient(circle at 82% 20%,rgba(22,135,255,.22),transparent 28%),linear-gradient(135deg,#03172f,#061f3d 64%,#020d1c)!important;border:1px solid rgba(215,168,43,.3)!important}
+ body:not(.z-authenticated) #home>.hero h1{font-size:58px!important;color:#fff!important}
+ body:not(.z-authenticated) #home>.hero h1 span{color:#e5b63f!important}
+ body:not(.z-authenticated) #home>.hero .primary{background:linear-gradient(180deg,#168fff,#0871e5)!important;color:#fff!important}
+ body:not(.z-authenticated) #home>.trust{grid-column:1!important;grid-row:2!important}
+ body:not(.z-authenticated) #home>.sectionHead{grid-column:1/-1!important}
+ body:not(.z-authenticated) #home>.grid{grid-column:1/-1!important;display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr))!important}
+ body:not(.z-authenticated) #home>.featureRow{grid-column:1/-1!important}
+ body:not(.z-authenticated) #home>.sectionHead:last-of-type{grid-column:2!important;grid-row:1!important;margin:0!important;padding:18px 22px 0!important;z-index:2!important}
+ body:not(.z-authenticated) #home>.sectionHead:last-of-type h2{color:#fff!important}
+ body:not(.z-authenticated) #home>.sectionHead:last-of-type p{color:#aebed0!important}
+ body:not(.z-authenticated) #home>#accountBox{grid-column:2!important;grid-row:1!important;margin-top:92px!important;max-width:none!important;min-height:280px!important;padding:24px!important;background:linear-gradient(180deg,rgba(7,31,57,.96),rgba(3,18,35,.96))!important;border:1px solid #2b527a!important;border-radius:20px!important;box-shadow:0 24px 60px rgba(0,0,0,.25)!important}
+ body:not(.z-authenticated) #home:before,body:not(.z-authenticated) #home:after{display:none!important}
+ body:not(.z-authenticated) #home .accountWrap:before{display:none!important}
+ body:not(.z-authenticated) .trustItem{background:#071b32!important;border-color:#24496f!important;color:#fff!important}
+ body:not(.z-authenticated) .trustItem span{color:#aebed0!important}
+}
