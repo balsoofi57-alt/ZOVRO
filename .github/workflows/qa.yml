@@ -3,7 +3,7 @@ name: ZOVRO Full QA
 on:
   workflow_dispatch:
   push:
-    branches: [main, feature/zovro-product-expansion, store-release-prep, zovro-final-deploy, ui/final-reference-6704-20260925, ui/exact-brand-6704-20260925, ui/official-brand-asset-20260925, ui/final-locked-car-brand-20260925, ui/final-gps-wheel-lock-20260925, web/final-classic-layout-20260925]
+    branches: [main, feature/zovro-product-expansion, store-release-prep, zovro-final-deploy, ui/final-reference-6704-20260925, ui/exact-brand-6704-20260925, ui/official-brand-asset-20260925, ui/final-locked-car-brand-20260925, ui/final-gps-wheel-lock-20260925, web/final-classic-layout-20260925, fix/desktop-classic-structure-20260925]
     paths:
       - 'backend/**'
       - 'src/**'
