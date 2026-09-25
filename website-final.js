@@ -41,9 +41,9 @@
     if(hero){
       if(!hero.querySelector('.z-brand-showcase')){const art=document.createElement('img');art.className='z-brand-showcase';art.src='assets/zovro-official-brand.webp';art.alt='ZOVRO official brand';hero.prepend(art)}
       const eyebrow=hero.querySelector('.eyebrow');if(eyebrow)eyebrow.textContent='● Anywhere, Anytime, Near to You.';
-      const h1=hero.querySelector('h1');if(h1)h1.innerHTML='Tell us what you need. <span>We’ll help you find it nearby.</span>';
-      const p=h1?.nextElementSibling;if(p&&p.tagName==='P')p.textContent='Roadside, auto, home, moving and everyday services — one simple request, matched to nearby local professionals.';
-      const bar=hero.querySelector('.bar');if(bar)bar.innerHTML='<button class="btn primary" id="zHeroHelp">Get Help Now</button><button class="btn ghost" id="zHeroProvider">Join as a Provider</button><button class="btn danger" id="sosButton">SOS<br><span style="font-size:9px;font-weight:800">EMERGENCY HELP</span></button>';
+      const h1=hero.querySelector('h1');if(h1)h1.innerHTML='Everyday problems.<br><span>Nearby solutions.</span>';
+      const p=h1?.nextElementSibling;if(p&&p.tagName==='P')p.textContent='From roadside help to home repairs. Find a local professional and keep every update in one place.';
+      const bar=hero.querySelector('.bar');if(bar)bar.innerHTML='<button class="btn primary" id="zHeroHelp">Help Now</button><button class="btn ghost" id="zHeroProvider">Join as a Provider</button><button class="btn danger" id="sosButton" aria-label="SOS" aria-describedby="sosHelp sosStatus">SOS</button>';
       document.getElementById('zHeroHelp')?.addEventListener('click',()=>document.getElementById('smartMatch')?.scrollIntoView({behavior:'smooth'}));
       document.getElementById('zHeroProvider')?.addEventListener('click',()=>{document.getElementById('providerJoin')?.scrollIntoView({behavior:'smooth'});setTimeout(()=>call('openAuth'),350)});
       document.getElementById('sosButton')?.addEventListener('click',()=>call('quickSOS'));
@@ -51,7 +51,7 @@
 
     if(hero&&!document.getElementById('smartMatch')){
       const sm=document.createElement('section');sm.id='smartMatch';sm.className='z-smart-match';
-      sm.innerHTML='<div class="z-section-kicker">Smart Match</div><h2>What do you need help with?</h2><p>Describe the problem in your own words. ZOVRO will start the right request flow for you.</p><div class="z-smart-box"><textarea id="zProblem" rows="2" placeholder="Example: My car will not start, or water is leaking under my sink"></textarea><div class="z-smart-actions"><button class="btn primary" id="zSmartGo">Find Help</button><button class="btn ghost" id="zVoice">🎙 Voice</button></div></div><div id="zSmartStatus" class="z-smart-status">No need to know the service category — just describe the problem.</div>';
+      sm.innerHTML='<div class="z-section-kicker">Smart Match</div><h2>What do you need help with?</h2><p>Describe the problem in your own words. ZOVRO will start the right request flow for you.</p><div class="z-smart-box"><textarea id="zProblem" rows="2" placeholder="Example: My car will not start, or water is leaking under my sink"></textarea><div class="z-smart-actions"><button class="btn primary" id="zSmartGo">Help Now</button><button class="btn ghost" id="zVoice">🎙 Voice</button></div></div><div id="zSmartStatus" class="z-smart-status">No need to know the service category — just describe the problem.</div>';
       hero.insertAdjacentElement('afterend',sm);
       document.getElementById('zSmartGo').addEventListener('click',()=>{const q=document.getElementById('zProblem').value.trim();if(!q){document.getElementById('zProblem').focus();return}openHelp(q)});
       document.getElementById('zVoice').addEventListener('click',()=>{
@@ -59,7 +59,7 @@
         if(!SR){document.getElementById('zSmartStatus').textContent='Voice input is not available in this browser. You can type your request instead.';return}
         const r=new SR();r.lang='en-US';r.interimResults=false;r.maxAlternatives=1;
         document.getElementById('zSmartStatus').textContent='Listening…';
-        r.onresult=e=>{document.getElementById('zProblem').value=e.results[0][0].transcript;document.getElementById('zSmartStatus').textContent='Voice captured. Tap Find Help.'};
+        r.onresult=e=>{document.getElementById('zProblem').value=e.results[0][0].transcript;document.getElementById('zSmartStatus').textContent='Voice captured. Tap Help Now.'};
         r.onerror=()=>document.getElementById('zSmartStatus').textContent='Voice input could not start. You can type your request instead.';
         r.start();
       });
@@ -95,10 +95,14 @@
       features.insertAdjacentElement('afterend',p);document.getElementById('zProviderJoinBtn').onclick=()=>call('openAuth');
     }
 
+    const howSection=document.getElementById('howItWorks');
+    const nearbySection=document.getElementById('zAvailableNow');
+    if(howSection&&nearbySection)nearbySection.insertAdjacentElement('beforebegin',howSection);
+
     const account=document.getElementById('accountBox');
     if(account&&!document.getElementById('zSupportStrip')){const s=document.createElement('div');s.id='zSupportStrip';s.className='z-support-strip';s.innerHTML='<div><strong>ZOVRO Support</strong><span>AI-guided help, complaints, payment disputes, safety reports and account support.</span></div><div class="z-support-actions"><a href="support.html">Help Center</a><a href="support.html#complaints">File a Complaint</a><a href="mailto:support@zovro.work">Email Support</a></div>';account.insertAdjacentElement('afterend',s)}
 
-    if(!document.getElementById('zMobileHelp')){const m=document.createElement('button');m.id='zMobileHelp';m.className='z-mobile-help';m.textContent='Get Help Now';m.onclick=()=>document.getElementById('smartMatch')?.scrollIntoView({behavior:'smooth'});document.body.appendChild(m)}
+    if(!document.getElementById('zMobileHelp')){const m=document.createElement('button');m.id='zMobileHelp';m.className='z-mobile-help';m.textContent='Help Now';m.onclick=()=>document.getElementById('smartMatch')?.scrollIntoView({behavior:'smooth'});document.body.appendChild(m)}
 
     const shell=document.querySelector('.shell');
     if(shell&&!document.querySelector('.z-site-footer')){const f=document.createElement('footer');f.className='z-site-footer';f.innerHTML='<div>© 2026 ZOVRO LLC · Anywhere, Anytime, Near to You.</div><div><a href="privacy.html">Privacy</a><a href="terms.html">Terms</a><a href="support.html">Support</a></div>';shell.appendChild(f)}
