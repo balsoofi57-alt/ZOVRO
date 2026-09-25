@@ -19,3 +19,15 @@
 .field label{display:block}.field input:not([type=checkbox]):not([type=radio]),.field select,.field textarea{width:100%;min-width:0;max-width:100%}.field .password-control{min-width:0}.field .password-control input{padding-right:52px!important}
 .z-document .wrap{padding-bottom:calc(70px + env(safe-area-inset-bottom));overflow-wrap:anywhere}.z-document p,.z-document li,.z-document small{color:var(--z-muted)}.z-document .brand img{display:block;width:180px;max-width:100%;height:auto}.z-document .back,.z-document .btn{display:inline-flex;align-items:center;justify-content:center;min-height:48px}.z-document h1{font-size:clamp(25px,6vw,34px);line-height:1.25}.z-document h2{line-height:1.35}
 .admin-wrap{padding-bottom:calc(80px + env(safe-area-inset-bottom))!important}.admin-wrap h1{font-size:clamp(26px,6vw,40px);line-height:1.2;overflow-wrap:anywhere}.admin-head a{min-height:44px;display:flex;align-items:center}.admin-head img{max-width:40%;height:auto!important}.admin-wrap .field{display:grid;gap:8px}.admin-wrap .field label{margin:0!important}.admin-wrap #adminShowPassword{justify-self:start}.admin-tools input{min-width:0!important;width:100%}.admin-actions{display:flex;flex-wrap:wrap;gap:12px;margin:18px 0}.admin-status:empty{display:none}@media(max-width:500px){.admin-tools{flex-direction:column}.admin-tools button,#adminLoginSubmit{width:100%}.admin-row>div{min-width:0;overflow-wrap:anywhere}}
+
+/* 2026-09-25 approved compact UI: account first, service tiles after sign-in */
+:root{--z-gold:#d4af37;--z-silver:#c7cbd1;--z-navy:#061a33;--z-electric:#22a7ff}
+body{background:radial-gradient(circle at 85% 0,rgba(34,167,255,.12),transparent 30%),linear-gradient(180deg,#07182d,#101823)!important}
+.top{background:rgba(6,26,51,.96)!important}
+.hero{background:radial-gradient(circle at 92% 12%,rgba(34,167,255,.18),transparent 25%),linear-gradient(135deg,#061a33,#102a4a)!important;border-color:#58616d!important}
+.hero h1 span,.z-section-kicker,.logo i{color:var(--z-gold)!important}
+.primary,.ok,.hero .primary,.modal .sheet .primary{background:linear-gradient(135deg,#e0bd52,#b88b1e)!important;color:#07182c!important;border-color:#ead078!important}
+.svc span{background:linear-gradient(145deg,#0b2442,#182d45)!important;border-color:#7a8490!important}
+.svc:hover{border-color:var(--z-gold)!important}
+.z-electric-accent{filter:drop-shadow(0 0 7px rgba(34,167,255,.8))}
+@media(max-width:700px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}.svc{min-height:118px!important;padding:14px!important}.svc span{width:38px;height:38px}.svc b{margin:9px 0 2px!important}.trust{margin-top:14px!important}}
