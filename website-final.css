@@ -121,3 +121,16 @@ body:not(.z-authenticated) #passwordToggle{color:#52647a!important}
  body.z-authenticated .accountWrap{margin-top:12px!important}
  #requestModal .sheet,#chatModal .sheet,#trackingModal .sheet{border-radius:0!important;max-width:430px!important;min-height:100dvh!important}
 }
+
+/* Exact IMG_6704 brand lock: navy + metallic gold + silver + electric blue */
+:root{--brand-navy:#03152b;--brand-navy-hi:#082d59;--brand-gold:#d7a82b;--brand-gold-hi:#f0ce67;--brand-silver:#d9dee5;--brand-electric:#1687ff}
+body.z-authenticated .top{background:linear-gradient(180deg,#062c59,#031b39)!important;border-bottom:1px solid #c89a28!important}
+body.z-authenticated .logo{color:#fff!important}
+body.z-authenticated .logo i{color:var(--brand-gold-hi)!important}
+body.z-authenticated #home>.hero{background:radial-gradient(circle at 80% 0,rgba(22,135,255,.18),transparent 28%),linear-gradient(180deg,#062c59,#031b39)!important;border-bottom:2px solid var(--brand-gold)!important}
+body.z-authenticated .bottom button.active{color:var(--brand-gold)!important}
+body.z-authenticated .svc span{color:#082d59!important}
+body:not(.z-authenticated) #home:after{color:#061b36!important;text-shadow:0 1px 0 #fff}
+body:not(.z-authenticated) #home:before,.modal .sheet:before{filter:drop-shadow(0 7px 12px rgba(3,21,43,.14))}
+#trackingModal .primary,#chatModal .primary,#requestModal .primary{background:linear-gradient(180deg,#1788ff,#0b6ee8)!important}
+@media(max-width:700px){body.z-authenticated .top{border-bottom:1px solid #b78a20!important}}
