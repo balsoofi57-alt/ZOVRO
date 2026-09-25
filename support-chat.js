@@ -114,4 +114,7 @@
     const link = event.target.closest('a[href="mailto:support@zovro.work"], [data-support-chat]');
     if (link) { event.preventDefault(); open(link); }
   });
+  function openSupportLink(){if(location.hash==='#support')open();}
+  window.addEventListener('hashchange',openSupportLink);
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',openSupportLink,{once:true});else openSupportLink();
 })();
