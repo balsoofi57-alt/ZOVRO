@@ -134,3 +134,23 @@ body:not(.z-authenticated) #home:after{color:#061b36!important;text-shadow:0 1px
 body:not(.z-authenticated) #home:before,.modal .sheet:before{filter:drop-shadow(0 7px 12px rgba(3,21,43,.14))}
 #trackingModal .primary,#chatModal .primary,#requestModal .primary{background:linear-gradient(180deg,#1788ff,#0b6ee8)!important}
 @media(max-width:700px){body.z-authenticated .top{border-bottom:1px solid #b78a20!important}}
+
+/* FINAL LOCKED DESIGN — approved 2026-09-25: dark navy, car frame, metallic ZOVRO */
+body:not(.z-authenticated){background:radial-gradient(circle at 50% 5%,#0b3b6a 0,#031b35 34%,#020e1f 78%,#010914 100%)!important;color:#fff!important}
+body:not(.z-authenticated) #home{background:linear-gradient(180deg,rgba(5,37,70,.35),rgba(1,10,22,.15))!important}
+body:not(.z-authenticated) #home:before{width:min(86vw,390px)!important;height:310px!important;margin:16px auto 0!important;background:url('/assets/zovro-official-brand.webp') center/contain no-repeat!important;filter:drop-shadow(0 0 22px rgba(22,135,255,.25)) drop-shadow(0 8px 16px rgba(0,0,0,.45))!important}
+body:not(.z-authenticated) #home:after{content:"REAL HELP. RIGHT NOW.";color:#fff!important;font-size:18px!important;letter-spacing:.18em!important;text-shadow:0 0 14px rgba(22,135,255,.25)!important;margin:0 auto 26px!important}
+body:not(.z-authenticated) #accountBox{background:transparent!important;color:#fff!important}
+body:not(.z-authenticated) #accountBox>b{color:#fff!important}
+body:not(.z-authenticated) #accountBox .muted{color:#b7c6d9!important}
+body:not(.z-authenticated) #accountBox .primary{background:linear-gradient(180deg,#1497ff,#0868d8)!important;color:#fff!important;border:1px solid #55baff!important;box-shadow:0 0 20px rgba(20,151,255,.35)!important}
+body:not(.z-authenticated) .modal{background:radial-gradient(circle at 50% 0,#0a3764,#03182e 45%,#010b18 100%)!important}
+body:not(.z-authenticated) .modal .sheet{background:transparent!important;color:#fff!important}
+body:not(.z-authenticated) .modal .sheet:before{width:min(78vw,330px)!important;height:250px!important;background:url('/assets/zovro-official-brand.webp') center/contain no-repeat!important;filter:drop-shadow(0 0 18px rgba(22,135,255,.22))!important}
+body:not(.z-authenticated) .modal .sheet h2,body:not(.z-authenticated) .modal .sheet label{color:#fff!important}
+body:not(.z-authenticated) .modal .sheet .muted,body:not(.z-authenticated) .modal .sheet small{color:#b7c6d9!important}
+body:not(.z-authenticated) .modal .sheet input:not([type=checkbox]):not([type=radio]),body:not(.z-authenticated) .modal .sheet select{background:#07182b!important;color:#fff!important;border:1px solid #45698f!important}
+body:not(.z-authenticated) .modal .sheet .primary{background:linear-gradient(180deg,#1497ff,#0868d8)!important;color:#fff!important;border:1px solid #55baff!important}
+body:not(.z-authenticated) .modal .sheet .ghost{background:transparent!important;color:#fff!important;border:1px solid #4d7daf!important}
+body:not(.z-authenticated) #passwordToggle{color:#d8ad4a!important}
+@media(max-width:700px){body:not(.z-authenticated) #home:before{height:270px!important}body:not(.z-authenticated) .modal .sheet:before{height:215px!important}}
