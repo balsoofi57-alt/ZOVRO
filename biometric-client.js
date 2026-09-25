@@ -75,6 +75,8 @@
         if(typeof loadJobs==='function')loadJobs();
         if(window.ZOVRO_PUSH?.syncUser)window.ZOVRO_PUSH.syncUser();
       }
+      if(typeof closeModal==='function')closeModal('authModal');
+      if(typeof resumeRequestIntent==='function')resumeRequestIntent();
       toastSafe('Signed in with Face ID.');
       return true;
     }catch{
