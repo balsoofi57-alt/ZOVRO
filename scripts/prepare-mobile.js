@@ -27,7 +27,7 @@ if(!html.includes('<script src="i18n.js"></script>'))html=html.replace('</body>'
 const mobileStartup="<script>document.addEventListener('DOMContentLoaded',()=>{ZOVRO_SECURE_SESSION.initialize().then(()=>{token=window.ZOVRO_SESSION_TOKEN||'';boot();setTimeout(handleStripeConnectReturn,900);setInterval(()=>{if(me)loadJobs()},10000)});},{once:true});</script>";
 html=html.replace('</body>',mobileStartup+'\n</body>');
 fs.writeFileSync(path.join(out,'index.html'),html);
-for(const name of ['manifest.webmanifest','service-worker.js','privacy.html','terms.html','support.html','biometric-client.js','secure-session.js','i18n.js','consent-client.js','profile-security-client.js','payment-client.js','push-client.js','payment-ui.js','live-map.js','support-center.js','support-policy.js','website-final.css','website-final.js','password-recovery-client.js','provider-service-picker.js'])fs.copyFileSync(path.join(root,name),path.join(out,name));
+for(const name of ['manifest.webmanifest','service-worker.js','privacy.html','terms.html','support.html','biometric-client.js','secure-session.js','i18n.js','consent-client.js','profile-security-client.js','payment-client.js','push-client.js','payment-ui.js','live-map.js','support-center.js','support-policy.js','website-final.css','website-final.js','password-recovery-client.js','phone-verification-client.js','support-chat.js','provider-service-picker.js'])fs.copyFileSync(path.join(root,name),path.join(out,name));
 fs.mkdirSync(path.join(out,'src'),{recursive:true});
 for(const name of ['service-catalog.js','provider-services.js'])fs.copyFileSync(path.join(root,'src',name),path.join(out,'src',name));
 const leafletDist=path.join(root,'node_modules','leaflet','dist');

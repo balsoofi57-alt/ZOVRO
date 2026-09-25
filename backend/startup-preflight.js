@@ -12,6 +12,11 @@ const profileEncryptionKeyLength=Buffer.from(String(process.env.ZOVRO_PROFILE_EN
 
 const status = {
   event: 'zovro.startup_preflight',
+  passwordRecoveryEnabled: process.env.ZOVRO_PASSWORD_RECOVERY_ENABLED === 'true',
+  recoveryTwilioAccountConfigured: /^AC[0-9a-f]{32}$/i.test(process.env.TWILIO_ACCOUNT_SID || ''),
+  recoveryTwilioTokenPresent: present('TWILIO_AUTH_TOKEN'),
+  recoveryVerifyServiceConfigured: /^VA[0-9a-f]{32}$/i.test(process.env.TWILIO_RECOVERY_VERIFY_SERVICE_SID || ''),
+  passwordRecoveryConfigured: require('./password-recovery').verifyProvider().configured(),
   nodeEnv: process.env.NODE_ENV || null,
   dbMirrorMode,
   mirrorRequested: dbMirrorMode==='mirror',

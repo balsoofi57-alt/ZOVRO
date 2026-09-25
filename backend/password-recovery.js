@@ -3,6 +3,11 @@ const crypto = require('node:crypto');
 const digest = value => crypto.createHash('sha256').update(value).digest('hex');
 const TYPE = 'password_recovery';
 const TTL = 10 * 60 * 1000;
+function normalizeRecoveryPhone(value) {
+  let phone=String(value||'').replace(/[\s()-]/g,'');
+  if(/^1[0-9]{10}$/.test(phone))phone='+'+phone;
+  return /^\+[1-9][0-9]{7,14}$/.test(phone)?phone:null;
+}
 const unavailable = {error:'Password recovery is not available yet. Contact support@zovro.work for help.'};
 
 function verifyProvider(env=process.env, fetcher=fetch) {
@@ -53,7 +58,8 @@ function createRecovery({readDb,writeDb,body,json,limited,hash,validPassword,aud
       const recent=db.workflows.filter(x=>x.type===TYPE&&x.phoneHash===phoneHash&&x.createdMs>timestamp-3600000);
       // Same response for throttled, absent, inactive and unverified accounts.
       if(recent.length>=3||recent.some(x=>x.createdMs>timestamp-60000)){generic();return true;}
-      const user=db.users.find(u=>u.phone===phone);
+      const matches=db.users.filter(u=>normalizeRecoveryPhone(u.phone)===phone);
+      const user=matches.length===1?matches[0]:null;
       const row={id:crypto.randomUUID(),type:TYPE,phoneHash,challengeHash:digest(challenge),createdMs:timestamp,createdAt:new Date(timestamp).toISOString(),expiresAt:timestamp+TTL,attempts:0,status:'starting',recoveryUserId:active(user)?user.id:null,passwordVersion:active(user)?digest(user.passwordHash):null};
       db.workflows=db.workflows.filter(x=>x.type!==TYPE||x.createdMs>timestamp-3600000);
       db.workflows.push(row);writeDb(db);
@@ -69,13 +75,13 @@ function createRecovery({readDb,writeDb,body,json,limited,hash,validPassword,aud
     const bad=()=>json(res,400,{error:'Code is invalid or expired. Request a new code.'});
     let db=readDb(),row=db.workflows.find(x=>x.type===TYPE&&x.challengeHash===digest(b.challenge));
     let user=db.users.find(u=>u.id===row?.recoveryUserId);
-    if(!row||row.status!=='pending'||row.expiresAt<=now()||row.attempts>=5||!active(user)||row.phoneHash!==digest(user.phone)||row.passwordVersion!==digest(user.passwordHash)){bad();return true;}
+    if(!row||row.status!=='pending'||row.expiresAt<=now()||row.attempts>=5||!active(user)||row.phoneHash!==digest(normalizeRecoveryPhone(user.phone)||'')||row.passwordVersion!==digest(user.passwordHash)){bad();return true;}
     row.attempts++;row.status='checking';writeDb(db);
     let approved=false;try{approved=await provider.check(row.verificationSid,b.code);}catch{}
     db=readDb();row=db.workflows.find(x=>x.type===TYPE&&x.challengeHash===digest(b.challenge));user=db.users.find(u=>u.id===row?.recoveryUserId);
     if(!row||row.status!=='checking'){bad();return true;}
     if(!approved){row.status=row.attempts>=5?'locked':'pending';writeDb(db);bad();return true;}
-    if(row.expiresAt<=now()||!active(user)||row.phoneHash!==digest(user.phone)||row.passwordVersion!==digest(user.passwordHash)){row.status='expired';writeDb(db);bad();return true;}
+    if(row.expiresAt<=now()||!active(user)||row.phoneHash!==digest(normalizeRecoveryPhone(user.phone)||'')||row.passwordVersion!==digest(user.passwordHash)){row.status='expired';writeDb(db);bad();return true;}
     user.passwordHash=hash(b.newPassword);
     db.deviceSessions=db.deviceSessions.filter(s=>s.userId!==user.id);
     for(const attempt of db.workflows)if(attempt.type===TYPE&&attempt.recoveryUserId===user.id){attempt.status='consumed';delete attempt.verificationSid;delete attempt.passwordVersion;}
@@ -83,4 +89,4 @@ function createRecovery({readDb,writeDb,body,json,limited,hash,validPassword,aud
     json(res,200,{ok:true,message:'Password updated. Sign in with your new password.'});return true;
   };
 }
-module.exports={createRecovery,verifyProvider};
+module.exports={createRecovery,verifyProvider,normalizeRecoveryPhone};
