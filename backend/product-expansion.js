@@ -16,6 +16,9 @@ async function productApi(req,res,next){
   if(req.method==='GET'&&url.pathname==='/src/zovro-enhancements.js')return send(res,200,'application/javascript; charset=utf-8',file('src/zovro-enhancements.js'));
   if(req.method==='GET'&&url.pathname==='/src/workflow-client.js')return send(res,200,'application/javascript; charset=utf-8',file('src/workflow-client.js'));
   if(req.method==='GET'&&url.pathname==='/src/zovro-theme.css')return send(res,200,'text/css; charset=utf-8',file('src/zovro-theme.css'));
+  if(req.method==='GET'&&url.pathname==='/website-final.css')return send(res,200,'text/css; charset=utf-8',file('website-final.css'));
+  if(req.method==='GET'&&url.pathname==='/website-final.js')return send(res,200,'application/javascript; charset=utf-8',file('website-final.js'));
+  if(req.method==='GET'&&url.pathname==='/assets/zovro-icon.svg')return send(res,200,'image/svg+xml; charset=utf-8',file('assets/zovro-icon.svg'));
   if(req.method==='GET'&&url.pathname==='/api/product/catalog')return json(res,200,{brand:BRAND,categories:SERVICE_CATALOG,language:{default:'en',options:['en','es'],label:'English | Spanish'}});
   if(req.method==='GET'&&url.pathname==='/api/product/features')return json(res,200,{features:PRODUCT_FEATURES,launchPhases:LAUNCH_PHASES});
   if(req.method==='POST'&&url.pathname==='/api/product/smart-match'){
