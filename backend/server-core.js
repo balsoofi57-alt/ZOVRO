@@ -48,7 +48,9 @@ function providerStats(db,providerId){const jobs=(db.requests||[]).filter(r=>r.p
 function requestView(r,db,viewer=null){const customer=db.users.find(u=>u.id===r.customerId),provider=db.users.find(u=>u.id===r.providerId),view={...r,customerName:customer?.name||'Customer',customerPhotoUrl:customer?.photoUrl||null,providerName:provider?.name||null,providerPhotoUrl:provider?.photoUrl||null,providerVerified:!!provider?.providerVerified,providerRating:provider?providerStats(db,provider.id).rating:null,providerRatingCount:provider?providerStats(db,provider.id).ratingCount:0,messages:(db.messages||[]).filter(m=>m.requestId===r.id)};if(viewer?.role==='provider'){if(!r.providerId||r.providerId!==viewer.uid)delete view.securityCode;delete view.lastHandoffReason;view.handoffs=(r.handoffs||[]).map(h=>({occurredAt:h.occurredAt,previousStatus:h.previousStatus}))}return view}
 const recovery = require('./password-recovery').createRecovery({readDb,writeDb,body,json,limited,hash,validPassword,audit});
 const phoneVerification = require('./phone-verification').createPhoneVerification({readDb,writeDb,body,json,limited,auth,audit});
+const supportAssistant = require('./support-assistant-api').createSupportAssistant({body,json,limited});
 async function api(req,res,url){
+ if(await supportAssistant(req,res,url))return;
  if(await phoneVerification(req,res,url))return;
  if(await recovery(req,res,url))return;
  if(req.method==='GET'&&url.pathname==='/api/health')return json(res,200,{ok:true,service:'zovro-api',version:APP_VERSION,stage:STAGE,environment:IS_PROD?'production':'development',database:dbInfo().engine,uptimeSeconds:Math.floor((Date.now()-STARTED_AT)/1000),time:new Date().toISOString()});
