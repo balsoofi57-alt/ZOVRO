@@ -50,7 +50,7 @@
     "password-recovery:check": "node --test backend/password-recovery.test.js backend/phone-verification.test.js",
     "payment:webhook-state-check": "node scripts/payment-webhook-state-check.js",
     "payment:receipt-storage-check": "node scripts/payment-receipt-storage-check.js",
-    "admin:check": "node --test backend/admin-requests.test.js"
+    "admin:check": "node --test backend/admin-requests.test.js && node scripts/admin-session-check.js"
   },
   "dependencies": {
     "@capacitor/core": "^7.0.0",
