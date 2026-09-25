@@ -171,3 +171,22 @@ body:not(.z-authenticated) #home:after{color:#fff!important}
 @media(max-width:700px){
  body:not(.z-authenticated) #home .accountWrap:before{right:5%;top:20px;width:46px;height:46px;font-size:25px}
 }
+
+/* FINAL WEBSITE GATE — classic desktop layout, mobile app layout unchanged */
+@media(min-width:901px){
+ body:not(.z-authenticated) .top{display:flex!important;position:sticky!important;top:0!important;z-index:40!important;background:rgba(2,14,31,.96)!important;border-bottom:1px solid rgba(215,168,43,.35)!important;min-height:88px!important;padding:12px 5vw!important}
+ body:not(.z-authenticated) .top .logo{display:block!important;width:300px!important;height:62px!important;font-size:0!important;background:url('/assets/zovro-official-brand.webp') left center/contain no-repeat!important}
+ body:not(.z-authenticated) #home{max-width:1480px!important;margin:auto!important;padding:38px 5vw 64px!important;min-height:calc(100vh - 88px)!important}
+ body:not(.z-authenticated) #home:before{width:430px!important;height:210px!important;margin:0 0 8px!important;background-position:left center!important}
+ body:not(.z-authenticated) #home:after{text-align:left!important;margin:0 0 30px!important;font-size:16px!important}
+ body:not(.z-authenticated) #accountBox{display:grid!important;grid-template-columns:1fr 1fr!important;gap:16px!important;max-width:720px!important;margin:0 0 34px!important;padding:0!important;text-align:left!important}
+ body:not(.z-authenticated) #accountBox>b{grid-column:1/-1!important;font-size:34px!important}
+ body:not(.z-authenticated) #accountBox .muted{grid-column:1/-1!important}
+ body:not(.z-authenticated) .services{grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:16px!important}
+ body:not(.z-authenticated) .svc{min-height:150px!important;background:linear-gradient(180deg,rgba(8,38,70,.94),rgba(3,22,43,.94))!important;border:1px solid #244d77!important;color:#fff!important}
+ body:not(.z-authenticated) .svc b{color:#fff!important}
+ body:not(.z-authenticated) .svc small{color:#aebed0!important}
+ body:not(.z-authenticated) .sectionHead h2{color:#fff!important}
+ body:not(.z-authenticated) .sectionHead p{color:#aebed0!important}
+ body:not(.z-authenticated) .accountWrap:before{right:5vw!important;top:116px!important}
+}
