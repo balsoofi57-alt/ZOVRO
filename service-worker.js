@@ -1,4 +1,4 @@
-const CACHE='zovro-web-v5';
+const CACHE='zovro-web-v6';
 const CORE=['./','./index.html','./privacy.html','./terms.html','./support.html','./manifest.webmanifest','./assets/zovro-icon.svg','./website-final.css','./website-final.js'];
 
 self.addEventListener('install',event=>{
@@ -16,6 +16,8 @@ self.addEventListener('fetch',event=>{
   if(request.method!=='GET') return;
   const url=new URL(request.url);
   if(url.origin!==self.location.origin) return;
+  // Never cache authenticated API data or explicit private reads.
+  if(url.pathname.startsWith('/api/')||request.cache==='no-store') return;
 
   if(request.mode==='navigate'){
     event.respondWith(
