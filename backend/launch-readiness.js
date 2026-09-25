@@ -4,6 +4,7 @@ const http = require('http');
 const { dbInfo } = require('./database');
 const payments = require('./payments');
 const push = require('./push');
+const {verifyProvider} = require('./password-recovery');
 
 const originalCreateServer = http.createServer.bind(http);
 const present = name => Boolean(String(process.env[name] || '').trim());
@@ -31,7 +32,10 @@ function snapshot() {
   const applePayRequested = enabled('ZOVRO_APPLE_PAY_ENABLED');
   const applePayMerchantPresent = /^merchant\.[A-Za-z0-9.-]+$/.test(String(process.env.ZOVRO_APPLE_PAY_MERCHANT_ID || '').trim());
 
+  const passwordRecoveryRequested = process.env.ZOVRO_PASSWORD_RECOVERY_ENABLED === 'true';
+  const passwordRecoveryConfigured = verifyProvider(process.env).configured();
   const blockers = [];
+  if (passwordRecoveryRequested && !passwordRecoveryConfigured) blockers.push('password_recovery_provider');
   if (!databaseUrlPresent) blockers.push('database_url');
   if ((dbMirrorMode === 'mirror' || dbMirrorMode === 'durable') && !postgresConfigured) blockers.push('postgres_runtime');
   if ((dbMirrorMode === 'mirror' || dbMirrorMode === 'durable') && postgresConfigured && !postgresOperational) blockers.push('postgres_connection');
@@ -54,6 +58,8 @@ function snapshot() {
     launchReady: blockers.length === 0,
     blockers,
     checks: {
+      passwordRecoveryRequested,
+      passwordRecoveryConfigured,
       databaseUrlPresent,
       postgresConfigured,
       postgresOperational,

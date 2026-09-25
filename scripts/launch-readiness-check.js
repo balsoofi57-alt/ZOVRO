@@ -38,24 +38,30 @@ const healthyEnv = {
   ONESIGNAL_REST_API_KEY: 'fixture', ZOVRO_SECRET: 's'.repeat(32),
   ZOVRO_ALLOWED_ORIGINS: 'https://example.test'
 };
-for (const key of [undefined, '', 'x'.repeat(31), 'x'.repeat(32), 'é'.repeat(16)]) {
+for (const recoveryMode of ['off','incomplete','configured']) for (const key of [undefined, '', 'x'.repeat(31), 'x'.repeat(32), 'é'.repeat(16)]) {
   let handler;
   const http = { createServer: fn => { handler = fn; } };
   const env = { ...healthyEnv };
+  if (recoveryMode !== 'off') env.ZOVRO_PASSWORD_RECOVERY_ENABLED='true';
+  if (recoveryMode === 'configured') Object.assign(env,{TWILIO_ACCOUNT_SID:'AC'+'a'.repeat(32),TWILIO_AUTH_TOKEN:'test-only-secret',TWILIO_RECOVERY_VERIFY_SERVICE_SID:'VA'+'b'.repeat(32)});
   if (key !== undefined) env.ZOVRO_PROFILE_ENCRYPTION_KEY = key;
   const context = { module: { exports: {} }, Buffer, URL, process: { env }, require(name) {
     if (name === 'http') return http;
     if (name === './database') return { dbInfo: () => ({ postgresConfigured: true, postgresOperational: true, mirrorWriteSafe: true }) };
     if (name === './payments') return { configured: () => true, webhookConfigured: () => true };
+    if (name === './password-recovery') return require('../backend/password-recovery');
     if (name === './push') return { configured: () => true };
     throw Error('Unexpected dependency: ' + name);
   }};
   vm.runInNewContext(launch, context, { filename: launchPath });
-  const expected = Buffer.byteLength(key || '', 'utf8') >= 32;
+  const encryptionExpected = Buffer.byteLength(key || '', 'utf8') >= 32;
+  const expected = encryptionExpected && recoveryMode !== 'incomplete';
   const status = context.module.exports.snapshot();
+  assert(status.blockers.includes('password_recovery_provider') === (recoveryMode === 'incomplete'), 'enabled recovery must block readiness when provider credentials are incomplete');
+  assert(!JSON.stringify(status).includes('test-only-secret'), 'readiness must not expose Verify credentials');
   assert(status.launchReady === expected, 'readiness must enforce encryption key byte length');
-  assert(status.checks.profileEncryptionConfigured === expected, 'encryption check must match readiness');
-  assert(status.blockers.includes('profile_encryption_key') === !expected, 'missing/short key must block launch');
+  assert(status.checks.profileEncryptionConfigured === encryptionExpected, 'encryption check must match readiness');
+  assert(status.blockers.includes('profile_encryption_key') === !encryptionExpected, 'missing/short key must block launch');
   assert(status.checks.dbMirrorMode === 'durable', 'readiness must require durable mode');
   assert(status.checks.durableOperational === true, 'durable readiness must require verified restore/write safety');
   if (key) assert(!JSON.stringify(status).includes(key), 'readiness must never expose encryption key');

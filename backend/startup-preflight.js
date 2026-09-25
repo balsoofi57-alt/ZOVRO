@@ -40,6 +40,7 @@ status.postgresRuntimeReady=status.databaseUrlPresent&&status.pgModuleAvailable;
 status.mirrorOperational=status.mirrorRequested&&status.postgresRuntimeReady;
 status.durableOperational=status.durableRequested&&status.postgresRuntimeReady;
 status.blockers=[];
+if(status.passwordRecoveryEnabled&&!status.passwordRecoveryConfigured) status.blockers.push('password_recovery_provider');
 if(!status.databaseUrlPresent) status.blockers.push('database_url');
 if(!status.pgModuleAvailable) status.blockers.push('postgres_driver');
 if((status.mirrorRequested||status.durableRequested)&&!status.postgresRuntimeReady) status.blockers.push('postgres_runtime');
