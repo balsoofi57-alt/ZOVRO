@@ -3,18 +3,7 @@
   function ready(fn){document.readyState==='loading'?document.addEventListener('DOMContentLoaded',fn):fn()}
   function call(name,...args){if(typeof window[name]==='function')return window[name](...args)}
   function openHelp(prefill){
-    call('startRequestWithLocation');
-    setTimeout(()=>{
-      const d=document.getElementById('reqDetails');
-      if(d&&prefill)d.value=prefill;
-      const s=document.getElementById('reqService');
-      if(s&&prefill){
-        const q=prefill.toLowerCase();
-        const rules=[[/tire|flat|jump|battery|tow|lockout|roadside/,'road'],[/car|vehicle|engine|mechanic|brake/,'auto'],[/plumb|leak|sink|toilet|water/,'plumb'],[/heat|cool|ac|air condition|furnace|hvac/,'hvac'],[/electric|outlet|power|light/,'electric'],[/move|moving|furniture/,'mov'],[/roof/,'roof'],[/snow/,'snow'],[/lawn|grass/,'lawn'],[/appliance|washer|dryer|refrigerator|fridge/,'appliance']];
-        const hit=rules.find(([re])=>re.test(q));
-        if(hit){const opt=[...s.options].find(o=>o.textContent.toLowerCase().includes(hit[1]));if(opt)s.value=opt.value}
-      }
-    },120);
+    call('startRequestWithLocation',{details:prefill||''});
   }
   function goNearby(){
     const b=[...document.querySelectorAll('.bottom button')].find(x=>/nearby/i.test(x.textContent));
