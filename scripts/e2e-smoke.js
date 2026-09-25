@@ -11,6 +11,14 @@ function backup(){fs.mkdirSync(data,{recursive:true});for(const f of files){cons
 function restore(){for(const f of files)fs.rmSync(path.join(data,f),{force:true});for(const [p,b] of backups){fs.copyFileSync(b,p);fs.rmSync(b,{force:true})}}
 (async()=>{backup();const child=spawn(process.execPath,['server.js'],{cwd:backend,env:{...process.env,PORT:String(port),ZOVRO_SECRET:'final-e2e-secret-not-production',ZOVRO_APP_VERSION:'1.0.0'},stdio:['ignore','pipe','pipe']});
 try{let ready=false;for(let i=0;i<40;i++){try{const h=await call('GET','/api/health');if(h.ok&&h.stage==='FINAL'&&h.version==='1.0.0'){ready=true;break}}catch{}await sleep(100)}if(!ready)throw new Error('Final backend did not become ready with expected version/stage');
+// Exercise static protection through the complete middleware chain.
+for(const file of ['/backend/server-core.js','/backend/package.json','/package.json','/.git/config','/backend/data/db.json','/%62ackend/server-core.js']){
+ const response=await fetch(base+file,{method:'HEAD'});
+ if(response.status!==404)throw new Error(`Private static path exposed: ${file} (${response.status})`);
+}
+for(const file of ['/index.html','/website-final.css','/assets/zovro-icon.svg']){
+ const response=await fetch(base+file);if(response.status!==200)throw new Error(`Public asset blocked: ${file}`);await response.arrayBuffer();
+}
 const suffix=Date.now();
 const c=await call('POST','/api/auth/register',{name:'ZOVRO Customer',phone:`1313${String(suffix).slice(-7)}`,password:'StrongPass22!',role:'customer',termsAccepted:true,privacyAccepted:true,termsVersion:'2026-09-09',privacyVersion:'2026-09-09'});
 const p=await call('POST','/api/auth/register',{name:'ZOVRO Provider',phone:`2484${String(suffix).slice(-7)}`,password:'StrongPass22!',role:'provider',service:'Roadside Assistance',termsAccepted:true,privacyAccepted:true,termsVersion:'2026-09-09',privacyVersion:'2026-09-09'});
