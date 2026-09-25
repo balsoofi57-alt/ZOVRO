@@ -47,3 +47,77 @@ body:not(.z-authenticated) .bottom{display:none!important}
 body:not(.z-authenticated) #home{min-height:72vh;display:grid;place-items:center}
 body:not(.z-authenticated) #home .accountWrap{width:min(520px,100%);margin:28px auto!important}
 body.z-authenticated #home{display:block}
+
+/* FINAL VISUAL REFERENCE: IMG_6704 — mobile app + website */
+:root{--final-blue:#082c58;--final-blue2:#041a35;--final-action:#0d6efd;--final-gold:#d9aa2b;--final-paper:#f7f8fa;--final-ink:#0c1a2d}
+body{background:#f7f8fa!important;color:var(--final-ink)!important}
+body.z-authenticated{background:#f7f8fa!important}
+body.z-authenticated .top{background:linear-gradient(180deg,#062b57,#041f42)!important;color:white!important}
+body.z-authenticated #home>.hero{background:linear-gradient(180deg,#082f60,#06264d)!important;border:0!important;border-radius:0 0 24px 24px!important;color:white!important}
+body.z-authenticated #home>.hero h1,body.z-authenticated #home>.hero p{color:white!important}
+body.z-authenticated .grid{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:10px!important}
+body.z-authenticated .svc{background:white!important;border:1px solid #dce3ec!important;color:#10223a!important;border-radius:14px!important;min-height:126px!important;box-shadow:0 2px 8px #00152c12!important}
+body.z-authenticated .svc span{background:#f4f7fb!important;border:0!important}
+body.z-authenticated .svc b{color:#10223a!important}
+body.z-authenticated .svc small{color:#66758a!important}
+body.z-authenticated .bottom{background:#fff!important;border:1px solid #dce3ec!important}
+body.z-authenticated .bottom button{color:#64748b!important}
+body.z-authenticated .bottom button.active{background:transparent!important;color:#0d6efd!important}
+body:not(.z-authenticated){background:#fff!important}
+body:not(.z-authenticated) .top{display:none!important}
+body:not(.z-authenticated) #home{display:block!important;min-height:100dvh!important;padding-top:max(22px,env(safe-area-inset-top))!important}
+body:not(.z-authenticated) #home:before{content:"";display:block;width:168px;height:168px;margin:24px auto 8px;background:url('/assets/zovro-icon.svg') center/contain no-repeat}
+body:not(.z-authenticated) #home:after{content:"ZOVRO\A REAL HELP. RIGHT NOW.";white-space:pre;display:block;text-align:center;font-weight:900;letter-spacing:.04em;color:#071d38;font-size:31px;line-height:1.05;margin:0 auto 20px}
+body:not(.z-authenticated) #accountBox{background:white!important;border:0!important;box-shadow:none!important;text-align:center!important;padding:0 20px!important}
+body:not(.z-authenticated) #accountBox>b{font-size:22px!important;color:#101827!important}
+body:not(.z-authenticated) #accountBox .muted{color:#7b8797!important}
+body:not(.z-authenticated) #accountBox .primary{background:#0d6efd!important;color:white!important;border:0!important;width:100%!important}
+body:not(.z-authenticated) .modal{background:#fff!important;backdrop-filter:none!important;padding:0!important;align-items:flex-start!important}
+body:not(.z-authenticated) .modal .sheet{background:#fff!important;color:#101827!important;border:0!important;border-radius:0!important;box-shadow:none!important;max-width:430px!important;width:100%!important;margin:auto!important;padding:22px 24px calc(28px + env(safe-area-inset-bottom))!important}
+body:not(.z-authenticated) .modal .sheet:before{content:"";display:block;width:130px;height:130px;margin:4px auto 4px;background:url('/assets/zovro-icon.svg') center/contain no-repeat}
+body:not(.z-authenticated) .modal .sheet h2{text-align:center!important;color:#101827!important}
+body:not(.z-authenticated) .modal .sheet label{color:#334155!important}
+body:not(.z-authenticated) .modal .sheet .muted,body:not(.z-authenticated) .modal .sheet small{color:#64748b!important}
+body:not(.z-authenticated) .modal .sheet input:not([type=checkbox]):not([type=radio]),body:not(.z-authenticated) .modal .sheet select{background:#fff!important;color:#101827!important;border:1px solid #d7dee8!important}
+body:not(.z-authenticated) .modal .sheet .primary{background:#0d6efd!important;color:#fff!important;border:0!important}
+body:not(.z-authenticated) .modal .sheet .ghost{background:#fff!important;color:#14233a!important;border:1px solid #d7dee8!important}
+body:not(.z-authenticated) #passwordToggle{color:#52647a!important}
+@media(max-width:700px){body:not(.z-authenticated) .shell{padding:0!important}body:not(.z-authenticated) #home:before{width:145px;height:145px;margin-top:18px}body:not(.z-authenticated) #home:after{font-size:27px}.modal .sheet{max-height:100dvh!important}.shell{padding-left:14px!important;padding-right:14px!important}}
+
+/* IMG_6704 screen language */
+#requestModal .sheet{background:#fff!important;color:#10223a!important}
+#requestModal .sheet h2{color:#10223a!important}
+#requestModal .sheet label{color:#334155!important}
+#requestModal .sheet input,#requestModal .sheet select,#requestModal .sheet textarea{background:#fff!important;color:#10223a!important;border:1px solid #d8e0ea!important}
+#requestModal .sheet .primary{background:#0d6efd!important;color:#fff!important}
+#chatModal .sheet,#trackingModal .sheet{background:#fff!important;color:#10223a!important}
+#chatModal .sheet h2,#trackingModal .sheet h2{color:#10223a!important}
+#trackingMap{background:#eef2f6!important;border:1px solid #d8e0ea}
+#profile{color:#10223a!important}
+#profile .card{background:#fff!important;color:#10223a!important;border-color:#d8e0ea!important}
+#profile .sectionHead h2,#jobs .sectionHead h2,#nearby .sectionHead h2{color:#10223a!important}
+#jobs .card,#nearby .card{background:#fff!important;color:#10223a!important;border-color:#d8e0ea!important}
+@media(max-width:700px){
+ body.z-authenticated .shell{padding-top:0!important}
+ body.z-authenticated #home>.hero{margin:0 -14px 14px!important;padding:22px 18px 20px!important;border-radius:0 0 20px 20px!important}
+ body.z-authenticated #home>.hero .eyebrow{display:none!important}
+ body.z-authenticated #home>.hero h1{font-size:27px!important;line-height:1.08!important;margin:4px 0 6px!important;letter-spacing:-.03em!important}
+ body.z-authenticated #home>.hero h1:before{content:"Need Help?";display:block;color:#f1c84b;font-size:21px;letter-spacing:0;margin-bottom:3px}
+ body.z-authenticated #home>.hero h1{font-size:0!important}
+ body.z-authenticated #home>.hero h1:after{content:"We'll Get You Connected.";font-size:17px;color:#fff;display:block}
+ body.z-authenticated #home>.hero>p{display:none!important}
+ body.z-authenticated #home>.hero .bar{margin-top:14px!important}
+ body.z-authenticated #home>.hero .bar .primary{width:100%!important;background:#fff!important;color:#718096!important;text-align:left!important}
+ body.z-authenticated #home>.hero .bar .primary:after{content:"  What do you need help with?";font-weight:500}
+ body.z-authenticated #home>.hero .danger,#sosHelp,#sosStatus,#sosView{display:none!important}
+ body.z-authenticated .trust,body.z-authenticated .featureRow{display:none!important}
+ body.z-authenticated .sectionHead{margin:14px 0 10px!important}
+ body.z-authenticated .sectionHead h2{font-size:0!important}
+ body.z-authenticated .sectionHead h2:after{content:"Services";font-size:20px;color:#10223a}
+ body.z-authenticated .sectionHead p{display:none!important}
+ body.z-authenticated .svc{min-height:112px!important;padding:13px!important;text-align:center!important}
+ body.z-authenticated .svc span{margin:auto!important;width:42px!important;height:42px!important;font-size:22px!important}
+ body.z-authenticated .svc b{font-size:13px!important;margin-top:8px!important}
+ body.z-authenticated .accountWrap{margin-top:12px!important}
+ #requestModal .sheet,#chatModal .sheet,#trackingModal .sheet{border-radius:0!important;max-width:430px!important;min-height:100dvh!important}
+}
