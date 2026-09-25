@@ -1,0 +1,21 @@
+'use strict';
+const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
+const html=fs.readFileSync(require('node:path').join(__dirname,'../index.html'),'utf8');
+assert.match(html,/<form id="signInForm"[^>]*method="post"[^>]*autocomplete="on"[^>]*onsubmit="event.preventDefault\(\);submitAuth\(\)"/);
+assert.match(html,/<input id="phone"[^>]*name="username"[^>]*type="tel"[^>]*autocomplete="username"/);
+assert.match(html,/<input id="password"[^>]*name="password"[^>]*type="password"[^>]*autocomplete="current-password"/);
+assert.match(html,/<button id="authSubmit"[^>]*type="submit"/);
+const nodes=new Map(),storage={},messages=[];let calls=0,settle;
+const $=id=>{if(!nodes.has(id))nodes.set(id,{value:'',disabled:false,textContent:'',innerHTML:'',autocomplete:''});return nodes.get(id)};
+const c=vm.createContext({$,authMode:'login',token:'',me:null,localStorage:storage,setPasswordVisible(){},closeModal(){},renderAccount(){},loadJobs(){},resumeRequestIntent(){},toast:m=>messages.push(m),api:()=>{calls++;return new Promise((resolve,reject)=>settle={resolve,reject})}});
+vm.runInContext(html.match(/^function openAuth\(\).*$/m)[0]+'\n'+html.match(/^(?:let authBusy=false;)?async function submitAuth\(\).*$/m)[0],c);
+(async()=>{
+ $('password').value='previous secret';c.renderAuth();assert.equal($('password').value,'');assert.equal($('password').autocomplete,'current-password');
+ c.authMode='register';c.renderAuth();assert.equal($('password').autocomplete,'new-password');
+ c.authMode='login';c.renderAuth();$('phone').value='+13135550100';$('password').value='test-secret-only';
+ const first=c.submitAuth();await c.submitAuth();assert.equal(calls,1,'Double submission must not create extra sessions');
+ settle.reject(Error('Invalid credentials'));await first;assert.equal($('authSubmit').disabled,false);assert.deepEqual(storage,{});
+ const retry=c.submitAuth();settle.resolve({token:'test-session',user:{id:'u'}});await retry;
+ assert.equal($('authSubmit').disabled,false);assert.deepEqual(storage,{zovroToken:'test-session'},'Only the session token may enter app storage, never the password');
+ console.log('Password autofill: browser form metadata, registration hints, duplicate submission, retry and password-storage checks passed.');
+})().catch(e=>{console.error(e);process.exitCode=1});
