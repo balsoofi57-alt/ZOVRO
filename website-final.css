@@ -154,3 +154,20 @@ body:not(.z-authenticated) .modal .sheet .primary{background:linear-gradient(180
 body:not(.z-authenticated) .modal .sheet .ghost{background:transparent!important;color:#fff!important;border:1px solid #4d7daf!important}
 body:not(.z-authenticated) #passwordToggle{color:#d8ad4a!important}
 @media(max-width:700px){body:not(.z-authenticated) #home:before{height:270px!important}body:not(.z-authenticated) .modal .sheet:before{height:215px!important}}
+
+/* FINAL DESIGN LOCK: GPS + wheel identity */
+body:not(.z-authenticated) #home:before,
+body:not(.z-authenticated) .modal .sheet:before{
+  background:url('/assets/zovro-official-brand.webp') center/contain no-repeat!important;
+}
+body:not(.z-authenticated) #home{position:relative}
+body:not(.z-authenticated) #home .accountWrap:before{
+  content:"➤";position:absolute;right:7%;top:28px;width:54px;height:54px;
+  display:grid;place-items:center;border:2px solid #d7a82b;border-radius:50%;
+  color:#f0c557;font-size:30px;line-height:1;transform:rotate(-35deg);
+  box-shadow:0 0 18px rgba(215,168,43,.25),inset 0 0 14px rgba(22,135,255,.10)
+}
+body:not(.z-authenticated) #home:after{color:#fff!important}
+@media(max-width:700px){
+ body:not(.z-authenticated) #home .accountWrap:before{right:5%;top:20px;width:46px;height:46px;font-size:25px}
+}
