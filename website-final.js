@@ -24,6 +24,7 @@
     field.style.display='none';
   }
   ready(()=>{
+    document.body.classList.toggle('z-authenticated',!!window.me);
     document.title='ZOVRO — Anywhere, Anytime, Near to You.';
     const brand=document.querySelector('.brand');
     if(brand&&!brand.querySelector('.z-official-brand'))brand.innerHTML='<img class="z-official-brand" src="assets/zovro-official-brand.webp" alt="ZOVRO — Anywhere, Anytime, Near to You.">';
@@ -106,6 +107,13 @@
 
     const shell=document.querySelector('.shell');
     if(shell&&!document.querySelector('.z-site-footer')){const f=document.createElement('footer');f.className='z-site-footer';f.innerHTML='<div>© 2026 ZOVRO LLC · Anywhere, Anytime, Near to You.</div><div><a href="privacy.html">Privacy</a><a href="terms.html">Terms</a><a href="support.html">Support</a></div>';shell.appendChild(f)}
+
+    const originalAccount=window.renderAccount;
+    if(typeof originalAccount==='function'&&!originalAccount.__zovroLoginFirst){
+      const wrappedAccount=function(){const out=originalAccount.apply(this,arguments);document.body.classList.toggle('z-authenticated',!!window.me);return out};
+      wrappedAccount.__zovroLoginFirst=true;window.renderAccount=wrappedAccount;
+    }
+    if(!window.me)setTimeout(()=>call('openAuth'),180);
 
     const originalRenderAuth=window.renderAuth;
     if(typeof originalRenderAuth==='function'&&!originalRenderAuth.__zovroNames){
