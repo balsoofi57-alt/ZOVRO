@@ -35,7 +35,7 @@
     "private-profile-api:check": "node scripts/private-profile-api-check.js",
     "gps:check": "node scripts/gps-runtime-check.js && node scripts/request-flow-check.js",
     "session-recovery:check": "node scripts/session-recovery-check.js",
-    "qa:all": "npm run session-recovery:check && npm run gps:check && npm run password-recovery:check && npm run product:check && npm run scale:check && npm run platform:check && npm run engagement:check && npm run operations:check && npm run workflow-store:check && npm run workflow-api:check && npm run workflow-ui:check && npm run postgres-probe:check && npm run final:check && npm run production:check && npm run launch-readiness:check && npm run payment:check && npm run payment:webhook-state-check && npm run payment:receipt-storage-check && npm run payment:saved-card-check && npm run push:check && npm run sms:check && npm run mobile-push:check && npm run native-push:check && npm run mobile-release-workflows:check && npm run cors:check && npm run security:check && npm run store:check && npm run db-cutover:check && npm run release:check && npm run maps:check && npm run support:check && npm run profile-privacy:check && npm run private-profile-api:check && npm run test:e2e && npm run sos:check && npm run biometric:check && npm run mobile-bootstrap:check && npm run smart-match:check && npm run request-privacy:check && npm run log-privacy:check && npm run consent:check && npm run multi-service:check && npm run admin:check",
+    "qa:all": "npm run session-recovery:check && npm run gps:check && npm run password-recovery:check && npm run product:check && npm run scale:check && npm run platform:check && npm run engagement:check && npm run operations:check && npm run workflow-store:check && npm run workflow-api:check && npm run workflow-ui:check && npm run postgres-probe:check && npm run final:check && npm run production:check && npm run launch-readiness:check && npm run payment:check && npm run payment:webhook-state-check && npm run payment:receipt-storage-check && npm run payment:saved-card-check && npm run push:check && npm run sms:check && npm run mobile-push:check && npm run native-push:check && npm run mobile-release-workflows:check && npm run cors:check && npm run security:check && npm run store:check && npm run db-cutover:check && npm run release:check && npm run maps:check && npm run support:check && npm run profile-privacy:check && npm run private-profile-api:check && npm run test:e2e && npm run sos:check && npm run biometric:check && npm run mobile-bootstrap:check && npm run smart-match:check && npm run request-privacy:check && npm run log-privacy:check && npm run consent:check && npm run multi-service:check && npm run admin:check && npm run account-session:check",
     "launch-readiness:check": "node scripts/launch-readiness-check.js",
     "sos:check": "node scripts/sos-check.js",
     "biometric:check": "node scripts/biometric-check.js",
@@ -50,7 +50,8 @@
     "password-recovery:check": "node --test backend/password-recovery.test.js backend/phone-verification.test.js",
     "payment:webhook-state-check": "node scripts/payment-webhook-state-check.js",
     "payment:receipt-storage-check": "node scripts/payment-receipt-storage-check.js",
-    "admin:check": "node --test backend/admin-requests.test.js && node scripts/admin-session-check.js && node scripts/password-autofill-check.js"
+    "admin:check": "node --test backend/admin-requests.test.js && node scripts/admin-session-check.js && node scripts/password-autofill-check.js",
+    "account-session:check": "node scripts/account-session-check.js"
   },
   "dependencies": {
     "@capacitor/core": "^7.0.0",
