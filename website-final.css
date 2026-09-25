@@ -83,3 +83,41 @@ body:not(.z-authenticated) .modal .sheet .primary{background:#0d6efd!important;c
 body:not(.z-authenticated) .modal .sheet .ghost{background:#fff!important;color:#14233a!important;border:1px solid #d7dee8!important}
 body:not(.z-authenticated) #passwordToggle{color:#52647a!important}
 @media(max-width:700px){body:not(.z-authenticated) .shell{padding:0!important}body:not(.z-authenticated) #home:before{width:145px;height:145px;margin-top:18px}body:not(.z-authenticated) #home:after{font-size:27px}.modal .sheet{max-height:100dvh!important}.shell{padding-left:14px!important;padding-right:14px!important}}
+
+/* IMG_6704 screen language */
+#requestModal .sheet{background:#fff!important;color:#10223a!important}
+#requestModal .sheet h2{color:#10223a!important}
+#requestModal .sheet label{color:#334155!important}
+#requestModal .sheet input,#requestModal .sheet select,#requestModal .sheet textarea{background:#fff!important;color:#10223a!important;border:1px solid #d8e0ea!important}
+#requestModal .sheet .primary{background:#0d6efd!important;color:#fff!important}
+#chatModal .sheet,#trackingModal .sheet{background:#fff!important;color:#10223a!important}
+#chatModal .sheet h2,#trackingModal .sheet h2{color:#10223a!important}
+#trackingMap{background:#eef2f6!important;border:1px solid #d8e0ea}
+#profile{color:#10223a!important}
+#profile .card{background:#fff!important;color:#10223a!important;border-color:#d8e0ea!important}
+#profile .sectionHead h2,#jobs .sectionHead h2,#nearby .sectionHead h2{color:#10223a!important}
+#jobs .card,#nearby .card{background:#fff!important;color:#10223a!important;border-color:#d8e0ea!important}
+@media(max-width:700px){
+ body.z-authenticated .shell{padding-top:0!important}
+ body.z-authenticated #home>.hero{margin:0 -14px 14px!important;padding:22px 18px 20px!important;border-radius:0 0 20px 20px!important}
+ body.z-authenticated #home>.hero .eyebrow{display:none!important}
+ body.z-authenticated #home>.hero h1{font-size:27px!important;line-height:1.08!important;margin:4px 0 6px!important;letter-spacing:-.03em!important}
+ body.z-authenticated #home>.hero h1:before{content:"Need Help?";display:block;color:#f1c84b;font-size:21px;letter-spacing:0;margin-bottom:3px}
+ body.z-authenticated #home>.hero h1{font-size:0!important}
+ body.z-authenticated #home>.hero h1:after{content:"We'll Get You Connected.";font-size:17px;color:#fff;display:block}
+ body.z-authenticated #home>.hero>p{display:none!important}
+ body.z-authenticated #home>.hero .bar{margin-top:14px!important}
+ body.z-authenticated #home>.hero .bar .primary{width:100%!important;background:#fff!important;color:#718096!important;text-align:left!important}
+ body.z-authenticated #home>.hero .bar .primary:after{content:"  What do you need help with?";font-weight:500}
+ body.z-authenticated #home>.hero .danger,#sosHelp,#sosStatus,#sosView{display:none!important}
+ body.z-authenticated .trust,body.z-authenticated .featureRow{display:none!important}
+ body.z-authenticated .sectionHead{margin:14px 0 10px!important}
+ body.z-authenticated .sectionHead h2{font-size:0!important}
+ body.z-authenticated .sectionHead h2:after{content:"Services";font-size:20px;color:#10223a}
+ body.z-authenticated .sectionHead p{display:none!important}
+ body.z-authenticated .svc{min-height:112px!important;padding:13px!important;text-align:center!important}
+ body.z-authenticated .svc span{margin:auto!important;width:42px!important;height:42px!important;font-size:22px!important}
+ body.z-authenticated .svc b{font-size:13px!important;margin-top:8px!important}
+ body.z-authenticated .accountWrap{margin-top:12px!important}
+ #requestModal .sheet,#chatModal .sheet,#trackingModal .sheet{border-radius:0!important;max-width:430px!important;min-height:100dvh!important}
+}
