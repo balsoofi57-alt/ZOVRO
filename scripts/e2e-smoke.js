@@ -12,6 +12,14 @@ async function call(method,url,body,token){const r=await fetch(base+url,{method,
 try{let ready=false;for(let i=0;i<40;i++){try{const h=await call('GET','/api/health');if(h.ok&&h.stage==='FINAL'&&h.version==='1.0.0'){ready=true;break}}catch{}await sleep(100)}if(!ready)throw new Error('Final backend did not become ready with expected version/stage');
 const malformed=await fetch(base+'/api/auth/login',{method:'POST',headers:{'content-type':'application/json'},body:'{bad'});if(malformed.status!==400)throw new Error(`Malformed JSON returned ${malformed.status}, expected 400`);
 const oversized=await fetch(base+'/api/auth/login',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({value:'x'.repeat(1000001)})});if(oversized.status!==413)throw new Error(`Oversized JSON returned ${oversized.status}, expected 413`);
+// Exercise static protection through the complete middleware chain.
+for(const file of ['/backend/server-core.js','/backend/package.json','/package.json','/.git/config','/backend/data/db.json','/%62ackend/server-core.js']){
+ const response=await fetch(base+file,{method:'HEAD'});
+ if(response.status!==404)throw new Error(`Private static path exposed: ${file} (${response.status})`);
+}
+for(const file of ['/index.html','/website-final.css','/assets/zovro-icon.svg']){
+ const response=await fetch(base+file);if(response.status!==200)throw new Error(`Public asset blocked: ${file}`);await response.arrayBuffer();
+}
 const suffix=Date.now();
 const missingConsent=await fetch(base+'/api/auth/register',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({name:'Blocked User',phone:`7345${String(suffix).slice(-7)}`,password:'StrongPass22!',role:'customer'})});if(missingConsent.status!==428)throw new Error(`Registration without consent returned ${missingConsent.status}, expected 428`);
 const c=await call('POST','/api/auth/register',{name:'ZOVRO Customer',phone:`1313${String(suffix).slice(-7)}`,password:'StrongPass22!',role:'customer'});
