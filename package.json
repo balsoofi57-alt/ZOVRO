@@ -21,7 +21,7 @@
     "gps:check": "node scripts/gps-runtime-check.js && node scripts/request-flow-check.js",
     "qa:all": "npm run session-recovery:check && npm run gps:check && npm run product:check && npm run final:check && npm run production:check && npm run payment:check && npm run payment:saved-card-check && npm run push:check && npm run cors:check && npm run security:check && npm run store:check && npm run release:check && npm run test:e2e && npm run admin:check",
     "session-recovery:check": "node scripts/session-recovery-check.js",
-    "admin:check": "node scripts/admin-session-check.js"
+    "admin:check": "node scripts/admin-session-check.js && node scripts/password-autofill-check.js"
   },
   "dependencies": {
     "@capacitor/core": "^7.0.0",
