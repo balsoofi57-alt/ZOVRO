@@ -9,11 +9,11 @@ function headersFor(req){
     'x-content-type-options':'nosniff',
     'x-frame-options':'DENY',
     'referrer-policy':'no-referrer',
-    'content-security-policy':"default-src 'none'; frame-ancestors 'none'; base-uri 'none'",
+    'content-security-policy': req.url.startsWith('/api/') ? "default-src 'none'; frame-ancestors 'none'; base-uri 'none'" : "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' https://zovro-api-final.onrender.com https://api.stripe.com https://onesignal.com https://*.onesignal.com; frame-src https://js.stripe.com https://hooks.stripe.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self'",
     'cross-origin-opener-policy':'same-origin',
     'cross-origin-resource-policy':'cross-origin',
     'x-permitted-cross-domain-policies':'none',
-    'permissions-policy':'camera=(), microphone=(), geolocation=()'
+    'permissions-policy': req.url.startsWith('/api/') ? 'camera=(), microphone=(), geolocation=()' : 'camera=(self), microphone=(self), geolocation=(self)'
   };
   if(production)h['strict-transport-security']='max-age=31536000; includeSubDomains';
   if(origin&&allowedOrigins.has(origin)){
