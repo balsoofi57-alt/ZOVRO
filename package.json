@@ -24,7 +24,8 @@
     "admin:check": "node scripts/admin-session-check.js && node scripts/password-autofill-check.js",
     "account-session:check": "node scripts/account-session-check.js",
     "static-assets:check": "node --test backend/static-assets.test.js",
-    "native-memory:check": "node --test scripts/native-memory.test.js"
+    "native-memory:check": "node --test scripts/native-memory.test.js",
+    "support-ai:check": "node --test backend/support-assistant.test.js"
   },
   "dependencies": {
     "@capacitor/core": "^7.0.0",
