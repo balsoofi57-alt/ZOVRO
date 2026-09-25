@@ -66,7 +66,7 @@ body.z-authenticated .bottom button.active{background:transparent!important;colo
 body:not(.z-authenticated){background:#fff!important}
 body:not(.z-authenticated) .top{display:none!important}
 body:not(.z-authenticated) #home{display:block!important;min-height:100dvh!important;padding-top:max(22px,env(safe-area-inset-top))!important}
-body:not(.z-authenticated) #home:before{content:"";display:block;width:168px;height:168px;margin:24px auto 8px;background:url('/assets/zovro-icon.svg') center/contain no-repeat}
+body:not(.z-authenticated) #home:before{content:"";display:block;width:168px;height:168px;margin:24px auto 8px;background:url('/assets/zovro-official-brand.webp') center/contain no-repeat}
 body:not(.z-authenticated) #home:after{content:"ZOVRO\A REAL HELP. RIGHT NOW.";white-space:pre;display:block;text-align:center;font-weight:900;letter-spacing:.04em;color:#071d38;font-size:31px;line-height:1.05;margin:0 auto 20px}
 body:not(.z-authenticated) #accountBox{background:white!important;border:0!important;box-shadow:none!important;text-align:center!important;padding:0 20px!important}
 body:not(.z-authenticated) #accountBox>b{font-size:22px!important;color:#101827!important}
@@ -74,7 +74,7 @@ body:not(.z-authenticated) #accountBox .muted{color:#7b8797!important}
 body:not(.z-authenticated) #accountBox .primary{background:#0d6efd!important;color:white!important;border:0!important;width:100%!important}
 body:not(.z-authenticated) .modal{background:#fff!important;backdrop-filter:none!important;padding:0!important;align-items:flex-start!important}
 body:not(.z-authenticated) .modal .sheet{background:#fff!important;color:#101827!important;border:0!important;border-radius:0!important;box-shadow:none!important;max-width:430px!important;width:100%!important;margin:auto!important;padding:22px 24px calc(28px + env(safe-area-inset-bottom))!important}
-body:not(.z-authenticated) .modal .sheet:before{content:"";display:block;width:130px;height:130px;margin:4px auto 4px;background:url('/assets/zovro-icon.svg') center/contain no-repeat}
+body:not(.z-authenticated) .modal .sheet:before{content:"";display:block;width:130px;height:130px;margin:4px auto 4px;background:url('/assets/zovro-official-brand.webp') center/contain no-repeat}
 body:not(.z-authenticated) .modal .sheet h2{text-align:center!important;color:#101827!important}
 body:not(.z-authenticated) .modal .sheet label{color:#334155!important}
 body:not(.z-authenticated) .modal .sheet .muted,body:not(.z-authenticated) .modal .sheet small{color:#64748b!important}
