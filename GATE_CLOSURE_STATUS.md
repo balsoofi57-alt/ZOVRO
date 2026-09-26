@@ -49,7 +49,7 @@ Checkpoint: 2026-09-12
 - Public production backend is live at `https://zovro-api-final.onrender.com`.
 - External launch gates remain intentionally blocked until payment, push, signing, real-device, support, legal/store and durability evidence are complete.
 
-## Stripe live — ACCOUNT ACTIVE / VERIFICATION + LIVE EVENT EVIDENCE STILL OPEN
+## Stripe live — ACCOUNT ACTIVE / TAX VERIFIED / WEBHOOK DELIVERY VERIFIED
 
 Verified current state:
 - `charges_enabled=true`
@@ -62,10 +62,12 @@ Verified current state:
 - Subscribed events include `payment_intent.succeeded`, `payment_intent.payment_failed`, `charge.refunded`, and `transfer.reversed`.
 
 Still open:
-- Render log review has not yet captured a real signed Stripe `POST` delivery. Existing GET/HEAD probes returning 401 are expected and do not count as lifecycle verification.
-- Production payment gate remains open until a real signed Stripe event is successfully received and signature verification is proven.
-- Stripe still reports `company.tax_id` currently due because the EIN on the supplied IRS document does not match the EIN recorded on the Stripe account.
-- Current Stripe deadline recorded from the live account: 2026-10-09.
+- Stripe Account Status currently shows no active tasks; Payments and Payouts are active.
+- Stripe Tax details now shows **Verified** for the live account; the prior EIN / `company.tax_id` mismatch is no longer an open gate.
+- Production destination `ZOVRO Production Webhook` is Active and subscribes to `charge.refunded`, `payment_intent.payment_failed`, `payment_intent.succeeded`, and `transfer.reversed`.
+- A live `charge.refunded` event shows **Delivered / Recovered** with **HTTP 200**, proving Stripe-to-ZOVRO signed webhook delivery is accepted by the production endpoint.
+- Historical webhook failures coincided with repeated Render deployments/restarts and later recovered; the current webhook endpoint is accepting deliveries.
+- Remaining Stripe launch evidence: capture a live `payment_intent.succeeded` flow, a payment failure path where practical, and confirm provider Connect/payout readiness for an actual provider account.
 
 ## OneSignal / push — SERVER CONFIG PASS / REAL DELIVERY STILL OPEN
 
