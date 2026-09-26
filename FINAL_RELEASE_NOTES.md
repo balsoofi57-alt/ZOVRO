@@ -13,7 +13,7 @@ The current ZOVRO 1.0.0 release candidate includes customer and provider account
 
 ## Remaining external release gates
 
-- OneSignal production REST credential must be replaced with a valid app key. The current Render credential returns HTTP 403.
+- OneSignal backend credential verification is closed and production readiness is clear. Remaining push work is APNs/FCM platform configuration plus signed physical-device registration and delivery evidence.
 - OneSignal currently has 0 subscriptions; APNs/FCM and real push delivery require signed physical-device registration.
 - iOS distribution certificate/profile, Apple team/App Store Connect credentials, and Android signing secrets are not present in GitHub Actions.
 - Signed iOS/Android builds, physical-device acceptance, TestFlight/Play upload, store screenshots, and final store declarations remain open.
