@@ -1,3 +1,16 @@
+
+## Live verification — 2026-09-26
+
+- OneSignal app `Zovro llc App` is reachable through the connected account.
+- OneSignal `Total Subscriptions` count: **0**; `Active Subscriptions` count: **0**. No physical device is registered yet, so end-to-end delivery cannot be claimed.
+- OneSignal message history before the probe contained **0** notifications.
+- A safe production credential probe targeted a deliberately nonexistent external user and returned **HTTP 403** from OneSignal. This proves the `ONESIGNAL_REST_API_KEY` currently stored in Render is invalid or lacks permission for notification creation.
+- The credential probe was disabled immediately after the check.
+- All Android release signing secrets are absent from GitHub Actions.
+- All iOS distribution/provisioning/App Store Connect signing secrets are absent from GitHub Actions.
+- iOS native preparation now creates an `aps-environment=production` entitlement and wires `CODE_SIGN_ENTITLEMENTS` to the main target. Full QA passed before merge.
+- Launch readiness now requires a separately verified OneSignal credential flag. Production currently reports blocker `onesignal_credentials_unverified` and `externalLaunchReady=false` until a valid OneSignal App API key is installed and successfully probed.
+
 # ZOVRO Push Release Status
 
 Checkpoint: 2026-09-11, 18:10 UTC
