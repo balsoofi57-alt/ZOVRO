@@ -22,7 +22,7 @@
     "keywords": "local services,roadside,handyman,mechanic,plumber,HVAC,moving,home repair",
     "primaryCategory": "Lifestyle",
     "secondaryCategory": "Utilities",
-    "reviewNotes": "Use two test accounts supplied privately in App Store Connect: one customer and one provider. Review the request, provider acceptance, messaging, status update, account deletion, and SOS marketplace-assistance flows. ZOVRO SOS does not replace 911. No credentials are stored in this repository."
+    "reviewNotes": "Use test accounts supplied privately in App Store Connect: one customer and one provider. Review request creation, provider acceptance, messaging, status updates, account deletion, password recovery, and SOS marketplace-assistance flows. ZOVRO SOS does not replace 911. Production secrets and review credentials are not stored in this repository. Push delivery should be evaluated only after the submitted signed build has a registered OneSignal device subscription."
   },
   "googlePlay": {
     "appName": "ZOVRO",
@@ -37,7 +37,7 @@
     ]
   },
   "screenshots": {
-    "capturePolicy": "Capture only from the final signed build with synthetic accounts and no personal data.",
+    "capturePolicy": "Capture only from the final signed release candidate with synthetic accounts, no personal data, no real customer addresses, and no production secrets or identifiers visible.",
     "story": [
       "Home and service discovery",
       "Describe a need with Smart Match",
@@ -46,7 +46,7 @@
       "Job tracking and status",
       "Private in-app messaging",
       "Ratings and provider history",
-      "Privacy, support, and account deletion"
+      "Privacy, support, password recovery, and account deletion"
     ],
     "appleIPhonePortrait": {
       "preferredDisplay": "6.9-inch",
@@ -78,5 +78,11 @@
       "pixelSize": "1024x500",
       "required": true
     }
+  },
+  "releaseGateNotes": {
+    "push": "Do not claim push delivery until OneSignal REST credentials, APNs/FCM, and at least one signed physical-device subscription are verified.",
+    "signing": "Do not upload unsigned simulator/debug artifacts as store release builds.",
+    "privacy": "Reconcile App Privacy / Data Safety answers against the final signed build before submission.",
+    "legal": "Final human legal review remains required."
   }
 }
