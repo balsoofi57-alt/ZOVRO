@@ -96,10 +96,14 @@ Still open:
 - Terms clearly states that SOS/roadside features do not replace 911 and discloses beta/payment behavior.
 - Technical support/inbox monitoring is closed. Independent legal review of Terms/Privacy remains a separate launch gate.
 
-## Store screenshots / listing assets — OPEN
+## Store metadata / privacy declarations — PREP COMPLETE / SIGNED-BUILD EVIDENCE OPEN
 
-- Repository review has not identified a completed store screenshot package yet.
-- Final App Store / Play Store screenshots should be generated from signed release-candidate builds and matched to the final UI before submission.
+- Apple and Google Play listing metadata exists in `store/listing.en-US.json` and is validated by the store-readiness check.
+- The App Privacy / Google Play Data Safety worksheet has been refreshed to match current production integrations: Stripe live payments, durable PostgreSQL, OneSignal push integration, support@zovro.work, location, messaging, account deletion, and no advertising/cross-app tracking SDK in the current source.
+- Store-readiness now fails if the privacy/data-safety worksheet is missing, the legacy `support@zovro.net` address reappears, or required push/signing/privacy/legal release-gate notes disappear.
+- Latest Android and iOS release-verification workflows both pass their unsigned build stages. Signed Android AAB and signed iOS archive steps are skipped because signing secrets are absent.
+- Final screenshots must still be captured from the signed release candidate using synthetic accounts and no personal data.
+- Apple App Privacy and Google Play Data Safety forms must still be reconciled against that final signed build before submission.
 
 ## Password recovery / Forgot Password — CLOSED
 
@@ -121,9 +125,9 @@ Still open:
 1. Complete APNs + FCM production credentials and verify real push delivery on signed physical devices.
 2. Sign the existing Android release AAB and produce a signed iOS archive; verify physical-device GPS, SOS, push, biometric and payment lifecycle behavior.
 3. Upload signed builds through Play Console/TestFlight/App Store Connect and complete store-console metadata.
-4. Generate final store screenshots and complete App Privacy / Google Play Data Safety declarations against the actual signed production build.
+4. Capture final store screenshots and reconcile the prepared App Privacy / Google Play Data Safety declarations against the signed production build.
 5. Complete final human legal review, mark PR #1 ready only after the external gates above are closed, and proceed to store submission.
 
 ## Current completion position
 
-The executable repository/backend/production-mirror work is substantially complete. Remaining work is dominated by real transaction evidence, Stripe tax verification, push credentials/device delivery, signing/store-console access, support monitoring, store assets/declarations, final legal review, and non-empty durability evidence.
+The executable repository/backend work is substantially complete. Stripe, password recovery, durable database operation, support-mail monitoring, store metadata, and privacy/data-safety preparation have current evidence. Remaining work is dominated by valid OneSignal/APNs/FCM credentials, physical-device push evidence, iOS/Android signing, store-console upload, final screenshots/declaration reconciliation, and final human legal review.
