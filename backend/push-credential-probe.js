@@ -9,7 +9,8 @@ async function runPushCredentialProbe(){
     ok:result.verified===true,
     status:result.status,
     keyType:raw.startsWith('os_v2_app_')?'app_v2':raw.startsWith('os_v2_org_')?'org_v2':'other',
-    keyLength:raw.length
+    keyLength:raw.length,
+    error:result.error||null
   };
   console.log(JSON.stringify(out));
   return out;
