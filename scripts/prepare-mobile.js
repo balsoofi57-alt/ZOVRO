@@ -6,7 +6,7 @@ let html=fs.readFileSync(path.join(root,'index.html'),'utf8');
 const api=(process.env.ZOVRO_API_URL||'https://zovro-api-final.onrender.com').replace(/\/$/,'');
 const pkg=JSON.parse(fs.readFileSync(path.join(root,'package.json'),'utf8'));
 const channel=process.env.ZOVRO_BUILD_CHANNEL||'release';
-const oneSignalAppId=String(process.env.ONESIGNAL_APP_ID||'7992b022-6c11-4a66-bad4-8cbd114266d0').trim();
+const oneSignalAppId=String(process.env.ONESIGNAL_APP_ID||'2d595bd4-61a1-40f2-9e8d-02900ab6f367').trim();
 const mapTileUrl=String(process.env.ZOVRO_MAP_TILE_URL||'https://tile.openstreetmap.org/{z}/{x}/{y}.png').trim();
 html=html.replace('<head>','<head><script>window.ZOVRO_CONFIG={apiBase:'+JSON.stringify(api)+',appVersion:'+JSON.stringify(pkg.version)+',buildChannel:'+JSON.stringify(channel)+',oneSignalAppId:'+JSON.stringify(oneSignalAppId)+',mapTileUrl:'+JSON.stringify(mapTileUrl)+'};<\/script>');
 html=html.replace("const API='https://zovro-api.onrender.com'","const API=(window.ZOVRO_CONFIG?.apiBase||'https://zovro-api-final.onrender.com')");
