@@ -1,6 +1,6 @@
 (function(){
   'use strict';
-  const APP_ID=String(window.ZOVRO_CONFIG?.oneSignalAppId||'7992b022-6c11-4a66-bad4-8cbd114266d0');
+  const APP_ID=String(window.ZOVRO_CONFIG?.oneSignalAppId||'2d595bd4-61a1-40f2-9e8d-02900ab6f367');
   // Undefined means the native SDK identity has not been reconciled this session.
   let initialized=false,lastUserId=undefined,busy=false,listenersReady=false;
   const plugin=()=>window.Capacitor?.Plugins?.OneSignalCapacitor||null;
