@@ -13,8 +13,8 @@ The current ZOVRO 1.0.0 release candidate includes customer and provider account
 
 ## Remaining external release gates
 
-- OneSignal backend credential verification is closed and production readiness is clear. Remaining push work is APNs/FCM platform configuration plus signed physical-device registration and delivery evidence.
-- OneSignal currently has 0 subscriptions; APNs/FCM and real push delivery require signed physical-device registration.
+- OneSignal backend credential verification and Google Android FCM platform configuration are closed. Remaining push work is APNs configuration for iOS plus signed physical-device registration and delivery evidence.
+- OneSignal currently has no verified physical-device subscription evidence; real push delivery requires signed physical-device registration. Android FCM is configured; APNs remains open.
 - iOS distribution certificate/profile, Apple team/App Store Connect credentials, and Android signing secrets are not present in GitHub Actions.
 - Signed iOS/Android builds, physical-device acceptance, TestFlight/Play upload, store screenshots, and final store declarations remain open.
 - Final human legal review remains required before public commercial launch.
