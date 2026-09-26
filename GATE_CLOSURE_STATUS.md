@@ -66,7 +66,7 @@ Still open:
 - Stripe Tax details now shows **Verified** for the live account; the prior EIN / `company.tax_id` mismatch is no longer an open gate.
 - Production destination `ZOVRO Production Webhook` is Active and subscribes to `charge.refunded`, `payment_intent.payment_failed`, `payment_intent.succeeded`, and `transfer.reversed`.
 - A live `charge.refunded` event shows **Delivered / Recovered** with **HTTP 200**, proving Stripe-to-ZOVRO signed webhook delivery is accepted by the production endpoint.
-- Historical webhook failures coincided with repeated Render deployments/restarts and later recovered; the current webhook endpoint is accepting deliveries.
+- Historical webhook failures are now explained: Render startup logs from the failure window show `stripeWebhookPresent=false` and blocker `stripe_webhook`. The signing secret was not configured at that time. Current production has the webhook secret configured and accepts deliveries with HTTP 200.
 - A live `payment_intent.succeeded` delivery is visible in Stripe Event deliveries with **HTTP 200**, proving the production success-payment webhook reaches ZOVRO successfully.
 - Remaining Stripe launch evidence: capture/verify the `payment_intent.payment_failed` path where practical and confirm provider Connect/payout readiness for an actual provider account.
 
