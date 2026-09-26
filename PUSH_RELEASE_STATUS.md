@@ -1,6 +1,7 @@
 
 ## Live verification — 2026-09-26
 
+- A second safe verification used the official `POST /notifications` endpoint with an intentionally incomplete payload that cannot deliver a notification. OneSignal still returned **HTTP 403**, so the current Render App API key is not authorized by OneSignal. Full QA run #791 passed on the corresponding source commit `3e00090655a5a8234e446933a2ca3c6cd48fa1e9`.
 - OneSignal app `Zovro llc App` is reachable through the connected account.
 - OneSignal `Total Subscriptions` count: **0**; `Active Subscriptions` count: **0**. No physical device is registered yet, so end-to-end delivery cannot be claimed.
 - OneSignal message history before the probe contained **0** notifications.
