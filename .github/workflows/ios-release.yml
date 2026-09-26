@@ -129,6 +129,7 @@ jobs:
           PROFILE_UUID=$(/usr/libexec/PlistBuddy -c 'Print :UUID' "$PROFILE_PLIST_PATH")
           PROFILE_TEAM_ID=$(/usr/libexec/PlistBuddy -c 'Print :TeamIdentifier:0' "$PROFILE_PLIST_PATH")
           PROFILE_APP_ID=$(/usr/libexec/PlistBuddy -c 'Print :Entitlements:application-identifier' "$PROFILE_PLIST_PATH")
+          PROFILE_APS_ENV=$(/usr/libexec/PlistBuddy -c 'Print :Entitlements:aps-environment' "$PROFILE_PLIST_PATH" 2>/dev/null || true)
 
           if [[ "$PROFILE_TEAM_ID" != "$APPLE_TEAM_ID" ]]; then
             echo "::error::The provisioning profile team does not match ZOVRO_APPLE_TEAM_ID."
@@ -141,6 +142,10 @@ jobs:
               exit 1
               ;;
           esac
+          if [[ "$PROFILE_APS_ENV" != "production" ]]; then
+            echo "::error::The provisioning profile does not authorize production APNs (aps-environment=production)."
+            exit 1
+          fi
 
           PROFILE_INSTALL_DIR="$HOME/Library/MobileDevice/Provisioning Profiles"
           mkdir -p "$PROFILE_INSTALL_DIR"
