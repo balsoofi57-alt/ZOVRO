@@ -4,9 +4,8 @@ Checkpoint: 2026-09-26
 
 ## Authoritative current status — 2026-09-26
 
-- OneSignal credential diagnosis update (2026-09-26): a deliberately invalid, non-deliverable POST to the official `/notifications` endpoint still returned HTTP 403 with the Render App API key, while GitHub Full QA run #791 passed on commit `3e00090655a5a8234e446933a2ca3c6cd48fa1e9`. This confirms the remaining blocker is external OneSignal credential authorization rather than application code, App ID mismatch, or the read-only probe endpoint.
+- OneSignal backend credential gate: CLOSED on 2026-09-26. The correct OneSignal App ID is `2d595bd4-61a1-40f2-9e8d-02900ab6f367`; after updating Render to this App ID, the safe non-deliverable credential probe returned HTTP 400 as expected, with `oneSignalCredentialsVerified=true`, `blockers=[]`, and `externalLaunchReady=true`.
 - Security hardening refresh (2026-09-26): production readiness now blocks if `ZOVRO_SECRET`, `ZOVRO_ALLOWED_ORIGINS`, or `ONESIGNAL_APP_ID` are missing; temporary OneSignal diagnostic fields were removed from production logs after diagnosis.
-- OneSignal diagnosis refined: Render is using the correct App ID (`7992b022-6c11-4a66-bad4-8cbd114266d0`) and a modern `os_v2_app_` App API key shape, but OneSignal still returns HTTP 403 `Access denied`, so the remaining fault is external credential validity/authorization rather than Render variable presence or app-id mismatch.
 
 This section is the current source of truth. Older sections below are retained as historical evidence where explicitly labeled.
 
@@ -18,7 +17,7 @@ This section is the current source of truth. Older sections below are retained a
 - Store metadata / privacy-data-safety technical preparation: CLOSED.
 - Mobile signing workflow code: CLOSED.
 - Legal-review preparation: CLOSED; final human approval remains external.
-- Current production launch blocker: OneSignal credential verification. The configured Render key returns HTTP 403 and readiness reports `onesignal_credentials_unverified`.
+- Current production backend readiness: READY; no startup preflight blockers remain.
 - OneSignal subscriptions: 0 total / 0 active; no physical-device push evidence yet.
 - iOS/Android signing credentials: not provisioned in GitHub Actions; signed IPA/AAB generation and store upload remain external.
 - Remote Desktop Commander is not connected, so local Xcode/Gradle signing cannot be executed from this chat yet.
@@ -104,11 +103,11 @@ Still open:
 - OneSignal REST API key is configured for the production backend.
 - The connected OneSignal account currently shows no sent push notifications in message history.
 - Real APNs/FCM delivery on signed physical devices has not yet been verified.
-- Live production probe on 2026-09-26 returned HTTP 403 from OneSignal using the Render credential, so the current REST API key is invalid or insufficient. Production readiness now blocks on `onesignal_credentials_unverified` instead of treating variable presence as success.
+- Production credential verification now passes with the correct OneSignal App ID `2d595bd4-61a1-40f2-9e8d-02900ab6f367`; startup preflight reports `oneSignalCredentialsVerified=true`, `blockers=[]`, and `externalLaunchReady=true`.
 - OneSignal currently reports 0 total subscriptions and 0 active subscriptions, so no physical device is registered yet.
 - Repository signing-secret presence check shows all Android signing secrets and all iOS distribution/provisioning/App Store Connect secrets are absent.
 - iOS native preparation now explicitly adds the production APNs entitlement (`aps-environment=production`) and wires it into code signing; Full QA passed.
-- Remaining gate: install a valid OneSignal App API key in Render, complete APNs/FCM platform credentials, provide mobile signing credentials, install signed builds on physical devices, register subscriptions, then verify receipt/tap routing.
+- Remaining gate: complete APNs/FCM platform credentials, provide mobile signing credentials, install signed builds on physical devices, register subscriptions, then verify receipt/tap routing.
 
 ## Privacy / Terms / Support — TECHNICAL GATE CLOSED / LEGAL REVIEW STILL OPEN
 
@@ -153,7 +152,7 @@ Still open:
 
 ## Current completion position
 
-The executable repository/backend work is substantially complete. Current unresolved work is limited to external credential/device/store/legal approval steps: valid OneSignal/APNs/FCM credentials, physical-device push evidence, iOS/Android signing credentials and signed builds, store-console upload and final screenshots/declaration reconciliation, plus final human legal approval.
+The executable repository/backend work is substantially complete. Current unresolved work is limited to external credential/device/store/legal approval steps: APNs/FCM credentials, physical-device push evidence, iOS/Android signing credentials and signed builds, store-console upload and final screenshots/declaration reconciliation, plus final human legal approval.
 
 
 ## Legal review preparation — TECHNICAL PREPARATION CLOSED
