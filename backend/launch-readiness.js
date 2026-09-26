@@ -22,7 +22,8 @@ function snapshot() {
   const oneSignalAppIdPresent = present('ONESIGNAL_APP_ID');
   const oneSignalRestKeyPresent = present('ONESIGNAL_REST_API_KEY');
   const oneSignalServerConfigured = push.configured();
-  const oneSignalCredentialsVerified = enabled('ZOVRO_ONESIGNAL_CREDENTIALS_VERIFIED');
+  const credentialStatus = typeof push.credentialStatus==='function'?push.credentialStatus():{checked:false,verified:false,status:null};
+  const oneSignalCredentialsVerified = credentialStatus.checked ? credentialStatus.verified : enabled('ZOVRO_ONESIGNAL_CREDENTIALS_VERIFIED');
   const productionSecretPresent = Boolean(
     process.env.ZOVRO_SECRET &&
     String(process.env.ZOVRO_SECRET).length >= 32 &&
@@ -74,6 +75,8 @@ function snapshot() {
       oneSignalRestKeyPresent,
       oneSignalServerConfigured,
       oneSignalCredentialsVerified,
+      oneSignalCredentialProbeChecked: credentialStatus.checked,
+      oneSignalCredentialProbeStatus: credentialStatus.status,
       productionSecretPresent,
       allowedOriginsPresent,
       profileEncryptionConfigured,
