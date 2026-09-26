@@ -50,9 +50,12 @@ if((status.mirrorRequested||status.durableRequested)&&!status.postgresRuntimeRea
 if(!status.stripePublishablePresent) status.blockers.push('stripe_publishable');
 if(!status.stripeSecretConfigured) status.blockers.push('stripe_secret');
 if(!status.stripeWebhookPresent) status.blockers.push('stripe_webhook');
+if(!status.productionSecretPresent) status.blockers.push('production_secret');
+if(!status.allowedOriginsPresent) status.blockers.push('allowed_origins');
 if(status.applePayRequested&&!status.applePayMerchantConfigured) status.blockers.push('apple_pay_merchant');
+if(!status.oneSignalAppIdPresent) status.blockers.push('onesignal_app_id');
 if(!status.oneSignalRestKeyPresent) status.blockers.push('onesignal_rest_key');
-if(status.oneSignalRestKeyPresent&&!status.oneSignalCredentialsVerified) status.blockers.push('onesignal_credentials_unverified');
+if(status.oneSignalAppIdPresent&&status.oneSignalRestKeyPresent&&!status.oneSignalCredentialsVerified) status.blockers.push('onesignal_credentials_unverified');
 if(!status.profileEncryptionConfigured) status.blockers.push('profile_encryption_key');
 status.externalLaunchReady=status.blockers.length===0;
 
