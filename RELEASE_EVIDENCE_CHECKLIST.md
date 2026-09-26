@@ -1,7 +1,7 @@
 # ZOVRO release evidence checklist
 
-Verified checkpoint: 2026-09-22. Repository evidence refreshed after production-source reconciliation. Owner: ZOVRO release maintainer (automated checks performed by Codex).
-Release PR: [#1](https://github.com/balsoofi57-alt/ZOVRO/pull/1), Draft. Source and production branches remain separate; no store launch is claimed.
+Verified checkpoint: 2026-09-23. Repository evidence reconciled with current Render and Stripe read-only observations. Owner: ZOVRO release maintainer (automated checks performed by Codex).
+Release tracking: [PR #1](https://github.com/balsoofi57-alt/ZOVRO/pull/1) was closed without merging on 2026-09-23. It is historical evidence, not an active release candidate. `main` and `zovro-final-deploy` remain separate; no store launch is claimed.
 
 ## Evidence rules
 
@@ -26,7 +26,7 @@ Source: Render service/deploy tools and read-only endpoint/log checks refreshed 
 
 - Primary service: `zovro-api-final`; branch `zovro-final-deploy`.
 - Live URL: https://zovro-api-final.onrender.com
-- Latest runtime-verified deployed source: `7ce40e787d4ca01ccb724ade93fa72a2ddd7a3c4`.
+- Latest observed live API deploy: `9f3de94e00f1c3a8f8faae9c3e83e35b074abb86` (2026-09-23 00:59 UTC, gated password recovery remains disabled by default). The older `7ce40e787d4ca01ccb724ade93fa72a2ddd7a3c4` has the recorded Full QA and unsigned mobile build evidence; those runs do not automatically validate later runtime changes.
 - Latest observed startup preflight reports `dbMirrorMode=durable`, `postgresRuntimeReady=true`, `durableOperational=true`, `blockers=[]`, and `externalLaunchReady=true`.
 - PostgreSQL is running in durable mode. The latest verified startup restore recovered 13 records and reported `verified=true`; isolated backup/restore and rollback evidence remains a separate operational gate.
 - Public [Privacy](https://zovro-web.onrender.com/privacy.html), [Terms](https://zovro-web.onrender.com/terms.html), and [Support](https://zovro-web.onrender.com/support.html) pages returned HTTP 200 during the latest verification. Inbox monitoring and legal approval are separate gates.
@@ -42,6 +42,16 @@ Source: connected Zovro Stripe account, US live mode, refreshed 2026-09-22.
 - No real signed Stripe POST delivery was observed in the reviewed Render logs; only unauthenticated GET/HEAD probes returned the expected 401. The payment lifecycle gate therefore remains open.
 - Stripe account requirements currently report `currently_due=[]`, `eventually_due=[]`, `past_due=[]`, `pending_verification=[]`, with no current deadline or disabled reason.
 - Live account evidence confirms `charges_enabled=true`, `payouts_enabled=true`, and a successful $1.00 PaymentIntent plus successful linked refund. No new payment or refund was created for this documentation refresh.
+
+## 2026-09-23 reconciliation (read-only)
+
+- Render's current web deploy is live at `b9b55d5bbc1ee258fa80fb3a7e790e45214f1fc2` (2026-09-23 03:09 UTC). [PR #30](https://github.com/balsoofi57-alt/ZOVRO/pull/30) merged the iPhone CTA/sign-in spacing fix; live GPS permission and SOS behavior still require iPhone acceptance evidence.
+- The latest API deploy is live at `9f3de94e00f1c3a8f8faae9c3e83e35b074abb86`; no full QA or signed mobile build is claimed for that exact SHA here.
+- A fresh read of the connected live Zovro Stripe account confirms `charges_enabled=true`, `payouts_enabled=true`, `details_submitted=true`, active `card_payments` and `transfers`, and empty `currently_due`, `eventually_due`, `past_due`, and `pending_verification` requirements. TAX-01 remains PASS as of this read.
+- The connected Zovro live Stripe account still lists an enabled endpoint for the four configured payment events at `/api/payments/webhook`. Render's path-filtered log query from 2026-09-22 onward returned no webhook requests. This log search alone cannot prove that Stripe has never attempted delivery; retain PAY-01 as partial until an event ID, delivery result, and application signature verification are recorded.
+- Render error-level log query returned no entries in the queried window. This is a scoped observation, not an integrated acceptance pass.
+- [PR #29](https://github.com/balsoofi57-alt/ZOVRO/pull/29) is an open draft documenting four Apple signing secret names; it does not produce a signed IPA or TestFlight acceptance.
+- Direct HTTP health probing from the current worker timed out. Render reports the API and web deploys as live; no fresh HTTP health response is claimed from that probe.
 
 ## OneSignal observations
 
@@ -69,7 +79,7 @@ Source: connected Zovro Stripe account, US live mode, refreshed 2026-09-22.
 2. Sign Android/iOS builds and complete physical-device push, GPS, SOS, biometric, and payment tests.
 3. Capture truthful screenshots from those signed builds and upload the prepared store listing metadata.
 4. Preserve durable mode; complete isolated backup/restore and rollback evidence without destructive production changes.
-5. Reconcile final reviewed source with production, perform integrated acceptance, and only then move PR #1 out of Draft.
+5. Reconcile final reviewed source with production, rerun QA and integrated acceptance on the final SHA, and open a current reviewable release PR. PR #1 is closed without merging.
 
 Production secrets and signing identities cannot be reconstructed from source. Missing external account or device evidence remains explicit.
 
@@ -82,3 +92,22 @@ Production secrets and signing identities cannot be reconstructed from source. M
 - Production/store/final checks now gate the reconciled release-critical client features and reject the legacy payment UI renderer override.
 - SMS transport remains disabled by default; no real SMS is part of automated release evidence.
 - Real payment, real push, signed-device, store-account, support-inbox, and signing evidence remain external gates and must not be marked PASS from source inspection alone.
+
+## 2026-09-23 merged mobile recovery packaging verification
+
+- [PR #32](https://github.com/balsoofi57-alt/ZOVRO/pull/32) merged into `zovro-final-deploy` as `b6b1a2972c977b1434e0ada2ee962ece7c428c99`. It copies the missing password-recovery client into mobile output, checks referenced local scripts exist, includes all 11 recovery tests in full QA, and triggers QA for recovery-client edits. Recovery/SMS activation is unchanged.
+- [Full QA #637](https://github.com/balsoofi57-alt/ZOVRO/actions/runs/35854197414) passed on that exact merged SHA.
+- [Build ZOVRO Android #50](https://github.com/balsoofi57-alt/ZOVRO/actions/runs/35854197412) and [Android Release Verification #137](https://github.com/balsoofi57-alt/ZOVRO/actions/runs/35854197395) passed on that SHA. The signing preparation succeeded but signed-build/upload steps were skipped, and the unsigned path ran: Android signing inputs remain incomplete. AND-01 stays BLOCKED.
+- Build #50 produced `zovro-android-debug-apk` (artifact 10746877905; archive digest `sha256:0dbd59c1047dd5f0421d6972b9e4c1b8e8b210fda339c89ebc97be1321e4e6de`) and `zovro-android-release-unsigned-aab` (artifact 10746858116; archive digest `sha256:3768127e4502ca096a26fdd11571f21a9746f501bf065eada0dc78b5238820f8`). These digests are GitHub artifact metadata, not independently computed APK/AAB hashes. Artifacts expire October 7, 2026. Direct archive retrieval into the verification worker returned HTTP 403, so binary contents were not independently inspected.
+- [iOS Release Verification](https://github.com/balsoofi57-alt/ZOVRO/actions/runs/35854197454) completed successfully on the same merged SHA. It produced `zovro-ios-simulator-unsigned` (artifact 10747515425; GitHub archive digest `sha256:91c46c532425f58f19ffcfcc7369a5d81edbc3c600ebf09d2f6adfa5e0e29bfc`, expires October 7, 2026). Signed archive, IPA export, and TestFlight upload steps were skipped. IOS-01 remains BLOCKED; simulator success does not prove signed-device behavior.
+- Read-only inspection of GitHub Actions secrets settings showed no repository secrets and no environment secrets on September 23. This corroborates missing signing inputs; no secret values were entered or changed. Google Play account inspection was blocked by automatic browser approval review, so current Play account/app status was not verified.
+- Latest read-only Render observation still showed API source `9f3de94e00f1c3a8f8faae9c3e83e35b074abb86` live; no production deployment of the packaging-only change was observed. The web source remains separately tracked. This merge is source/build evidence, not public launch evidence.
+- PAY-01, PUSH-01, IOS-01, DB-01 recovery drill, SUPPORT-01, STORE-01, and LIVE-01 keep their previously recorded external requirements. No real messages or payments were sent during this verification.
+
+## 2026-09-23 12:06 UTC live web GPS verification
+
+- PR #34 merged into main as `32522b95c8854a5049da8df5cba7a9ff63fffe79`. GPS now has callback deadlines, validates coordinate bounds and timestamp freshness, and retries an imprecise SOS position with high accuracy. Full QA passed before merge (run 35858009691) and on the merged source (run 35858060345).
+- Render zovro-web deploy `dep-daps0uc9v7es739noivg` is LIVE on that exact SHA, finished at `2026-09-23T12:06:01.35888Z`. The service had autoDeploy enabled but no new deployment queued or running when checked; a manual trigger deployed the reviewed current source. The underlying missed auto-deploy cause remains unverified.
+- A fresh successful HTTP fetch of https://zovro-web.onrender.com/ contained all three expected fixes: `options.timeout+1000`, `Date.now()-timestamp>60000`, and `geo({maxAccuracy:250})`.
+- Browser reload rendered the service page; clicking Get Help Now opened Sign in/Create account with Continue/Cancel controls. The inspected error-log sample contained browser-extension metadata errors only. This is a scoped UI check, not a full authenticated lifecycle pass. No location, real SOS request, payment, or message was submitted.
+- Physical iPhone GPS/SOS acceptance remains OPEN. These web changes target main; mobile source is separately tracked on zovro-final-deploy and must not be assumed to contain this GPS change.
