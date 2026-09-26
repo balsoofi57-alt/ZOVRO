@@ -9,6 +9,9 @@ const database=require('./database');
     await runPostgresWriteProbe();
   }
   require('./launch-readiness');
+  if(/^(1|true|yes|on)$/i.test(String(process.env.ZOVRO_PAYOUT_READINESS_SUMMARY||''))){
+    require('./payout-readiness-summary').logPayoutReadinessSummary();
+  }
   require('./response-security');
   require('./consent-guard');
   require('./request-privacy');
