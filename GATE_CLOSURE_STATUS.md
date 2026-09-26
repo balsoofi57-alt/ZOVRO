@@ -4,6 +4,7 @@ Checkpoint: 2026-09-26
 
 ## Authoritative current status — 2026-09-26
 
+- Latest mobile workflows confirm source/build readiness but no store signing: Android produced debug APK + unsigned release AAB while signed AAB steps were skipped; iOS produced the unsigned simulator app while signed archive/IPA/TestFlight steps were skipped. Remaining work for this gate is external signing credential provisioning, not source-code repair.
 - Release verification after the OneSignal mobile App ID correction is fully green on commit `9f88d8c77f90a63090e8cbed34b9eb46b9f4c90a`: Full QA run `36254277076`, Android Release Verification run `36254277047`, Android build run `36254277027`, and iOS Release Verification run `36254277032` all completed successfully.
 - Latest mobile artifacts are verified but unsigned: Android release candidate artifact `10910069161`, debug APK `10910380268`, unsigned AAB `10909074853`, and iOS simulator artifact `10909274485` were produced successfully on 2026-09-26. Signed Android AAB and signed iOS IPA steps were skipped because signing credentials are not provisioned.
 - OneSignal mobile App ID correction is fully verified: Full QA `36254277076`, Android Release Verification `36254277047`, Android Build `36254277027`, and iOS Release Verification `36254277032` all completed successfully for commit `9f88d8c77f90a63090e8cbed34b9eb46b9f4c90a`.
