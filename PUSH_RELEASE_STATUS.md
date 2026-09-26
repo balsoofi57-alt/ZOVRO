@@ -1,16 +1,12 @@
 
 ## Live verification — 2026-09-26
 
-- A second safe verification used the official `POST /notifications` endpoint with an intentionally incomplete payload that cannot deliver a notification. OneSignal still returned **HTTP 403**, so the current Render App API key is not authorized by OneSignal. Full QA run #791 passed on the corresponding source commit `3e00090655a5a8234e446933a2ca3c6cd48fa1e9`.
-- OneSignal app `Zovro llc App` is reachable through the connected account.
-- OneSignal `Total Subscriptions` count: **0**; `Active Subscriptions` count: **0**. No physical device is registered yet, so end-to-end delivery cannot be claimed.
-- OneSignal message history before the probe contained **0** notifications.
-- A safe production credential probe targeted a deliberately nonexistent external user and returned **HTTP 403** from OneSignal. This proves the `ONESIGNAL_REST_API_KEY` currently stored in Render is invalid or lacks permission for notification creation.
-- The credential probe was disabled immediately after the check.
-- All Android release signing secrets are absent from GitHub Actions.
-- All iOS distribution/provisioning/App Store Connect signing secrets are absent from GitHub Actions.
-- iOS native preparation now creates an `aps-environment=production` entitlement and wires `CODE_SIGN_ENTITLEMENTS` to the main target. Full QA passed before merge.
-- Launch readiness now requires a separately verified OneSignal credential flag. Production currently reports blocker `onesignal_credentials_unverified` and `externalLaunchReady=false` until a valid OneSignal App API key is installed and successfully probed.
+- OneSignal backend credential verification is now **PASS**.
+- Correct OneSignal app: `Zovro llc App` with App ID `2d595bd4-61a1-40f2-9e8d-02900ab6f367`.
+- After updating Render to the correct App ID, the safe non-deliverable POST credential probe returned **HTTP 400**, which is the expected validation response after successful authentication.
+- Production startup preflight reports `oneSignalCredentialsVerified=true`, `blockers=[]`, and `externalLaunchReady=true`.
+- OneSignal still has **0 subscriptions**, so physical-device delivery is not yet proven.
+- APNs and FCM platform credentials remain open, along with signed physical-device builds and end-to-end notification evidence.
 
 # ZOVRO Push Release Status
 
@@ -32,7 +28,7 @@ Checkpoint: 2026-09-11, 18:10 UTC
 ## Connected OneSignal observations
 
 - MCP service health: OK.
-- OneSignal app: `Zovro llc App` (`7992b022-6c11-4a66-bad4-8cbd114266d0`).
+- OneSignal app: `Zovro llc App` (`2d595bd4-61a1-40f2-9e8d-02900ab6f367`).
 - Nine push templates exist for new requests, provider acceptance, and job status events.
 - Message history at this checkpoint: `0` notifications. No delivery claim can be made yet.
 - Production backend readiness reports both the OneSignal App ID and REST API key configured.
