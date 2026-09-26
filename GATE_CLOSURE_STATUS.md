@@ -87,13 +87,14 @@ Still open:
 - iOS native preparation now explicitly adds the production APNs entitlement (`aps-environment=production`) and wires it into code signing; Full QA passed.
 - Remaining gate: install a valid OneSignal App API key in Render, complete APNs/FCM platform credentials, provide mobile signing credentials, install signed builds on physical devices, register subscriptions, then verify receipt/tap routing.
 
-## Privacy / Terms / Support — SOURCE PASS / EXTERNAL VERIFICATION STILL OPEN
+## Privacy / Terms / Support — TECHNICAL GATE CLOSED / LEGAL REVIEW STILL OPEN
 
-- Public source pages exist for Privacy Policy, Terms of Service, and Support.
-- Privacy Policy points users to `support@zovro.net` and describes account, location, messaging, service-request and deletion handling.
-- Terms of Service clearly states that SOS/roadside features do not replace 911.
-- Terms still requires final payment terms and final legal review before public commercial launch.
-- Support page uses `support@zovro.net`; inbox delivery and response monitoring still need external verification.
+- Public source pages exist for Privacy Policy, Terms of Service, and Support on the `main` branch used by the live `zovro-web` Render static site.
+- Support and Privacy both use the canonical address `support@zovro.work`.
+- Gmail evidence confirms bidirectional support operation: owner messages were sent to `support@zovro.work`; automated policy replies, alert-connection tests, and recurring overdue-review alerts were received from `support@zovro.work` in the company Gmail inbox.
+- Render reports `zovro-web` live with auto-deploy from `main`; the current deployed branch contains the corrected Support, Privacy, and Terms pages.
+- Terms clearly states that SOS/roadside features do not replace 911 and discloses beta/payment behavior.
+- Technical support/inbox monitoring is closed. Independent legal review of Terms/Privacy remains a separate launch gate.
 
 ## Store screenshots / listing assets — OPEN
 
@@ -120,9 +121,8 @@ Still open:
 1. Complete APNs + FCM production credentials and verify real push delivery on signed physical devices.
 2. Sign the existing Android release AAB and produce a signed iOS archive; verify physical-device GPS, SOS, push, biometric and payment lifecycle behavior.
 3. Upload signed builds through Play Console/TestFlight/App Store Connect and complete store-console metadata.
-4. Verify `support@zovro.work` inbox delivery/monitoring and verify the final public support/privacy/terms URLs.
-5. Generate final store screenshots and complete App Privacy / Google Play Data Safety declarations against the actual signed production build.
-6. Complete final human legal review, mark PR #1 ready only after the external gates above are closed, and proceed to store submission.
+4. Generate final store screenshots and complete App Privacy / Google Play Data Safety declarations against the actual signed production build.
+5. Complete final human legal review, mark PR #1 ready only after the external gates above are closed, and proceed to store submission.
 
 ## Current completion position
 
