@@ -1,0 +1,25 @@
+name: Password Recovery Production Smoke
+on:
+  push:
+    branches:
+      - ops/recovery-production-smoke-20260926
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verify live recovery endpoints without changing account data
+        run: |
+          set -euo pipefail
+          API="https://zovro-api-final.onrender.com"
+          status="$(curl --fail --silent --show-error --max-time 30 "$API/api/auth/recovery/status")"
+          node -e 'const x=JSON.parse(process.argv[1]); if(x.available!==true) process.exit(1);' "$status"
+          ready="$(curl --fail --silent --show-error --max-time 30 "$API/api/ready")"
+          node -e 'const x=JSON.parse(process.argv[1]); if(x.ready!==true) process.exit(1);' "$ready"
+          code="$(curl --silent --output /tmp/internal.json --write-out '%{http_code}' --max-time 30 "$API/api/internal/recovery-email/tasks")"
+          test "$code" = "404"
+          code="$(curl --silent --output /tmp/invalid.json --write-out '%{http_code}' --max-time 30 -X POST "$API/api/auth/forgot-password" -H 'content-type: application/json' --data '{"phone":"invalid"}')"
+          test "$code" = "400"
+          echo "RECOVERY_STATUS_AVAILABLE=true"
+          echo "API_READY=true"
+          echo "INTERNAL_ENDPOINT_HIDDEN=true"
+          echo "INVALID_INPUT_REJECTED=true"
