@@ -9,7 +9,12 @@ async function validateCredentials(){
   try{
     const url=`${API}?app_id=${encodeURIComponent(APP_ID)}&limit=1&offset=0`;
     const res=await fetch(url,{method:'GET',headers:{accept:'application/json',authorization:`Key ${REST_KEY}`}});
-    credentialState={checked:true,verified:res.ok,status:res.status};
+    let error=null;
+    if(!res.ok){
+      const body=await res.text().catch(()=> '');
+      error=String(body||res.statusText||'').replace(/os_v2_[A-Za-z0-9_\-]+/g,'[redacted]').slice(0,300);
+    }
+    credentialState={checked:true,verified:res.ok,status:res.status,error};
     return credentialState;
   }catch{credentialState={checked:true,verified:false,status:null};return credentialState;}
 }
