@@ -1,12 +1,13 @@
 
 ## Live verification — 2026-09-26
 
+- Google Android (FCM) platform configuration is now **PASS**: Firebase project `ZOVRO` was created, the Firebase Admin SDK service-account JSON was uploaded directly to OneSignal, OneSignal confirmed settings and SDK selection saved, and Push & In-App is Active. Physical-device delivery is still pending a signed Android build and a real subscription.
 - OneSignal backend credential verification is now **PASS**.
 - Correct OneSignal app: `Zovro llc App` with App ID `2d595bd4-61a1-40f2-9e8d-02900ab6f367`.
 - After updating Render to the correct App ID, the safe non-deliverable POST credential probe returned **HTTP 400**, which is the expected validation response after successful authentication.
 - Production startup preflight reports `oneSignalCredentialsVerified=true`, `blockers=[]`, and `externalLaunchReady=true`.
 - OneSignal still has **0 subscriptions**, so physical-device delivery is not yet proven.
-- APNs and FCM platform credentials remain open, along with signed physical-device builds and end-to-end notification evidence.
+- FCM platform configuration is complete. APNs remains open, along with signed physical-device builds and end-to-end notification evidence.
 
 # ZOVRO Push Release Status
 
@@ -33,12 +34,12 @@ Checkpoint: 2026-09-11, 18:10 UTC
 - Message history at this checkpoint: `0` notifications. No delivery claim can be made yet.
 - Production backend readiness reports both the OneSignal App ID and REST API key configured.
 - APNs platform credentials/capabilities and a signed iOS build remain required for iOS delivery.
-- FCM platform credentials and a signed Android build remain required for Android delivery.
+- FCM platform credentials are configured; a signed Android build and real device subscription remain required for Android delivery.
 - At least one real-device subscription is required before end-to-end delivery can be marked PASS.
 
 ## PASS criteria for PUSH-01
 
-1. Complete APNs and FCM channel configuration in the same OneSignal app.
+1. Complete APNs channel configuration for iOS; FCM channel configuration is already complete in the same OneSignal app.
 2. Install signed ZOVRO builds on physical iOS and Android devices and grant notification permission.
 3. Confirm OneSignal shows active subscriptions bound to the correct ZOVRO external user IDs.
 4. Send and record new nearby request, provider accepted, and job status update notifications.
