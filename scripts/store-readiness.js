@@ -14,7 +14,7 @@ function assert(condition, message) {
   if (!condition) fail(message);
 }
 
-for (const file of ['privacy.html', 'terms.html', 'support.html']) {
+for (const file of ['privacy.html', 'terms.html', 'support.html', 'APP_PRIVACY_DATA_SAFETY.md']) {
   const filePath = path.join(root, file);
   if (!fs.existsSync(filePath)) fail('MISSING ' + file);
   else if (fs.readFileSync(filePath, 'utf8').length < 500) fail('TOO SHORT ' + file);
@@ -32,6 +32,7 @@ for (const token of ['deleteAccount()', 'privacy.html', 'terms.html', 'support.h
 const support = fs.readFileSync(path.join(root, 'support.html'), 'utf8');
 const privacy = fs.readFileSync(path.join(root, 'privacy.html'), 'utf8');
 for (const [name, text] of [['support.html', support], ['privacy.html', privacy]]) {
+  if (text.includes('support@zovro.net')) fail('Legacy support email must not appear in ' + name);
   if (!text.includes('support@zovro.work')) fail('Approved support email missing from ' + name);
   else console.log('OK approved support email in', name);
 }
@@ -133,6 +134,11 @@ if (fs.existsSync(listingPath)) {
       !/\b(best|#1|guaranteed|always verified)\b/i.test(allClaims),
       'Store copy contains an unsupported promotional claim'
     );
+
+    assert(listing.releaseGateNotes?.push, 'Store listing must document the open push-delivery gate');
+    assert(listing.releaseGateNotes?.signing, 'Store listing must document the signing gate');
+    assert(listing.releaseGateNotes?.privacy, 'Store listing must require final privacy reconciliation');
+    assert(listing.releaseGateNotes?.legal, 'Store listing must retain the human legal-review gate');
 
     const story = listing.screenshots?.story;
     assert(Array.isArray(story) && story.length >= 4, 'Screenshot story must contain at least 4 screens');
