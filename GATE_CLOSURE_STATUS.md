@@ -68,6 +68,8 @@ Still open:
 - A live `charge.refunded` event shows **Delivered / Recovered** with **HTTP 200**, proving Stripe-to-ZOVRO signed webhook delivery is accepted by the production endpoint.
 - Historical webhook failures are now explained: Render startup logs from the failure window show `stripeWebhookPresent=false` and blocker `stripe_webhook`. The signing secret was not configured at that time. Current production has the webhook secret configured and accepts deliveries with HTTP 200.
 - A live `payment_intent.succeeded` delivery is visible in Stripe Event deliveries with **HTTP 200**, proving the production success-payment webhook reaches ZOVRO successfully.
+- The failed-payment path is additionally regression-tested in CI: a correctly signed `payment_intent.payment_failed` event returns HTTP 200, records the failure code/message, and duplicate delivery is acknowledged without a second state mutation. Full QA passed before merge.
+- Production now logs webhook signature rejection safely as `stripe.webhook_signature_rejected` with only a coarse reason; secrets and payloads are never logged. The hardened commit is live on Render.
 - Remaining Stripe launch evidence: capture/verify the `payment_intent.payment_failed` path where practical and confirm provider Connect/payout readiness for an actual provider account.
 
 ## OneSignal / push — SERVER CONFIG PASS / REAL DELIVERY STILL OPEN
