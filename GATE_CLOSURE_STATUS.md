@@ -4,6 +4,9 @@ Checkpoint: 2026-09-26
 
 ## Authoritative current status — 2026-09-26
 
+- Security hardening refresh (2026-09-26): production readiness now blocks if `ZOVRO_SECRET`, `ZOVRO_ALLOWED_ORIGINS`, or `ONESIGNAL_APP_ID` are missing; temporary OneSignal diagnostic fields were removed from production logs after diagnosis.
+- OneSignal diagnosis refined: Render is using the correct App ID (`7992b022-6c11-4a66-bad4-8cbd114266d0`) and a modern `os_v2_app_` App API key shape, but OneSignal still returns HTTP 403 `Access denied`, so the remaining fault is external credential validity/authorization rather than Render variable presence or app-id mismatch.
+
 This section is the current source of truth. Older sections below are retained as historical evidence where explicitly labeled.
 
 - Production backend: live on Render.
