@@ -1,0 +1,1 @@
+{"name":"zovro-support-mail-bridge","version":"0.1.0","private":true,"description":"Gated Spacemail policy-reply test bridge","scripts":{"start":"node worker.js","test":"node --test bridge.test.js"},"engines":{"node":">=22"},"dependencies":{"imapflow":"2.0.6","mailparser":"3.9.28","nodemailer":"10.0.10","pg":"8.23.0"}}
