@@ -4,6 +4,7 @@ Checkpoint: 2026-09-26
 
 ## Authoritative current status — 2026-09-26
 
+- OneSignal mobile App ID correction is fully verified: Full QA `36254277076`, Android Release Verification `36254277047`, Android Build `36254277027`, and iOS Release Verification `36254277032` all completed successfully for commit `9f88d8c77f90a63090e8cbed34b9eb46b9f4c90a`.
 - Android Release Verification passed on workflow run `36254277047` for commit `9f88d8c77f90a63090e8cbed34b9eb46b9f4c90a` after the OneSignal mobile App ID correction. The Kotlin/R8/D8 messages observed in logs were non-fatal warnings, not release blockers.
 - Mobile OneSignal App ID correction: `push-client.js`, `.env.mobile.example`, `scripts/prepare-mobile.js`, and the native push readiness guard now use the correct App ID `2d595bd4-61a1-40f2-9e8d-02900ab6f367`. ZOVRO Full QA run `#792` / workflow run `36254277076` passed on commit `9f88d8c77f90a63090e8cbed34b9eb46b9f4c90a`.
 - OneSignal backend credential gate: CLOSED on 2026-09-26. The correct OneSignal App ID is `2d595bd4-61a1-40f2-9e8d-02900ab6f367`; after updating Render to this App ID, the safe non-deliverable credential probe returned HTTP 400 as expected, with `oneSignalCredentialsVerified=true`, `blockers=[]`, and `externalLaunchReady=true`.
