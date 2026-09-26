@@ -2,7 +2,18 @@
 const APP_ID=String(process.env.ONESIGNAL_APP_ID||'').trim();
 const REST_KEY=String(process.env.ONESIGNAL_REST_API_KEY||'').trim();
 const API='https://api.onesignal.com/notifications';
+const APP_API='https://api.onesignal.com/apps/';
+let credentialState={checked:false,verified:false,status:null};
 function configured(){return /^[0-9a-f-]{36}$/i.test(APP_ID)&&REST_KEY.length>=16}
+async function validateCredentials(){
+  if(!configured()){credentialState={checked:true,verified:false,status:null};return credentialState;}
+  try{
+    const res=await fetch(APP_API+encodeURIComponent(APP_ID),{method:'GET',headers:{authorization:`Key ${REST_KEY}`}});
+    credentialState={checked:true,verified:res.ok,status:res.status};
+    return credentialState;
+  }catch{credentialState={checked:true,verified:false,status:null};return credentialState;}
+}
+function credentialStatus(){return {...credentialState}}
 async function deliver(notification){
   if(!configured()||!notification?.id||!notification?.userId)return {skipped:true};
   const payload={
@@ -24,4 +35,4 @@ function deliverMany(rows){
   if(!configured()||!Array.isArray(rows)||!rows.length)return;
   for(const n of rows.slice(0,100)) deliver(n).catch(e=>console.error(JSON.stringify({event:'onesignal.delivery_failed',notificationId:n?.id||null,status:e.status||null,message:e.message})));
 }
-module.exports={configured,deliver,deliverMany};
+module.exports={configured,validateCredentials,credentialStatus,deliver,deliverMany};
