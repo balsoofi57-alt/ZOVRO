@@ -1,7 +1,22 @@
 # ZOVRO 1.0.0 Final Release
 
-The verified ZOVRO 1.0.0 build includes customer and provider accounts, nearby-provider matching, SOS/urgent dispatch, job acceptance, lifecycle status updates, in-app messaging, cancellation flows, ratings/reputation, provider availability/location, account deletion, security checks, production health/readiness endpoints, Docker/Render deployment files and mobile packaging preparation.
+The current ZOVRO 1.0.0 release candidate includes customer and provider accounts, nearby-provider matching, SOS/urgent marketplace requests, job acceptance, lifecycle status updates, in-app messaging, cancellation flows, ratings/reputation, provider availability/location, account deletion, password recovery, support workflows, security checks, durable PostgreSQL, production readiness endpoints, mobile packaging preparation, and live Stripe integration.
 
-Automated release, security, operations, dispatch, lifecycle, cancellation, reputation, deployment and Render blueprint checks pass in the verified release artifact.
+## Verified production state — September 26, 2026
 
-Production durable PostgreSQL is operational with a verified startup restore, and the connected live Stripe account has verified charge/payout readiness plus successful live payment and linked refund evidence. Public commercial launch still depends on successful signed live Stripe webhook delivery evidence, isolated database backup/restore and rollback evidence, real push/SMS delivery on signed physical devices, final GPS/SOS/device acceptance, monitored `support@zovro.work` operations, final legal/store declarations, and iOS/Android distribution signing and store submission.
+- Durable PostgreSQL is operational and restores verified production data at startup.
+- Stripe platform payment readiness is closed: Payments and Payouts are active, tax/EIN is verified, production webhook delivery is accepted, successful payment delivery is evidenced, failed-payment handling is regression-tested, refund delivery is evidenced, and duplicate webhook processing is guarded.
+- Forgot Password is closed with secure email fallback, rate limiting, short-lived codes, sealed pending delivery data, and session revocation after reset.
+- Support uses support@zovro.work; bidirectional mailbox delivery, automated policy replies, and overdue-review alerts are evidenced.
+- Public Support, Privacy, and Terms source is current on the website branch.
+- Full QA passes for the current code paths described above.
+
+## Remaining external release gates
+
+- OneSignal production REST credential must be replaced with a valid app key. The current Render credential returns HTTP 403.
+- OneSignal currently has 0 subscriptions; APNs/FCM and real push delivery require signed physical-device registration.
+- iOS distribution certificate/profile, Apple team/App Store Connect credentials, and Android signing secrets are not present in GitHub Actions.
+- Signed iOS/Android builds, physical-device acceptance, TestFlight/Play upload, store screenshots, and final store declarations remain open.
+- Final human legal review remains required before public commercial launch.
+
+No release note should claim physical-device push delivery, signed store distribution, or store submission until those external gates are actually completed.
