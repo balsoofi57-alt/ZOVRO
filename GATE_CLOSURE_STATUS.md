@@ -67,7 +67,8 @@ Still open:
 - Production destination `ZOVRO Production Webhook` is Active and subscribes to `charge.refunded`, `payment_intent.payment_failed`, `payment_intent.succeeded`, and `transfer.reversed`.
 - A live `charge.refunded` event shows **Delivered / Recovered** with **HTTP 200**, proving Stripe-to-ZOVRO signed webhook delivery is accepted by the production endpoint.
 - Historical webhook failures coincided with repeated Render deployments/restarts and later recovered; the current webhook endpoint is accepting deliveries.
-- Remaining Stripe launch evidence: capture a live `payment_intent.succeeded` flow, a payment failure path where practical, and confirm provider Connect/payout readiness for an actual provider account.
+- A live `payment_intent.succeeded` delivery is visible in Stripe Event deliveries with **HTTP 200**, proving the production success-payment webhook reaches ZOVRO successfully.
+- Remaining Stripe launch evidence: capture/verify the `payment_intent.payment_failed` path where practical and confirm provider Connect/payout readiness for an actual provider account.
 
 ## OneSignal / push — SERVER CONFIG PASS / REAL DELIVERY STILL OPEN
 
