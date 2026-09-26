@@ -74,14 +74,18 @@ Still open:
 - A gated production summary found 0 active providers and therefore 0 linked Connect accounts. There is no live provider account to validate yet; this is not a Stripe platform configuration failure. The diagnostic flag was disabled immediately after the check.
 - Stripe platform payment readiness is closed. Provider Connect onboarding/payout verification becomes a first-provider activation check when the first real provider registers; ZOVRO already blocks in-app payment until that provider has a linked Connect account with payouts enabled.
 
-## OneSignal / push — SERVER CONFIG PASS / REAL DELIVERY STILL OPEN
+## OneSignal / push — CODE READY / CREDENTIAL + DEVICE GATE OPEN
 
 - OneSignal app: `Zovro llc App`.
 - OneSignal App ID is configured for the production backend.
 - OneSignal REST API key is configured for the production backend.
 - The connected OneSignal account currently shows no sent push notifications in message history.
 - Real APNs/FCM delivery on signed physical devices has not yet been verified.
-- Remaining gate: complete platform push credentials as required, install signed builds, register real subscriptions, send push events, and verify receipt/tap routing on iPhone and Android.
+- Live production probe on 2026-09-26 returned HTTP 403 from OneSignal using the Render credential, so the current REST API key is invalid or insufficient. Production readiness now blocks on `onesignal_credentials_unverified` instead of treating variable presence as success.
+- OneSignal currently reports 0 total subscriptions and 0 active subscriptions, so no physical device is registered yet.
+- Repository signing-secret presence check shows all Android signing secrets and all iOS distribution/provisioning/App Store Connect secrets are absent.
+- iOS native preparation now explicitly adds the production APNs entitlement (`aps-environment=production`) and wires it into code signing; Full QA passed.
+- Remaining gate: install a valid OneSignal App API key in Render, complete APNs/FCM platform credentials, provide mobile signing credentials, install signed builds on physical devices, register subscriptions, then verify receipt/tap routing.
 
 ## Privacy / Terms / Support — SOURCE PASS / EXTERNAL VERIFICATION STILL OPEN
 
