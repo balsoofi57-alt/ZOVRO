@@ -128,8 +128,16 @@ Still open:
 2. Sign the existing Android release AAB and produce a signed iOS archive; verify physical-device GPS, SOS, push, biometric and payment lifecycle behavior.
 3. Upload signed builds through Play Console/TestFlight/App Store Connect and complete store-console metadata.
 4. Complete signed-build/store-submission evidence: capture final screenshots and reconcile the prepared App Privacy / Google Play Data Safety forms against the signed production build.
-5. Complete final human legal review, mark PR #1 ready only after the external gates above are closed, and proceed to store submission.
+5. Obtain final human legal approval using `LEGAL_REVIEW_PACKET.md`; then mark PR #1 ready only after the external signing/push/store gates are also closed.
 
 ## Current completion position
 
 The executable repository/backend work is substantially complete. Stripe, password recovery, durable database operation, support-mail monitoring, store metadata, and privacy/data-safety preparation have current evidence. Remaining work is dominated by valid OneSignal/APNs/FCM credentials, physical-device push evidence, iOS/Android signing, store-console upload, final screenshots/declaration reconciliation, and final human legal review.
+
+
+## Legal review preparation — TECHNICAL PREPARATION CLOSED
+
+- Final review packet added as `LEGAL_REVIEW_PACKET.md`.
+- Packet consolidates Terms, Privacy, Support, App Privacy / Data Safety, store listing, marketplace role, licensing, payments, location, SMS, biometrics, children/age, support contact, and store declaration review points.
+- Source-side legal-review preparation is complete.
+- Final human legal approval remains external and cannot be represented as complete until an authorized human reviewer approves the launch documents.
