@@ -128,7 +128,7 @@ Still open:
 2. Sign the existing Android release AAB and produce a signed iOS archive; verify physical-device GPS, SOS, push, biometric and payment lifecycle behavior.
 3. Upload signed builds through Play Console/TestFlight/App Store Connect and complete store-console metadata.
 4. Complete signed-build/store-submission evidence: capture final screenshots and reconcile the prepared App Privacy / Google Play Data Safety forms against the signed production build.
-5. Obtain final human legal approval using `LEGAL_REVIEW_PACKET.md`; then mark PR #1 ready only after the external signing/push/store gates are also closed.
+5. Obtain final human legal approval using `LEGAL_REVIEW_PACKET.md`; then proceed to store submission only after the external signing/push/store gates are also closed.
 
 ## Current completion position
 
@@ -141,3 +141,10 @@ The executable repository/backend work is substantially complete. Stripe, passwo
 - Packet consolidates Terms, Privacy, Support, App Privacy / Data Safety, store listing, marketplace role, licensing, payments, location, SMS, biometrics, children/age, support contact, and store declaration review points.
 - Source-side legal-review preparation is complete.
 - Final human legal approval remains external and cannot be represented as complete until an authorized human reviewer approves the launch documents.
+
+
+## Release PR #1 — RETIRED
+
+- PR #1 (`Prepare ZOVRO store submission and final release gates`) is closed and was not merged.
+- It is historical release-preparation evidence only and is no longer an active launch gate.
+- Current release truth is tracked in `zovro-final-deploy` plus this gate-closure file.
