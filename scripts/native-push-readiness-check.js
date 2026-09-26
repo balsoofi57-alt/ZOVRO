@@ -13,6 +13,9 @@ if(cap.ios?.handleApplicationNotifications!==false)fail('iOS must allow OneSigna
 if(!pkg.dependencies?.['@onesignal/capacitor-plugin'])fail('OneSignal Capacitor plugin dependency missing');
 if(!prep.includes("'push-client.js'"))fail('push-client.js is not bundled into mobile output');
 if(!patch.includes('android.permission.POST_NOTIFICATIONS'))fail('Android notification permission patch missing');
+if(!patch.includes('App.entitlements'))fail('iOS push entitlements generation missing');
+if(!patch.includes('aps-environment'))fail('iOS aps-environment entitlement missing');
+if(!patch.includes('CODE_SIGN_ENTITLEMENTS = App/App.entitlements;'))fail('iOS target is not wired to push entitlements');
 if(!client.includes('7992b022-6c11-4a66-bad4-8cbd114266d0'))fail('verified OneSignal App ID missing from mobile client');
 if(!client.includes('OneSignalCapacitor'))fail('OneSignal native bridge name missing');
 if(!client.includes('initialize({appId:APP_ID})'))fail('OneSignal initialization shape mismatch');
