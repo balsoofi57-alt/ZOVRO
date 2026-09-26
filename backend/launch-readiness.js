@@ -22,6 +22,7 @@ function snapshot() {
   const oneSignalAppIdPresent = present('ONESIGNAL_APP_ID');
   const oneSignalRestKeyPresent = present('ONESIGNAL_REST_API_KEY');
   const oneSignalServerConfigured = push.configured();
+  const oneSignalCredentialsVerified = enabled('ZOVRO_ONESIGNAL_CREDENTIALS_VERIFIED');
   const productionSecretPresent = Boolean(
     process.env.ZOVRO_SECRET &&
     String(process.env.ZOVRO_SECRET).length >= 32 &&
@@ -33,7 +34,7 @@ function snapshot() {
   const applePayMerchantPresent = /^merchant\.[A-Za-z0-9.-]+$/.test(String(process.env.ZOVRO_APPLE_PAY_MERCHANT_ID || '').trim());
 
   const passwordRecoveryRequested = process.env.ZOVRO_PASSWORD_RECOVERY_ENABLED === 'true';
-  const passwordRecoveryConfigured = verifyProvider(process.env).configured();
+  const passwordRecoveryConfigured = verifyProvider(process.env).configured() || String(process.env.ZOVRO_RECOVERY_WORKER_TOKEN||'').length >= 32;
   const blockers = [];
   if (passwordRecoveryRequested && !passwordRecoveryConfigured) blockers.push('password_recovery_provider');
   if (!databaseUrlPresent) blockers.push('database_url');
@@ -46,6 +47,7 @@ function snapshot() {
   if (!stripeWebhookConfigured) blockers.push('stripe_webhook');
   if (!oneSignalAppIdPresent) blockers.push('onesignal_app_id');
   if (!oneSignalRestKeyPresent) blockers.push('onesignal_rest_key');
+  if (oneSignalRestKeyPresent && !oneSignalCredentialsVerified) blockers.push('onesignal_credentials_unverified');
   if (!productionSecretPresent) blockers.push('production_secret');
   if (!allowedOriginsPresent) blockers.push('allowed_origins');
   if (!profileEncryptionConfigured) blockers.push('profile_encryption_key');
@@ -71,6 +73,7 @@ function snapshot() {
       oneSignalAppIdPresent,
       oneSignalRestKeyPresent,
       oneSignalServerConfigured,
+      oneSignalCredentialsVerified,
       productionSecretPresent,
       allowedOriginsPresent,
       profileEncryptionConfigured,

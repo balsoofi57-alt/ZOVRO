@@ -33,6 +33,7 @@ const status = {
   googlePayRequested: enabled('ZOVRO_GOOGLE_PAY_ENABLED'),
   oneSignalAppIdPresent: present('ONESIGNAL_APP_ID'),
   oneSignalRestKeyPresent: present('ONESIGNAL_REST_API_KEY'),
+  oneSignalCredentialsVerified: enabled('ZOVRO_ONESIGNAL_CREDENTIALS_VERIFIED'),
   productionSecretPresent: Boolean(process.env.ZOVRO_SECRET && !String(process.env.ZOVRO_SECRET).includes('dev-only')),
   allowedOriginsPresent: present('ZOVRO_ALLOWED_ORIGINS'),
   profileEncryptionConfigured: profileEncryptionKeyLength>=32
@@ -51,6 +52,7 @@ if(!status.stripeSecretConfigured) status.blockers.push('stripe_secret');
 if(!status.stripeWebhookPresent) status.blockers.push('stripe_webhook');
 if(status.applePayRequested&&!status.applePayMerchantConfigured) status.blockers.push('apple_pay_merchant');
 if(!status.oneSignalRestKeyPresent) status.blockers.push('onesignal_rest_key');
+if(status.oneSignalRestKeyPresent&&!status.oneSignalCredentialsVerified) status.blockers.push('onesignal_credentials_unverified');
 if(!status.profileEncryptionConfigured) status.blockers.push('profile_encryption_key');
 status.externalLaunchReady=status.blockers.length===0;
 

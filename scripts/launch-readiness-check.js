@@ -27,6 +27,7 @@ assert(launch.includes("stripe_webhook"), 'Stripe webhook blocker must be enforc
 assert(launch.includes("onesignal_app_id"), 'OneSignal App ID blocker must be enforced');
 assert(launch.includes("onesignal_rest_key"), 'OneSignal REST-key blocker must be enforced');
 assert(launch.includes("oneSignalServerConfigured"), 'OneSignal server configuration state must be reported');
+assert(launch.includes("onesignal_credentials_unverified"), 'OneSignal verified-credential blocker must be enforced');
 assert(launch.includes("production_secret"), 'production secret blocker must be enforced');
 assert(launch.includes("allowed_origins"), 'allowed-origins blocker must be enforced');
 
@@ -35,7 +36,7 @@ const vm = require('vm');
 const healthyEnv = {
   DATABASE_URL: 'postgresql://localhost/test', ZOVRO_DB_MIRROR_MODE: 'durable',
   STRIPE_PUBLISHABLE_KEY: 'pk_test_fixture', ONESIGNAL_APP_ID: 'fixture',
-  ONESIGNAL_REST_API_KEY: 'fixture', ZOVRO_SECRET: 's'.repeat(32),
+  ONESIGNAL_REST_API_KEY: 'fixture', ZOVRO_ONESIGNAL_CREDENTIALS_VERIFIED: 'true', ZOVRO_SECRET: 's'.repeat(32),
   ZOVRO_ALLOWED_ORIGINS: 'https://example.test'
 };
 for (const recoveryMode of ['off','incomplete','configured']) for (const key of [undefined, '', 'x'.repeat(31), 'x'.repeat(32), 'é'.repeat(16)]) {
