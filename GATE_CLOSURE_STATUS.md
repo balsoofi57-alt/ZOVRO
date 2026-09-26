@@ -89,6 +89,21 @@ Still open:
 - Repository review has not identified a completed store screenshot package yet.
 - Final App Store / Play Store screenshots should be generated from signed release-candidate builds and matched to the final UI before submission.
 
+## Password recovery / Forgot Password — CLOSED
+
+- Closed on 2026-09-26.
+- Production recovery status reports available.
+- Production readiness reports ready with no password-recovery blocker.
+- Secure email fallback is enabled when Twilio Verify is unavailable.
+- Recovery worker is protected by a private internal token and its endpoint is hidden from unauthenticated callers.
+- Password reset codes are short-lived, rate-limited, and pending email delivery data is sealed before storage.
+- Successful recovery revokes all existing sessions for the account.
+- ZOVRO Full QA passed for the recovery changes.
+- Support-mail service passed 49/49 tests with 0 failures.
+- A production smoke test confirmed recovery availability, API readiness, hidden internal recovery endpoint, and rejection of invalid input.
+- The scheduled support-mail cycle executed the password-recovery email worker successfully in production.
+- This gate is no longer listed as an open launch blocker.
+
 ## Remaining launch gates
 
 1. Execute and record a real production Stripe payment/webhook lifecycle with successful signed webhook delivery and verification.
