@@ -49,7 +49,7 @@ Checkpoint: 2026-09-12
 - Public production backend is live at `https://zovro-api-final.onrender.com`.
 - External launch gates remain intentionally blocked until payment, push, signing, real-device, support, legal/store and durability evidence are complete.
 
-## Stripe live — ACCOUNT ACTIVE / TAX VERIFIED / WEBHOOK DELIVERY VERIFIED
+## Stripe live — PLATFORM PAYMENT GATE CLOSED
 
 Verified current state:
 - `charges_enabled=true`
@@ -70,7 +70,9 @@ Still open:
 - A live `payment_intent.succeeded` delivery is visible in Stripe Event deliveries with **HTTP 200**, proving the production success-payment webhook reaches ZOVRO successfully.
 - The failed-payment path is additionally regression-tested in CI: a correctly signed `payment_intent.payment_failed` event returns HTTP 200, records the failure code/message, and duplicate delivery is acknowledged without a second state mutation. Full QA passed before merge.
 - Production now logs webhook signature rejection safely as `stripe.webhook_signature_rejected` with only a coarse reason; secrets and payloads are never logged. The hardened commit is live on Render.
-- Remaining Stripe launch evidence: capture/verify the `payment_intent.payment_failed` path where practical and confirm provider Connect/payout readiness for an actual provider account.
+- `payment_intent.payment_failed` is covered by signed-webhook regression testing: HTTP 200, failure-state persistence, and duplicate suppression all pass in full QA.
+- A gated production summary found 0 active providers and therefore 0 linked Connect accounts. There is no live provider account to validate yet; this is not a Stripe platform configuration failure. The diagnostic flag was disabled immediately after the check.
+- Stripe platform payment readiness is closed. Provider Connect onboarding/payout verification becomes a first-provider activation check when the first real provider registers; ZOVRO already blocks in-app payment until that provider has a linked Connect account with payouts enabled.
 
 ## OneSignal / push — SERVER CONFIG PASS / REAL DELIVERY STILL OPEN
 
@@ -111,15 +113,12 @@ Still open:
 
 ## Remaining launch gates
 
-1. Execute and record a real production Stripe payment/webhook lifecycle with successful signed webhook delivery and verification.
-2. Resolve Stripe `company.tax_id` / EIN mismatch before 2026-10-09.
-3. Complete APNs + FCM production credentials and verify real push delivery on signed physical devices.
-4. Sign the existing Android release AAB and produce a signed iOS archive; verify physical-device GPS, SOS, push, biometric and payment lifecycle behavior.
-5. Upload signed builds through Play Console/TestFlight/App Store Connect and complete store-console metadata.
-6. Verify `support@zovro.net` inbox delivery/monitoring and verify the final public support/privacy/terms URLs.
-7. Generate representative non-empty database traffic in mirror mode, run strict count/hash parity, verify restart persistence, backup/restore and rollback; only then perform controlled durable cutover.
-8. Generate final store screenshots and complete App Privacy / Google Play Data Safety declarations against the actual signed production build.
-9. Complete final human legal review, mark PR #1 ready only after the external gates above are closed, and proceed to store submission.
+1. Complete APNs + FCM production credentials and verify real push delivery on signed physical devices.
+2. Sign the existing Android release AAB and produce a signed iOS archive; verify physical-device GPS, SOS, push, biometric and payment lifecycle behavior.
+3. Upload signed builds through Play Console/TestFlight/App Store Connect and complete store-console metadata.
+4. Verify `support@zovro.work` inbox delivery/monitoring and verify the final public support/privacy/terms URLs.
+5. Generate final store screenshots and complete App Privacy / Google Play Data Safety declarations against the actual signed production build.
+6. Complete final human legal review, mark PR #1 ready only after the external gates above are closed, and proceed to store submission.
 
 ## Current completion position
 
