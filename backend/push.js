@@ -7,14 +7,15 @@ function configured(){return /^[0-9a-f-]{36}$/i.test(APP_ID)&&REST_KEY.length>=1
 async function validateCredentials(){
   if(!configured()){credentialState={checked:true,verified:false,status:null};return credentialState;}
   try{
-    const url=`${API}?app_id=${encodeURIComponent(APP_ID)}&limit=1&offset=0`;
-    const res=await fetch(url,{method:'GET',headers:{accept:'application/json',authorization:`Key ${REST_KEY}`}});
-    let error=null;
-    if(!res.ok){
-      const body=await res.text().catch(()=> '');
-      error=String(body||res.statusText||'').replace(/os_v2_[A-Za-z0-9_\-]+/g,'[redacted]').slice(0,300);
-    }
-    credentialState={checked:true,verified:res.ok,status:res.status,error};
+    // Deliberately invalid, non-deliverable request: authentication is checked
+    // but no audience/content is supplied, so a valid key should yield 400 rather than send.
+    const res=await fetch(API,{
+      method:'POST',
+      headers:{'content-type':'application/json',authorization:`Key ${REST_KEY}`},
+      body:JSON.stringify({app_id:APP_ID})
+    });
+    const verified=res.status===400||res.ok;
+    credentialState={checked:true,verified,status:res.status};
     return credentialState;
   }catch{credentialState={checked:true,verified:false,status:null};return credentialState;}
 }
