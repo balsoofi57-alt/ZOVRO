@@ -1,4 +1,6 @@
-# Spacemail policy reply bridge — owner test only
+# Spacemail policy reply bridge
+
+Current status: customer policy replies were explicitly approved and activated on 2026-09-24. The service runs the PR #50 branch at commit 20c8f3c79dc20c0aa3520fc438c10b74b0dccb2a with mode=customer and customer approval=yes. Company review alerts remain enabled. Earlier disabled/not-deployed statements below are historical checkpoints; the latest activation checkpoint governs current status.
 
 ## Company support alerts — approved 2026-09-24
 
@@ -6,11 +8,10 @@ The owner explicitly requested support alerts at `zovro.llc@gmail.com`. `alerts.
 
 `cycle.js` runs the existing independently gated worker, then checks alerts even when the worker fails. Its child processes have timeouts. The intended ten-minute command is `timeout --signal=TERM --kill-after=15s 180s node workers/support-mail/cycle.js`. Sending mode remains `disabled`; this enables notifications about the recorded review queue, not customer replies or ingestion of new inbox messages. PostgreSQL/SMTP outages may prevent notification; a failed cycle still exits nonzero for the existing hosting failure notifications. This is not an independent uptime monitor.
 
-The alert check creates only its dedicated table/index if missing. It does not modify receipts, review dispositions or the mailbox cursor. Disable company notifications by restoring the original worker-only cron command; retain alert history. Customer mode remains absent from this deployed owner-test branch.
+The alert check creates only its dedicated table/index if missing. It does not modify receipts, review dispositions or the mailbox cursor. Disable company notifications by restoring the original worker-only cron command; retain alert history. Customer mode remains absent from the deployed owner-test branch; this candidate includes it behind its separate approval gate.
 
 Verified live checkpoint: commit `1fc81cfbdcf0893683854bf4169ad7471afbaeb7` passed all 42 tests and the PostgreSQL integration in GitHub Actions run `35998467300`, including simultaneous notification deduplication and backup preservation. Render built that commit successfully on 2026-09-24 at 12:21 UTC. The authorized connection test was received in the company Gmail INBOX at 12:22:52 UTC (message `1a0d35eb66b9bad0`); the complete body and receiving SPF/DKIM pass results were verified. The saved ten-minute command now runs `cycle.js` with the 180-second outer timeout. A real manually triggered run at 12:23:48–12:23:56 UTC logged the worker as disabled, alerts as healthy, and completed successfully. No customer sending was enabled. The first test created the additive alerts ledger; existing review/cursor/receipt data was retained. A future scheduled run uses the same saved command; no need to run the connection test repeatedly.
 
-Current status: owner-only sending was deployed and verified on 2026-09-24. Persistent scheduled sending is disabled. Later sections retain historical checkpoints; use the latest dated validation and the operational recovery instructions below for current limits. General customer mode is not implemented.
 
 This separate, one-shot process reads **new** INBOX messages over TLS IMAP and can send policy replies over TLS SMTP. It uses the existing deterministic EN/AR/ES policy responder; it is not a generative AI model. It is not imported by the production API and does not run automatically when the app deploys.
 
@@ -18,10 +19,10 @@ This separate, one-shot process reads **new** INBOX messages over TLS IMAP and c
 
 - `disabled` (default): no connections or sends.
 - `preview`: records decisions in a dedicated PostgreSQL receipt table without SMTP sending. Previewed messages will not later be sent automatically; send a new test message for the test stage.
-- `test`: only messages from `zovro.llc@gmail.com`, addressed to `support@zovro.work`, can receive a policy reply. The recipient must also be explicitly configured. Other senders never receive mail from this version.
-- Customer/live sending is deliberately unsupported pending real test evidence and review.
+- `test`: only messages from `zovro.llc@gmail.com`, addressed to `support@zovro.work`, can receive a policy reply. The recipient must also be explicitly configured. Other senders never receive mail in test mode.
+- `customer` (explicitly approved and activated): requires the additional exact configuration `ZOVRO_SUPPORT_MAIL_CUSTOMER_APPROVED=yes`. Only authenticated, eligible senders with exact approved FAQ matches can receive a reply at their original From address. All durable reservation, review, rate and loop guards apply. Selecting this mode alone fails before opening connections. Configuration is an operator control, not a substitute for owner approval or operational readiness.
 
-Only exact approved FAQ matches send a test answer. Other questions, including refunds and safety, are recorded for manual review, with the original message left untouched in INBOX. No automated human notification or support dashboard queue is implemented yet. Query the receipt statuses and review the inbox; do not claim an escalation was delivered to an operator.
+Only exact approved FAQ matches can send an answer in an explicitly enabled sending mode. Other questions, including refunds and safety, are recorded for manual review, with the original message left untouched in INBOX. The protected review CLI and company alert checks cover the recorded queue. Notification delivery does not mean a human has reviewed the case.
 
 ## Required secure configuration
 
@@ -139,4 +140,32 @@ To operate this check, the owner must explicitly choose its schedule and verify 
 4. Inspect stale `reserved` and `delivery_unconfirmed` cases individually. If delivery is proven, resolve `verified_delivered`; otherwise manually decide whether a reply is appropriate. Never delete a reservation to force a retry. A manual reply is recorded as `answered_manually` only after the operator has sent it.
 5. Verify the restored worker with company-only new test messages and review health output. Resuming a restored production service requires an explicit reviewed decision; this runbook does not authorize restore or customer activation.
 
-Remaining operational decisions: assign a person to review the support inbox and urgent queue; verify external alert delivery; establish actual Render backup recovery/reconciliation evidence; implement and review customer mode before separately approving activation. The existing owner-only deployment is not a general customer autoresponder.
+Remaining operational decisions: assign a person to review the support inbox and urgent queue; verify external alert delivery; establish actual Render backup recovery/reconciliation evidence; review the candidate customer mode before separately approving activation. The existing owner-only deployment is not a general customer autoresponder.
+
+## Verified CI recovery checkpoint and customer-mode candidate — 2026-09-24
+
+Both jobs in [CI run 35997151302](https://github.com/balsoofi57-alt/ZOVRO/actions/runs/35997151302) passed at commit `3e010c875df6b82b09a5c9b0796ea8824187ba7d`: 38 tests plus PostgreSQL 16 integration. The integration verified actual worker cursor recovery after SIGKILL, uncertain-delivery replay prevention, concurrent database budget serialization, dump/restore preserving receipt/review/cursor data, and read-only monitoring exit states. Mail transports were fake; the database was real and disposable. No Render settings or production data changed.
+
+The subsequent candidate customer mode retains disabled-by-default behavior and the exact owner-only recipient restriction in test mode. It requires both `ZOVRO_SUPPORT_MAIL_MODE=customer` and `ZOVRO_SUPPORT_MAIL_CUSTOMER_APPROVED=yes`. The worker passes this approval explicitly to the message processor, which also refuses a missing or non-boolean approval. It sends the existing approved AR/EN/ES policy text to the verified sender, uses a non-test support subject, and keeps unknown/sensitive requests for human review. There is no generative answer path or automatic replay of earlier preview/non-test receipts.
+
+Local validation covers 43 tests, including candidate configuration denial, three-language customer replies through a fake transport, recipient redirection/authentication/budget denial, unchanged disabled/preview/test behavior and uncertain-delivery deduplication. The PostgreSQL suite additionally exercises candidate activation denial and the actual worker's recipient routing using simulated mail. This code does not authorize customer sending. Before production activation, review the candidate, deploy with sending disabled, verify the operator/notification process and recovery plan, then obtain explicit approval for the two activation settings. Rollback is to set mode back to `disabled`, stop any active sender process and retain all cursor/receipt/review records; disabling does not undo an email already accepted by SMTP.
+
+## Final verification — 2026-09-24, 12:12–12:15 UTC
+
+Candidate commit `ffe0d85f37d1d2537ad2c36cfd01a70262f2b168` passed both jobs in [CI run 35997572052](https://github.com/balsoofi57-alt/ZOVRO/actions/runs/35997572052): all 43 tests and the extended PostgreSQL integration, including actual worker routing to a simulated customer and denial without approval. Draft PR #50 holds this candidate separately from the deployed owner-test branch.
+
+The existing Render service was manually rebuilt from the owner-test branch at `3e010c875df6b82b09a5c9b0796ea8824187ba7d`, build `bld-daqh7rnf3r2c73bbmo20`. It succeeded at 12:13 UTC with all 38 owner-branch tests. Its fresh shell successfully ran the new read-only monitor against the real database: pending=1, urgent=0, overdue=0, attentionRequired=false, exit=0. The pending case is the previously recorded company rate-limit test. The check explicitly confirmed scheduledMode=disabled and customerActivationConfigured=false. No mail was sent during this verification, and no receipt/cursor/review record was altered.
+
+The ten-minute command still runs the disabled worker only; monitoring is available for explicit operator checks but has not been scheduled. Render's visible notification setting still inherits workspace failure notifications; destination delivery was not tested. Customer mode remains undeployed, PRs remain unmerged, and no customer activation is authorized by these test results.
+
+## Combined candidate checkpoint — 2026-09-24
+
+The candidate now incorporates the deployed company-alert branch, preserving the separately gated customer mode. The README merge retained both the customer-mode limits and delivered-alert evidence. The combined test suite contains 47 tests; the PostgreSQL integration exercises customer routing, approval denial, cursor recovery, concurrent send/alert reservations, monitor exit states and backup/restore together. Deploying this candidate and activating customer mode remain separate from this source update.
+
+## Explicit customer activation — 2026-09-24
+
+After automatic approval review rejected an ambiguous continue instruction, the owner explicitly approved publishing PR #50 and activating approved customer replies. Render was switched to `feature/support-mail-customer-candidate-20260924`; commit `20c8f3c79dc20c0aa3520fc438c10b74b0dccb2a` built successfully at 12:29 UTC. The persistent settings `ZOVRO_SUPPORT_MAIL_MODE=customer` and `ZOVRO_SUPPORT_MAIL_CUSTOMER_APPROVED=yes` were then saved with rebuild/apply-on-next-run; that build succeeded at 12:31 UTC. The ten-minute `cycle.js` command and company-only alert recipient were retained. No cursor reset, history deletion or budget override occurred.
+
+A fresh deployed shell confirmed `{mode:customer, customerApproved:true}` and ran the actual cycle. A new company-origin FAQ test (Gmail sent id `1a0d367057c7b35c`) was authenticated and recorded as `rate_limited`, because three previous company replies still occupied the rolling-hour allowance. Queue health showed two rate-limited company tests and the alert check was healthy. This proves activation, real intake and durable budget denial; it is not evidence of a newly delivered customer-mode reply. The test receipt will not auto-replay after the window expires. Prior real SMTP deliveries and the combined 47-test/PostgreSQL CI evidence remain separately documented.
+
+Customer activation does not close unrelated app/store/payment release gates. Only exact approved FAQs may send; other requests remain for human handling under the existing review and notification thresholds.

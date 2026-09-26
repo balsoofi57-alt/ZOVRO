@@ -1,7 +1,7 @@
 name: Support mailbox bridge checks
 on:
   push:
-    branches: [zovro-final-deploy, feature/support-mail-sender-guards-20260924]
+    branches: [zovro-final-deploy, feature/support-mail-sender-guards-20260924, feature/support-mail-customer-candidate-20260924]
     paths: ['workers/support-mail/**', 'support-policy.js', 'backend/support-email-draft.js', '.github/workflows/support-mail-bridge.yml']
   pull_request:
     branches: [zovro-final-deploy]
