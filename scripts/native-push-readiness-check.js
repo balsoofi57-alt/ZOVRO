@@ -16,7 +16,7 @@ if(!patch.includes('android.permission.POST_NOTIFICATIONS'))fail('Android notifi
 if(!patch.includes('App.entitlements'))fail('iOS push entitlements generation missing');
 if(!patch.includes('aps-environment'))fail('iOS aps-environment entitlement missing');
 if(!patch.includes('CODE_SIGN_ENTITLEMENTS = App/App.entitlements;'))fail('iOS target is not wired to push entitlements');
-if(!client.includes('7992b022-6c11-4a66-bad4-8cbd114266d0'))fail('verified OneSignal App ID missing from mobile client');
+if(!client.includes('2d595bd4-61a1-40f2-9e8d-02900ab6f367'))fail('verified OneSignal App ID missing from mobile client');
 if(!client.includes('OneSignalCapacitor'))fail('OneSignal native bridge name missing');
 if(!client.includes('initialize({appId:APP_ID})'))fail('OneSignal initialization shape mismatch');
 if(!client.includes('login({externalId:userId})'))fail('OneSignal external user identity binding missing');
