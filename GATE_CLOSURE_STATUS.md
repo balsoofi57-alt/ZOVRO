@@ -1,6 +1,23 @@
 # ZOVRO Gate Closure Status
 
-Checkpoint: 2026-09-12
+Checkpoint: 2026-09-26
+
+## Authoritative current status — 2026-09-26
+
+This section is the current source of truth. Older sections below are retained as historical evidence where explicitly labeled.
+
+- Production backend: live on Render.
+- Database mode: `durable`; PostgreSQL runtime ready and durable operation confirmed.
+- Stripe platform payment gate: CLOSED.
+- Forgot Password / recovery gate: CLOSED.
+- Support / Privacy / Terms technical gate: CLOSED.
+- Store metadata / privacy-data-safety technical preparation: CLOSED.
+- Mobile signing workflow code: CLOSED.
+- Legal-review preparation: CLOSED; final human approval remains external.
+- Current production launch blocker: OneSignal credential verification. The configured Render key returns HTTP 403 and readiness reports `onesignal_credentials_unverified`.
+- OneSignal subscriptions: 0 total / 0 active; no physical-device push evidence yet.
+- iOS/Android signing credentials: not provisioned in GitHub Actions; signed IPA/AAB generation and store upload remain external.
+- Remote Desktop Commander is not connected, so local Xcode/Gradle signing cannot be executed from this chat yet.
 
 ## Latest continuation — provider history and handoff privacy
 
@@ -36,14 +53,14 @@ Checkpoint: 2026-09-12
 - GitHub Actions currently has no distribution certificate, provisioning profile, Apple team ID, or App Store Connect API credentials; signed archive/export/upload steps therefore remain skipped.
 - Source-side signing workflow preparation is closed. Remaining iOS work is external credential provisioning, signed IPA generation, physical-device acceptance, and TestFlight/App Store Connect upload.
 
-## PostgreSQL — MIRROR HEALTHY / DURABLE CUTOVER STILL BLOCKED
+## PostgreSQL — HISTORICAL MIRROR STATUS (SUPERSEDED)
 
 - Render service remains intentionally in `ZOVRO_DB_MIRROR_MODE=mirror`.
 - Latest observed production startup preflight reports `databaseUrlPresent=true`, `pgModuleAvailable=true`, `postgresRuntimeReady=true`, `mirrorOperational=true`, `blockers=[]`, and `externalLaunchReady=true` for the current mirror-mode configuration.
 - Do not switch to `durable` until representative non-empty production traffic exists, strict count/hash parity passes, restart persistence is proven, and backup/restore/rollback evidence is captured.
 - Do not weaken PostgreSQL TLS.
 
-## Production deployment — PASS FOR CURRENT MIRROR-MODE BUILD
+## Production deployment — HISTORICAL MIRROR-MODE EVIDENCE (SUPERSEDED)
 
 - Render service: `zovro-api-final`.
 - Production branch: `zovro-final-deploy`.
@@ -132,7 +149,7 @@ Still open:
 
 ## Current completion position
 
-The executable repository/backend work is substantially complete. Stripe, password recovery, durable database operation, support-mail monitoring, store metadata, and privacy/data-safety preparation have current evidence. Remaining work is dominated by valid OneSignal/APNs/FCM credentials, physical-device push evidence, iOS/Android signing, store-console upload, final screenshots/declaration reconciliation, and final human legal review.
+The executable repository/backend work is substantially complete. Current unresolved work is limited to external credential/device/store/legal approval steps: valid OneSignal/APNs/FCM credentials, physical-device push evidence, iOS/Android signing credentials and signed builds, store-console upload and final screenshots/declaration reconciliation, plus final human legal approval.
 
 
 ## Legal review preparation — TECHNICAL PREPARATION CLOSED
