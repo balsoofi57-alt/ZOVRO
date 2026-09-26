@@ -46,6 +46,13 @@ jobs:
           chmod +x gradlew
           ./gradlew assembleDebug bundleRelease --stacktrace
 
+      - name: Verify Android application ID
+        run: |
+          grep -R "applicationId.*com.zovro.app" -n android/app/build.gradle* android/app/build.gradle.kts 2>/dev/null || {
+            echo "::error::Android release applicationId is not com.zovro.app."
+            exit 1
+          }
+
       - name: Prepare optional Android release signing
         id: signing
         env:
