@@ -16,7 +16,8 @@ const status = {
   recoveryTwilioAccountConfigured: /^AC[0-9a-f]{32}$/i.test(process.env.TWILIO_ACCOUNT_SID || ''),
   recoveryTwilioTokenPresent: present('TWILIO_AUTH_TOKEN'),
   recoveryVerifyServiceConfigured: /^VA[0-9a-f]{32}$/i.test(process.env.TWILIO_RECOVERY_VERIFY_SERVICE_SID || ''),
-  passwordRecoveryConfigured: require('./password-recovery').verifyProvider().configured(),
+  passwordRecoveryTwilioConfigured: require('./password-recovery').verifyProvider().configured(),
+  passwordRecoveryEmailConfigured: String(process.env.ZOVRO_RECOVERY_WORKER_TOKEN||'').length>=32,
   nodeEnv: process.env.NODE_ENV || null,
   dbMirrorMode,
   mirrorRequested: dbMirrorMode==='mirror',
@@ -36,6 +37,7 @@ const status = {
   allowedOriginsPresent: present('ZOVRO_ALLOWED_ORIGINS'),
   profileEncryptionConfigured: profileEncryptionKeyLength>=32
 };
+status.passwordRecoveryConfigured=status.passwordRecoveryTwilioConfigured||status.passwordRecoveryEmailConfigured;
 status.postgresRuntimeReady=status.databaseUrlPresent&&status.pgModuleAvailable;
 status.mirrorOperational=status.mirrorRequested&&status.postgresRuntimeReady;
 status.durableOperational=status.durableRequested&&status.postgresRuntimeReady;

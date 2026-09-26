@@ -23,3 +23,23 @@ test('unrelated account mutations are preserved across await',async()=>{const f=
 test('provider requires explicit activation and binds approval to SID',async()=>{let calls=0;const env={TWILIO_ACCOUNT_SID:'AC'+'a'.repeat(32),TWILIO_AUTH_TOKEN:'fake',TWILIO_RECOVERY_VERIFY_SERVICE_SID:'VA'+'b'.repeat(32)};const p=verifyProvider(env,async(url,options)=>{calls++;assert.ok(options.body.includes('VerificationSid='));return {ok:true,json:async()=>({status:'approved',sid:'VE'+'c'.repeat(32)})}});assert.equal(p.configured(),false);env.ZOVRO_PASSWORD_RECOVERY_ENABLED='true';assert.equal(p.configured(),true);assert.equal(await p.check('VE'+'a'.repeat(32),'123456'),false);assert.equal(calls,1)});
 test('verified legacy US phone without plus can recover without changing identity',async()=>{const f=fixture();f.db.users[0].phone='13135551234';const r=await f.call('forgot-password',phone);assert.equal(f.starts,1);assert.equal((await f.call('reset-password',reset(r.data.challenge))).status,200);assert.equal(f.db.users[0].phone,'13135551234')});
 test('ambiguous canonical phones never receive a recovery code',async()=>{const f=fixture();f.db.users.push({...f.db.users[0],id:'other',phone:'13135551234'});const r=await f.call('forgot-password',phone);assert.equal(r.status,202);assert.equal(f.starts,0);assert.equal((await f.call('reset-password',reset(r.data.challenge))).status,400)});
+
+test('email fallback queues a sealed OTP and completes recovery without Twilio',async()=>{
+  let db={users:[{id:'u',phone:'+13135551234',email:'user@example.com',phoneVerified:false,passwordHash:'original',accountStatus:'active'}],workflows:[],deviceSessions:[{id:'a',userId:'u'}],audit:[]};
+  let time=20000000;const workerToken='w'.repeat(64);
+  const deps={readDb:()=>structuredClone(db),writeDb:v=>{db=structuredClone(v)},body:async req=>req.payload||{},json:(res,status,data)=>Object.assign(res,{status,data}),limited:()=>false,hash:p=>'hashed:'+p,validPassword:p=>typeof p==='string'&&p.length>=10&&/[A-Za-z]/.test(p)&&/\d/.test(p),audit:(d,u,action)=>d.audit.push({action,user:u.uid}),now:()=>time,workerToken,provider:{configured:()=>false,start:async()=>{throw Error('disabled')},check:async()=>false}};
+  const handler=createRecovery(deps);
+  const call=async(path,payload={},method='POST',headers={})=>{const res={};await handler({method,payload,headers},res,{pathname:path});return res};
+  const status=await call('/api/auth/recovery/status',{},'GET');assert.equal(status.status,200);assert.equal(status.data.available,true);
+  const start=await call('/api/auth/forgot-password',{phone:'+13135551234'});assert.equal(start.status,202);
+  assert.equal(db.workflows[0].channel,'email');assert.equal(db.workflows[0].status,'email_pending');assert.ok(db.workflows[0].deliveryEmail);assert.ok(db.workflows[0].deliveryCode);assert.equal(String(db.workflows[0].deliveryEmail).includes('user@example.com'),false);
+  const tasks=await call('/api/internal/recovery-email/tasks',{},'GET',{'x-zovro-recovery-worker-token':workerToken});assert.equal(tasks.status,200);assert.equal(tasks.data.tasks.length,1);
+  assert.equal(tasks.data.tasks[0].email,'user@example.com');assert.match(tasks.data.tasks[0].code,/^\d{6}$/);
+  const ack=await call('/api/internal/recovery-email/result',{id:tasks.data.tasks[0].id,delivered:true},'POST',{'x-zovro-recovery-worker-token':workerToken});assert.equal(ack.status,200);
+  const resetResult=await call('/api/auth/reset-password',{challenge:start.data.challenge,code:tasks.data.tasks[0].code,newPassword:'newPassword123'});
+  assert.equal(resetResult.status,200);assert.equal(db.users[0].passwordHash,'hashed:newPassword123');assert.equal(db.deviceSessions.length,0);
+});
+test('email recovery worker endpoint hides behind a 404 without its token',async()=>{
+  let db={users:[],workflows:[],deviceSessions:[],audit:[]};const handler=createRecovery({readDb:()=>structuredClone(db),writeDb:v=>{db=structuredClone(v)},body:async req=>req.payload||{},json:(res,status,data)=>Object.assign(res,{status,data}),limited:()=>false,hash:x=>x,validPassword:()=>true,audit:()=>{},workerToken:'w'.repeat(64),provider:{configured:()=>false,start:async()=>null,check:async()=>false}});
+  const res={};await handler({method:'GET',headers:{}},res,{pathname:'/api/internal/recovery-email/tasks'});assert.equal(res.status,404);
+});
