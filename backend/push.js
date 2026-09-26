@@ -2,13 +2,13 @@
 const APP_ID=String(process.env.ONESIGNAL_APP_ID||'').trim();
 const REST_KEY=String(process.env.ONESIGNAL_REST_API_KEY||'').trim();
 const API='https://api.onesignal.com/notifications';
-const APP_API='https://api.onesignal.com/apps/';
 let credentialState={checked:false,verified:false,status:null};
 function configured(){return /^[0-9a-f-]{36}$/i.test(APP_ID)&&REST_KEY.length>=16}
 async function validateCredentials(){
   if(!configured()){credentialState={checked:true,verified:false,status:null};return credentialState;}
   try{
-    const res=await fetch(APP_API+encodeURIComponent(APP_ID),{method:'GET',headers:{authorization:`Key ${REST_KEY}`}});
+    const url=`${API}?app_id=${encodeURIComponent(APP_ID)}&limit=1&offset=0`;
+    const res=await fetch(url,{method:'GET',headers:{accept:'application/json',authorization:`Key ${REST_KEY}`}});
     credentialState={checked:true,verified:res.ok,status:res.status};
     return credentialState;
   }catch{credentialState={checked:true,verified:false,status:null};return credentialState;}
