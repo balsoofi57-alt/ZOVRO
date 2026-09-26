@@ -4,6 +4,7 @@ Checkpoint: 2026-09-26
 
 ## Authoritative current status — 2026-09-26
 
+- Google Android (FCM) platform configuration: CLOSED on 2026-09-26. Firebase project `ZOVRO` was created, a Firebase Admin SDK service-account JSON was generated and uploaded directly to OneSignal, OneSignal reported `Settings saved` and `SDK selection successfully saved`, and `Push & In-App` is now Active for the app using App ID `2d595bd4-61a1-40f2-9e8d-02900ab6f367`. End-to-end Android delivery still requires a signed physical-device build and an active device subscription.
 - Production stability recheck after OneSignal correction: Render service is live; startup preflight reports `oneSignalCredentialsVerified=true`, `durableOperational=true`, `blockers=[]`, and `externalLaunchReady=true`; PostgreSQL restore verified 34 records and `/api/health` returned HTTP 200. Latest Render build also reported 0 npm vulnerabilities.
 - Latest mobile workflows confirm source/build readiness but no store signing: Android produced debug APK + unsigned release AAB while signed AAB steps were skipped; iOS produced the unsigned simulator app while signed archive/IPA/TestFlight steps were skipped. Remaining work for this gate is external signing credential provisioning, not source-code repair.
 - Release verification after the OneSignal mobile App ID correction is fully green on commit `9f88d8c77f90a63090e8cbed34b9eb46b9f4c90a`: Full QA run `36254277076`, Android Release Verification run `36254277047`, Android build run `36254277027`, and iOS Release Verification run `36254277032` all completed successfully.
@@ -103,18 +104,19 @@ Still open:
 - A gated production summary found 0 active providers and therefore 0 linked Connect accounts. There is no live provider account to validate yet; this is not a Stripe platform configuration failure. The diagnostic flag was disabled immediately after the check.
 - Stripe platform payment readiness is closed. Provider Connect onboarding/payout verification becomes a first-provider activation check when the first real provider registers; ZOVRO already blocks in-app payment until that provider has a linked Connect account with payouts enabled.
 
-## OneSignal / push — CODE READY / CREDENTIAL + DEVICE GATE OPEN
+## OneSignal / push — BACKEND + FCM CLOSED / APNS + DEVICE EVIDENCE OPEN
 
 - OneSignal app: `Zovro llc App`.
 - OneSignal App ID is configured for the production backend.
 - OneSignal REST API key is configured for the production backend.
 - The connected OneSignal account currently shows no sent push notifications in message history.
-- Real APNs/FCM delivery on signed physical devices has not yet been verified.
+- Google Android (FCM) platform configuration is complete; real Android delivery on a signed physical device has not yet been verified.
+- APNs platform configuration remains deferred/open for iOS.
 - Production credential verification now passes with the correct OneSignal App ID `2d595bd4-61a1-40f2-9e8d-02900ab6f367`; startup preflight reports `oneSignalCredentialsVerified=true`, `blockers=[]`, and `externalLaunchReady=true`.
 - OneSignal currently reports 0 total subscriptions and 0 active subscriptions, so no physical device is registered yet.
 - Repository signing-secret presence check shows all Android signing secrets and all iOS distribution/provisioning/App Store Connect secrets are absent.
 - iOS native preparation now explicitly adds the production APNs entitlement (`aps-environment=production`) and wires it into code signing; Full QA passed.
-- Remaining gate: complete APNs/FCM platform credentials, provide mobile signing credentials, install signed builds on physical devices, register subscriptions, then verify receipt/tap routing.
+- Remaining gate: complete APNs for iOS, provide mobile signing credentials, install signed builds on physical devices, register subscriptions, then verify receipt/tap routing.
 
 ## Privacy / Terms / Support — TECHNICAL GATE CLOSED / LEGAL REVIEW STILL OPEN
 
@@ -151,7 +153,7 @@ Still open:
 
 ## Remaining launch gates
 
-1. Complete APNs + FCM production credentials and verify real push delivery on signed physical devices.
+1. Complete APNs production credentials for iOS and verify real push delivery on signed physical devices; Android FCM platform configuration is already complete.
 2. Sign the existing Android release AAB and produce a signed iOS archive; verify physical-device GPS, SOS, push, biometric and payment lifecycle behavior.
 3. Upload signed builds through Play Console/TestFlight/App Store Connect and complete store-console metadata.
 4. Complete signed-build/store-submission evidence: capture final screenshots and reconcile the prepared App Privacy / Google Play Data Safety forms against the signed production build.
@@ -159,7 +161,7 @@ Still open:
 
 ## Current completion position
 
-The executable repository/backend work is substantially complete. Current unresolved work is limited to external credential/device/store/legal approval steps: APNs/FCM credentials, physical-device push evidence, iOS/Android signing credentials and signed builds, store-console upload and final screenshots/declaration reconciliation, plus final human legal approval.
+The executable repository/backend work is substantially complete. Current unresolved work is limited to external credential/device/store/legal approval steps: APNs credentials for iOS, physical-device push evidence, iOS/Android signing credentials and signed builds, store-console upload and final screenshots/declaration reconciliation, plus final human legal approval.
 
 
 ## Legal review preparation — TECHNICAL PREPARATION CLOSED
