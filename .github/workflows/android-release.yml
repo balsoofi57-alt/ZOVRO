@@ -48,10 +48,11 @@ jobs:
 
       - name: Verify Android application ID
         run: |
-          grep -R "applicationId.*com.zovro.app" -n android/app/build.gradle* android/app/build.gradle.kts 2>/dev/null || {
+          set -euo pipefail
+          if ! grep -R -E "applicationId[[:space:]]+[=]?[[:space:]]*['\"]com\.zovro\.app['\"]" android/app --include='build.gradle' --include='build.gradle.kts' >/dev/null 2>&1; then
             echo "::error::Android release applicationId is not com.zovro.app."
             exit 1
-          }
+          fi
 
       - name: Prepare optional Android release signing
         id: signing
