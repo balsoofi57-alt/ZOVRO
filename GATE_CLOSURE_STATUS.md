@@ -21,18 +21,20 @@ Checkpoint: 2026-09-12
 - Android build run #5 completed successfully for the same head.
 - iOS Release Verification run #39 completed successfully for the same head.
 
-## Android packaging — BUILD PASS / SIGNING STILL OPEN
+## Android packaging — SIGNING WORKFLOW CODE CLOSED / CREDENTIAL PROVISIONING OPEN
 
 - `zovro-android-debug-apk` artifact exists and is unexpired.
 - `zovro-android-release-unsigned-aab` artifact exists and is unexpired.
-- The release AAB is intentionally unsigned and is not yet ready for Play Console production submission.
-- Remaining Android gate: sign the release AAB with the production signing identity, test on a physical Android device, and upload through Play Console.
+- The unsigned release AAB build is verified. The release workflow now checks that the Android application ID is `com.zovro.app` before signing.
+- GitHub Actions currently has no Android keystore, keystore password, key alias, or key password secrets; signed AAB generation therefore remains skipped.
+- Source-side signing workflow preparation is closed. Remaining Android work is external credential provisioning, signed AAB generation, physical-device acceptance, and Play Console upload.
 
-## iOS packaging — VERIFICATION PASS / SIGNED ARCHIVE STILL OPEN
+## iOS packaging — SIGNING WORKFLOW CODE CLOSED / CREDENTIAL PROVISIONING OPEN
 
 - `zovro-ios-simulator-unsigned` artifact exists and is unexpired.
-- The current artifact is simulator output and is not a signed App Store archive.
-- Remaining iOS gate: produce a signed archive with the production Apple team/signing identity, test on a physical iPhone, and upload through TestFlight/App Store Connect.
+- The unsigned simulator build is verified. The signing workflow now validates Apple team identity, `com.zovro.app`, and requires `aps-environment=production` in the provisioning profile before creating an App Store archive.
+- GitHub Actions currently has no distribution certificate, provisioning profile, Apple team ID, or App Store Connect API credentials; signed archive/export/upload steps therefore remain skipped.
+- Source-side signing workflow preparation is closed. Remaining iOS work is external credential provisioning, signed IPA generation, physical-device acceptance, and TestFlight/App Store Connect upload.
 
 ## PostgreSQL — MIRROR HEALTHY / DURABLE CUTOVER STILL BLOCKED
 
