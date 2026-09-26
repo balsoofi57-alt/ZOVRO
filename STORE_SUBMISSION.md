@@ -1,6 +1,7 @@
 # ZOVRO Store Submission Pack
 
 Version: 1.0.0
+Status checkpoint: September 26, 2026
 App ID / Bundle ID: com.zovro.app
 App name: ZOVRO
 Public support email: support@zovro.work
@@ -26,8 +27,8 @@ local services, roadside assistance, handyman, mechanic, plumbing, electrical, H
 - Canonical production API base: https://zovro-api-final.onrender.com
 - Health endpoint: https://zovro-api-final.onrender.com/api/health
 - Readiness endpoint: https://zovro-api-final.onrender.com/api/ready
-- Approved public support email: support@zovro.work. Inbox delivery/monitoring still requires external verification before launch.
-- Privacy, Terms, and Support pages are included in the production web package, but their final public URLs must be verified before submission.
+- Approved public support email: support@zovro.work. Bidirectional delivery, automated policy replies, and monitoring alerts have been verified.
+- Privacy, Terms, and Support pages are included in the production web package and the live website branch uses the current support@zovro.work contact.
 - Account deletion is supported in-app and must be rechecked in the signed release build.
 - SOS/urgent service requests are marketplace requests and are not a replacement for emergency services.
 
@@ -38,8 +39,6 @@ local services, roadside assistance, handyman, mechanic, plumbing, electrical, H
 - STORE_ASSET_CHECKLIST.md — screenshot, icon, listing-asset and reviewer-claim checklist
 
 ## Assets / credentials still required at submission time
-- Verification that support@zovro.work receives and is monitored for support inquiries
-- Final public Privacy, Terms, and Support URLs
 - Final store screenshots and promotional graphics
 - Apple Developer signing credentials and App Store Connect access
 - Google Play Console signing/upload credentials
@@ -49,6 +48,6 @@ local services, roadside assistance, handyman, mechanic, plumbing, electrical, H
 ## Current build status
 - Android release candidate: CI build completed successfully; unsigned release AAB requires Play upload signing.
 - iOS release candidate: CI simulator build completed successfully; App Store/TestFlight archive requires Apple signing.
-- Production PostgreSQL, live payments, real-device push delivery, signing, and store submission remain release gates.
+- Production PostgreSQL durable operation, Stripe platform readiness, password recovery, and support-mail operations are technically closed. Remaining external gates are valid OneSignal/APNs/FCM credentials and real-device push evidence, mobile signing credentials and signed builds, store upload/screenshots/declaration reconciliation, and final human legal approval.
 
 Do not commit production secrets or signing credentials to this repository.
