@@ -20,8 +20,8 @@ for(const file of ['/index.html','/website-final.css','/assets/zovro-icon.svg'])
  const response=await fetch(base+file);if(response.status!==200)throw new Error(`Public asset blocked: ${file}`);await response.arrayBuffer();
 }
 const suffix=Date.now();
-const c=await call('POST','/api/auth/register',{name:'ZOVRO Customer',phone:`1313${String(suffix).slice(-7)}`,password:'StrongPass22!',role:'customer',termsAccepted:true,privacyAccepted:true,termsVersion:'2026-09-09',privacyVersion:'2026-09-09'});
-const p=await call('POST','/api/auth/register',{name:'ZOVRO Provider',phone:`2484${String(suffix).slice(-7)}`,password:'StrongPass22!',role:'provider',service:'Roadside Assistance',termsAccepted:true,privacyAccepted:true,termsVersion:'2026-09-09',privacyVersion:'2026-09-09'});
+const c=await call('POST','/api/auth/register',{name:'ZOVRO Customer',phone:`1313${String(suffix).slice(-7)}`,password:'StrongPass22!',role:'customer',termsAccepted:true,privacyAccepted:true,termsVersion:'2026-09-27',privacyVersion:'2026-09-22'});
+const p=await call('POST','/api/auth/register',{name:'ZOVRO Provider',phone:`2484${String(suffix).slice(-7)}`,password:'StrongPass22!',role:'provider',service:'Roadside Assistance',termsAccepted:true,privacyAccepted:true,termsVersion:'2026-09-27',privacyVersion:'2026-09-22'});
 await call('PATCH','/api/provider/availability',{available:true},p.token);
 await call('POST','/api/provider/location',{lat:42.3223,lng:-83.1763,accuracy:10},p.token);
 const nearby=await call('GET','/api/providers/nearby?lat=42.315&lng=-83.19&service=Roadside%20Assistance',null,c.token);if(!nearby.providers.length)throw new Error('Nearby provider matching failed');
