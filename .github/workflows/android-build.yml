@@ -226,6 +226,11 @@ jobs:
           curl --fail-with-body --silent --show-error \
             --request POST \
             --header "Authorization: Bearer $GOOGLE_PLAY_ACCESS_TOKEN" \
+            "$API_ROOT/edits/$EDIT_ID:validate" >/dev/null
+
+          curl --fail-with-body --silent --show-error \
+            --request POST \
+            --header "Authorization: Bearer $GOOGLE_PLAY_ACCESS_TOKEN" \
             "$API_ROOT/edits/$EDIT_ID:commit?changesNotSentForReview=true&changesInReviewBehavior=ERROR_IF_IN_REVIEW" >/dev/null
 
-          echo "Google Play internal draft prepared for versionCode $UPLOADED_VERSION_CODE."
+          echo "Google Play internal draft validated and prepared for versionCode $UPLOADED_VERSION_CODE."
