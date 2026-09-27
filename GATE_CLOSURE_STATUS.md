@@ -1,6 +1,42 @@
 # ZOVRO Gate Closure Status
 
-Checkpoint: 2026-09-26
+Checkpoint: 2026-09-27
+
+## Authoritative current status — 2026-09-27
+
+All release gates that can be closed from the currently connected repository/Render environment are closed and verified on production source `c542b25fbec55ce192fc3b5d134ec90370a025fd`.
+
+### CLOSED — verified now
+- **Production source alignment:** GitHub branch `zovro-final-deploy` and live Render service `zovro-api-final` are aligned to commit `c542b25fbec55ce192fc3b5d134ec90370a025fd`.
+- **Full QA:** GitHub Actions run `36281580127` completed successfully on the production source.
+- **Android source/build verification:** `Build ZOVRO Android` run `36281580174` and `ZOVRO Android Release Verification` run `36281580130` completed successfully. Current artifacts include debug APK `10919291297`, unsigned release AAB `10918928089`, and Android release-candidate artifact `10919510492`.
+- **iOS source/build verification:** `ZOVRO iOS Release Verification` run `36281580276` completed successfully. Current unsigned simulator artifact is `10919431072`.
+- **Launch-fee safety:** production reports `platformFeeBps=0`; the server default is also 0 if `ZOVRO_PLATFORM_FEE_BPS` is absent, preventing an accidental return to the future 10% fee during the introductory launch period.
+- **Backend/runtime readiness:** production startup preflight reports `blockers=[]`, `externalLaunchReady=true`, durable PostgreSQL operational, OneSignal server credentials verified, Stripe configured, and password recovery configured.
+- **Durable production data startup:** PostgreSQL restore verified 34 production records on the current deployment.
+- **OneSignal backend + Android FCM:** server credential probe remains verified and Android FCM configuration is closed. Mobile source uses the verified OneSignal App ID `2d595bd4-61a1-40f2-9e8d-02900ab6f367`.
+- **Stripe platform integration/code:** payment configuration, webhook signature verification, durable webhook receipt/idempotency handling, refunds, transfers, and payment-state regression checks are closed at the repository/backend level. Production marketplace fee is 0% for launch.
+- **Password recovery:** secure email fallback and recovery worker path remain closed and operational.
+- **Support technical path:** `support@zovro.work` send/receive/policy-reply and scheduled alert delivery are verified. Existing human-review/rate-limited queue items remain operator work, not a software failure.
+- **Public legal/support URLs:** official `zovro.work` Privacy, Terms, and Support URLs are live and store metadata now points to those official URLs.
+- **Store metadata technical preparation:** en-US store metadata, bundle ID `com.zovro.app`, support identity, legal URLs, screenshot policy, and store-readiness checks are closed.
+- **Mobile signing/upload workflow code:** Android and iOS signing/upload workflows are implemented and guarded; unsigned builds prove the source compiles. Signing steps correctly skip when credentials are absent.
+- **Legal-review packet preparation:** technical preparation is closed; final human legal approval remains external.
+
+### OPEN — external evidence or credentials only
+- **APNs / Apple account:** Apple Developer authentication is not available in the current connected browser session. APNs key/capability, distribution certificate/profile, Apple team identity, and App Store Connect access cannot be completed from the current connection.
+- **Signed iOS distribution:** signed archive/IPA and TestFlight/App Store Connect upload require Apple signing credentials and authenticated Apple access.
+- **Signed Android distribution:** signed AAB and Play internal-track upload require the Android keystore/upload credentials and authenticated Google Play access.
+- **Physical-device acceptance:** real iPhone/Android GPS, SOS, biometric/password AutoFill, payments, push delivery, foreground/background/terminated notification behavior, and notification tap routing require signed physical-device builds.
+- **Push end-to-end:** Android FCM is configured, but real device subscription/delivery evidence remains required; iOS additionally requires APNs.
+- **Twilio/SMS:** production SMS remains intentionally disabled because Twilio authentication/A2P/number or Messaging Service credentials are not available in the current connected session. Do not enable or invent them.
+- **Store-console declarations/submission:** App Privacy/Data Safety reconciliation, final signed-build screenshots, content-rating/console tasks, and submission require authenticated Apple/Google console access.
+- **Final human legal approval:** technical packet is ready, but an authorized human reviewer must approve the launch documents.
+- **Human support review queue:** unresolved `human_review` and `rate_limited` items require operator disposition; the automated worker correctly does not auto-retry or auto-answer them.
+- **Isolated production backup/restore drill:** current durable startup/restore is verified; a separate isolated backup/restore/rollback exercise remains an operational evidence task and must not be performed destructively against production.
+
+This section supersedes older status statements below where they conflict. Historical evidence is retained for auditability.
+
 
 ## Authoritative current status — 2026-09-26
 
