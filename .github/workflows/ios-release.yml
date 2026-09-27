@@ -135,13 +135,11 @@ jobs:
             echo "::error::The provisioning profile team does not match ZOVRO_APPLE_TEAM_ID."
             exit 1
           fi
-          case "$PROFILE_APP_ID" in
-            *".com.zovro.app") ;;
-            *)
-              echo "::error::The provisioning profile does not authorize com.zovro.app."
-              exit 1
-              ;;
-          esac
+          EXPECTED_PROFILE_APP_ID="$APPLE_TEAM_ID.com.zovro.app"
+          if [[ "$PROFILE_APP_ID" != "$EXPECTED_PROFILE_APP_ID" ]]; then
+            echo "::error::The provisioning profile application identifier does not exactly match $EXPECTED_PROFILE_APP_ID."
+            exit 1
+          fi
           if [[ "$PROFILE_APS_ENV" != "production" ]]; then
             echo "::error::The provisioning profile does not authorize production APNs (aps-environment=production)."
             exit 1
