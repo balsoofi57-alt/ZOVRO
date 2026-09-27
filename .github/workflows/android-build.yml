@@ -77,9 +77,13 @@ jobs:
 
       - name: Verify Android project
         run: |
+          set -euo pipefail
           test -f android/gradlew
           test -f android/app/src/main/AndroidManifest.xml
-          grep -R -q 'com.zovro.app' android/app || true
+          if ! grep -R -E "applicationId[[:space:]]+[=]?[[:space:]]*['\"]com\.zovro\.app['\"]" android/app --include='build.gradle' --include='build.gradle.kts' >/dev/null 2>&1; then
+            echo "::error::Android applicationId is not com.zovro.app."
+            exit 1
+          fi
       - name: Build debug APK
         working-directory: android
         run: ./gradlew --no-daemon assembleDebug
