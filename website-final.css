@@ -31,3 +31,154 @@ button[onclick^="approveChangeOrder("]{display:none!important}
 .field label{display:block}.field input:not([type=checkbox]):not([type=radio]),.field select,.field textarea{width:100%;min-width:0;max-width:100%}.field .password-control{min-width:0}.field .password-control input{padding-right:52px!important}
 .z-document .wrap{padding-bottom:calc(70px + env(safe-area-inset-bottom));overflow-wrap:anywhere}.z-document p,.z-document li,.z-document small{color:var(--z-muted)}.z-document .brand img{display:block;width:180px;max-width:100%;height:auto}.z-document .back,.z-document .btn{display:inline-flex;align-items:center;justify-content:center;min-height:48px}.z-document h1{font-size:clamp(25px,6vw,34px);line-height:1.25}.z-document h2{line-height:1.35}
 .admin-wrap{padding-bottom:calc(80px + env(safe-area-inset-bottom))!important}.admin-wrap h1{font-size:clamp(26px,6vw,40px);line-height:1.2;overflow-wrap:anywhere}.admin-head a{min-height:44px;display:flex;align-items:center}.admin-head img{max-width:40%;height:auto!important}.admin-wrap .field{display:grid;gap:8px}.admin-wrap .field label{margin:0!important}.admin-wrap #adminShowPassword{justify-self:start}.admin-tools input{min-width:0!important;width:100%}.admin-actions{display:flex;flex-wrap:wrap;gap:12px;margin:18px 0}.admin-status:empty{display:none}@media(max-width:500px){.admin-tools{flex-direction:column}.admin-tools button,#adminLoginSubmit{width:100%}.admin-row>div{min-width:0;overflow-wrap:anywhere}}
+
+
+/* =========================================================
+   ZOVRO FINAL APP DESIGN LOCK — APPROVED 2026-09-26
+   VISUAL-ONLY OVERRIDE. DO NOT ALTER APP BUSINESS LOGIC.
+   Metallic silver dominant + midnight navy + restrained gold
+   + blue GPS accent. English-only customer-facing UI.
+   ========================================================= */
+:root{
+  --z-final-navy:#081522;
+  --z-final-navy2:#10263a;
+  --z-final-navy3:#17324c;
+  --z-final-silver:#dfe4ea;
+  --z-final-silver2:#b7c0ca;
+  --z-final-silver3:#8995a3;
+  --z-final-gold:#d3b36a;
+  --z-final-gold2:#b58d46;
+  --z-final-blue:#1677ff;
+  --z-final-white:#f8fafc;
+  --z-final-panel:#e9edf1;
+  --z-final-darkpanel:#142234;
+}
+body{
+  background:
+    radial-gradient(circle at 90% 0,rgba(31,70,110,.24),transparent 34%),
+    linear-gradient(180deg,#0b1622 0%,#101923 100%)!important;
+}
+.top{
+  background:linear-gradient(180deg,rgba(8,21,34,.98),rgba(12,27,43,.98))!important;
+  border-bottom:1px solid rgba(223,228,234,.22)!important;
+}
+.z-official-brand{filter:saturate(.85) contrast(1.05)}
+.hero{
+  background:
+    linear-gradient(180deg,rgba(8,21,34,.10),rgba(8,21,34,.80)),
+    radial-gradient(circle at 75% 25%,rgba(211,179,106,.16),transparent 30%),
+    linear-gradient(135deg,#10263a,#081522 70%)!important;
+  border:1px solid rgba(223,228,234,.34)!important;
+  box-shadow:0 18px 50px rgba(0,0,0,.28)!important;
+}
+.hero h1{color:var(--z-final-white)!important}
+.hero h1 span,.z-section-kicker{color:var(--z-final-gold)!important}
+.hero p{color:#d1d7df!important}
+.primary,.ok,.hero .primary,.modal .sheet .primary{
+  background:linear-gradient(180deg,#e1c784 0%,#caa85d 100%)!important;
+  border-color:#e5d19b!important;
+  color:#10151d!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.55)!important;
+}
+.ghost,.modal .sheet .ghost{
+  background:linear-gradient(180deg,#2a3848,#1b2939)!important;
+  border-color:#5e6d7f!important;
+  color:#f2f5f8!important;
+}
+.svc,.card,.feature,.trustItem,.z-steps>div,.z-smart-match,.z-nearby-cta,.z-provider-join,.z-support-strip{
+  background:linear-gradient(145deg,#243447,#172638)!important;
+  border-color:rgba(190,200,211,.30)!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.035)!important;
+}
+.svc{
+  color:#f8fafc!important;
+  position:relative;
+  overflow:hidden;
+}
+.svc:after{
+  content:"";
+  position:absolute;inset:auto -30% -55% auto;
+  width:120px;height:120px;border-radius:50%;
+  background:radial-gradient(circle,rgba(223,228,234,.14),transparent 66%);
+  pointer-events:none;
+}
+.svc span{
+  background:linear-gradient(145deg,#eef1f4,#b9c0c8)!important;
+  color:#0f2134!important;
+  border:1px solid #f5f6f8!important;
+  box-shadow:0 5px 14px rgba(0,0,0,.18);
+}
+.svc b{color:#fff!important}
+.svc small{color:#c5ccd5!important}
+.bottom{
+  background:rgba(9,20,32,.985)!important;
+  border-top:1px solid rgba(223,228,234,.30)!important;
+  border-left:1px solid rgba(223,228,234,.16)!important;
+  border-right:1px solid rgba(223,228,234,.16)!important;
+}
+.bottom button{
+  color:#b8c1cc!important;
+}
+.bottom button.active{
+  background:linear-gradient(180deg,rgba(211,179,106,.22),rgba(211,179,106,.08))!important;
+  color:#ecd493!important;
+}
+.modal .sheet{
+  background:linear-gradient(155deg,#203247,#111f2f)!important;
+  border-color:#7c8997!important;
+}
+.field input,.field select,.field textarea,.provider-service-search input,
+.modal .sheet input:not([type=checkbox]):not([type=radio]),
+.modal .sheet select,.modal .sheet textarea{
+  background:#eef1f4!important;
+  color:#111820!important;
+  border-color:#aab4bf!important;
+}
+.field input::placeholder,.field textarea::placeholder,input::placeholder,textarea::placeholder{
+  color:#66727f!important;
+}
+#trackingMap{
+  background:linear-gradient(145deg,#e6eaee,#bcc6d0)!important;
+  border:1px solid #9eabb8!important;
+  color:#10243a!important;
+}
+.msg{
+  background:#e7ebef!important;
+  color:#16202a!important;
+}
+.msg.me{
+  background:#d6e7ff!important;
+  color:#0f2238!important;
+}
+.tag{
+  background:#dbe4ee!important;
+  color:#17324c!important;
+  border-color:#aeb9c5!important;
+}
+.state{
+  background:#dfe4ea!important;
+  color:#14263a!important;
+  border-color:#f6f8fa!important;
+}
+.z-support-actions a:first-child{
+  color:#102030!important;
+  background:linear-gradient(180deg,#e0c88c,#c9aa65)!important;
+  border-color:#e4cf9e!important;
+}
+@media(max-width:700px){
+  .top{min-height:72px}
+  .hero{padding-top:24px!important}
+  .hero .bar{display:grid!important;grid-template-columns:1fr 1fr}
+  .hero .bar #sosButton{grid-column:1 / -1;width:100%!important}
+  .grid{grid-template-columns:repeat(3,minmax(0,1fr))!important}
+  .svc{min-height:128px!important;text-align:center!important}
+  .svc span{margin:0 auto}
+  .svc b{font-size:12px!important}
+  .svc small{display:none}
+  .bottom{padding-top:7px!important}
+}
+@media(max-width:420px){
+  .grid{grid-template-columns:repeat(3,minmax(0,1fr))!important}
+  .svc{padding:12px 8px!important;min-height:122px!important}
+  .svc span{width:42px;height:42px}
+}
