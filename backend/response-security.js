@@ -33,7 +33,12 @@ http.createServer=function(handler,...args){
       const merged={...base,...(headers||{})};
       return statusMessage===undefined?originalWriteHead(statusCode,merged):originalWriteHead(statusCode,statusMessage,merged);
     };
-    if(req.method==='OPTIONS'&&req.headers.origin&&allowedOrigins.has(String(req.headers.origin))){res.writeHead(204);return res.end()}
+    const origin=String(req.headers.origin||'');
+    if(production&&origin&&!allowedOrigins.has(origin)){
+      res.writeHead(403,{'content-type':'application/json; charset=utf-8','cache-control':'no-store'});
+      return res.end(JSON.stringify({error:'Origin not allowed'}));
+    }
+    if(req.method==='OPTIONS'&&origin&&allowedOrigins.has(origin)){res.writeHead(204);return res.end()}
     return handler(req,res);
   },...args);
 };
