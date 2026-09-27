@@ -57,6 +57,17 @@ jobs:
         with:
           node-version: '22'
 
+      - name: Require supported Xcode for App Store submission
+        run: |
+          set -euo pipefail
+          XCODE_VERSION=$(xcodebuild -version | awk '/Xcode/{print $2; exit}')
+          XCODE_MAJOR=${XCODE_VERSION%%.*}
+          if [[ -z "$XCODE_MAJOR" || "$XCODE_MAJOR" -lt 26 ]]; then
+            echo "::error::ZOVRO App Store builds require Xcode 26 or later; found Xcode $XCODE_VERSION."
+            exit 1
+          fi
+          echo "Using supported Xcode $XCODE_VERSION."
+
       - name: Install dependencies
         run: npm install --no-audit --no-fund
 
