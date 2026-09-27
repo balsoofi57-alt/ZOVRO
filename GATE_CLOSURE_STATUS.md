@@ -4,13 +4,13 @@ Checkpoint: 2026-09-27
 
 ## Authoritative current status — 2026-09-27
 
-All release gates that can be closed from the currently connected repository/Render environment are closed and verified on production source `c542b25fbec55ce192fc3b5d134ec90370a025fd`.
+All release gates that can be closed from the currently connected repository/Render environment are closed. The live Render runtime is `0520ef284712fb25266947815764b5d137fb1a6a`; later commits are documentation-only. The latest privacy/source verification commit `f4cd09a1c39c362d5068c541d506b1548eba3f24` passed Full QA and fresh Android/iOS builds.
 
 ### CLOSED — verified now
-- **Production runtime alignment:** live Render service `zovro-api-final` runs verified runtime commit `c542b25fbec55ce192fc3b5d134ec90370a025fd`. Commits after that point in `zovro-final-deploy` are release-status documentation only and do not change runtime behavior.
-- **Full QA:** GitHub Actions run `36281580127` completed successfully on the production source.
-- **Android source/build verification:** `Build ZOVRO Android` run `36281580174` and `ZOVRO Android Release Verification` run `36281580130` completed successfully. Current artifacts include debug APK `10919291297`, unsigned release AAB `10918928089`, and Android release-candidate artifact `10919510492`.
-- **iOS source/build verification:** `ZOVRO iOS Release Verification` run `36281580276` completed successfully. Current unsigned simulator artifact is `10919431072`.
+- **Production runtime alignment:** live Render service `zovro-api-final` runs commit `0520ef284712fb25266947815764b5d137fb1a6a`, including the refreshed privacy source. The branch head may be ahead only by release/status documentation.
+- **Full QA:** run `36281580127` passed on the zero-fee runtime source, and run `36282143065` passed after the privacy/Data Safety refresh.
+- **Android source/build verification:** `Build ZOVRO Android` run `36281580174` and `ZOVRO Android Release Verification` run `36281580130` passed on the runtime source. A fresh privacy-refresh Android build run `36282143053` also passed, producing debug APK artifact `10919186531` and unsigned AAB artifact `10918719256`.
+- **iOS source/build verification:** `ZOVRO iOS Release Verification` run `36281580276` passed on the runtime source. A fresh privacy-refresh iOS verification run `36282143069` also passed, producing unsigned simulator artifact `10919411649`.
 - **Launch-fee safety:** production reports `platformFeeBps=0`; the server default is also 0 if `ZOVRO_PLATFORM_FEE_BPS` is absent, preventing an accidental return to the future 10% fee during the introductory launch period.
 - **Backend/runtime readiness:** production startup preflight reports `blockers=[]`, `externalLaunchReady=true`, durable PostgreSQL operational, OneSignal server credentials verified, Stripe configured, and password recovery configured.
 - **Durable production data startup:** PostgreSQL restore verified 34 production records on the current deployment.
