@@ -51,7 +51,7 @@ local services, roadside assistance, handyman, mechanic, plumbing, electrical, H
 - Production signing materials are not stored in the repository.
 
 ## Current build status
-- Android release candidate: CI build completed successfully; unsigned release AAB requires Play upload signing.
+- Android release candidate: verified signed AAB is prepared for `com.zovro.app` version `1.0.0`, versionCode `10301`; remaining Android store work is Google Play acceptance/internal testing and signed-device acceptance.
 - iOS release candidate: CI simulator build completed successfully; App Store/TestFlight archive requires Apple signing.
 - Production PostgreSQL durable operation, Stripe platform readiness, password recovery, and support-mail operations are technically closed. OneSignal server credentials and Android FCM platform configuration are closed. Remaining external gates are iOS APNs, real-device push evidence, mobile signing credentials and signed builds, store upload/screenshots/declaration reconciliation, and final human legal approval.
 
