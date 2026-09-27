@@ -46,6 +46,7 @@ requireTokens('Android workflow', android, [
   'jarsigner -verify',
   'VERSION_CODE=$((GITHUB_RUN_NUMBER * 100 + GITHUB_RUN_ATTEMPT))',
   'tracks/internal',
+  'edits/$EDIT_ID:validate',
   'status:"draft"',
   'changesNotSentForReview=true',
   'changesInReviewBehavior=ERROR_IF_IN_REVIEW'
