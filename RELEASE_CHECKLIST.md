@@ -33,5 +33,16 @@
 - Final support inbox verification and store-facing support/legal declarations.
 - Final legal review appropriate to launch jurisdictions.
 
+## Final locked-design release verification — 2026-09-27
+- FINAL_UI_DESIGN_LOCK.md is committed on main; approved visual direction is locked while preserving existing application behavior.
+- Full QA passed on the locked-design build (GitHub Actions run 36292990105).
+- Android release verification passed on the locked-design build (run 36292990073); artifact: zovro-android-release-candidate. The workflow currently produces a debug APK and an **unsigned** release AAB.
+- iOS release verification passed on the locked-design build (run 36292990064); artifact: zovro-ios-release-candidate. The workflow currently produces an **unsigned simulator** app archive.
+- GitHub Pages deployment completed successfully after the design lock, and https://zovro.work is publicly reachable.
+- Automated Google Play Console inspection could not enter the authenticated console because no persistent Play Console browser profile/credentials were available. No store-submission state was changed.
+
+### Remaining store-release blocker
+The source/build gates are green, but the generated Android and iOS artifacts are not store-signable submissions. Production launch still requires the authorized store signing identity / upload key and authenticated Google Play / App Store Connect access. Do not mark the mobile app as publicly launched until those signed artifacts are accepted by the stores.
+
 ## Release rule
 Do not describe ZOVRO as fully launched or all external gates as closed until the external evidence above is verified. Do not enable live SMS merely to satisfy a test.
