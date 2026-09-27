@@ -33,8 +33,10 @@ All release gates that can be closed from the currently connected repository/Ren
 - **Twilio/SMS:** production SMS remains intentionally disabled because Twilio authentication/A2P/number or Messaging Service credentials are not available in the current connected session. Do not enable or invent them.
 - **Store-console declarations/submission:** App Privacy/Data Safety reconciliation, final signed-build screenshots, content-rating/console tasks, and submission require authenticated Apple/Google console access.
 - **Final human legal approval:** technical packet is ready, but an authorized human reviewer must approve the launch documents.
-- **Human support review queue:** current overdue items are traced to owner-generated ZOVRO verification traffic from September 24, including explicit `human review` and `rate-limit verification` test messages. They are not evidence of a software failure or an unidentified customer backlog. Formal receipt dispositions can still be recorded later from a protected operator shell, but this no longer blocks technical launch readiness.
-- **Production-provider backup/restore:** current durable startup/restore is verified. The isolated technical backup/restore gate is CLOSED: support-mail CI run `35997572052` passed, and its PostgreSQL integration performs logical `pg_dump`/`psql` restore while preserving cursor, reservations, review dispositions, and replay prevention. A provider-level production backup/restore exercise remains external and must not be performed destructively against the live database.
+
+### NON-BLOCKING OPERATIONS
+- **Support review receipts:** remaining overdue items are owner-generated verification traffic from September 24, not an unidentified customer backlog. Optional operator dispositions can be recorded later.
+- **Provider-level backup/restore drill:** isolated PostgreSQL dump/restore evidence is already CLOSED via CI run `35997572052`. Any provider-level production backup/restore exercise is optional operational evidence and must not be performed destructively against live production.
 
 This section supersedes older status statements below where they conflict. Historical evidence is retained for auditability.
 
