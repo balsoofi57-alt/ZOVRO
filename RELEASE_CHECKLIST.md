@@ -27,6 +27,9 @@ Verified checkpoint: 2026-09-27
 - App Privacy / Google Play Data Safety worksheet technical preparation
 - Official `zovro.work` Privacy, Terms and Support URLs verified
 - Mobile signing/upload workflow code for Android and iOS
+- Xcode 26+ App Store CI guard and exact iOS provisioning identity checks
+- Google Play edit validation before commit and exact Android application ID checks
+- Twilio/SMS source-side safety: exact signed inbound/status routes, STOP/START/HELP handling, delivery-status persistence, and fail-closed activation
 - Legal review packet preparation
 
 ## External launch gates still open
@@ -35,7 +38,7 @@ Verified checkpoint: 2026-09-27
 - Android keystore/Play upload credentials, signed AAB, internal test-track acceptance and Play submission
 - Signed physical-device GPS/SOS/Face ID/payment/push tests
 - Real OneSignal device subscription/delivery/tap evidence; iOS additionally requires APNs
-- Twilio sender/A2P/number or Messaging Service readiness and real opt-in/reply/STOP evidence before enabling live SMS
+- Twilio external activation only: sender/A2P/number or Messaging Service readiness, credentials, and real opt-in/reply/STOP/delivery evidence before enabling live SMS
 - Final signed-build screenshots and store-console privacy/data-safety/content-rating declarations
 - Final human legal review appropriate to launch jurisdictions
 - Provider-level production backup/restore exercise if desired for operational evidence; do not perform destructively against live production
