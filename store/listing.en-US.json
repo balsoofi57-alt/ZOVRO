@@ -22,7 +22,8 @@
     "keywords": "local services,roadside,handyman,mechanic,plumber,HVAC,moving,home repair",
     "primaryCategory": "Lifestyle",
     "secondaryCategory": "Utilities",
-    "reviewNotes": "Use test accounts supplied privately in App Store Connect: one customer and one provider. Review request creation, provider acceptance, messaging, status updates, account deletion, password recovery, and SOS marketplace-assistance flows. ZOVRO SOS does not replace 911. Production secrets and review credentials are not stored in this repository. Push delivery should be evaluated only after the submitted signed build has a registered OneSignal device subscription."
+    "reviewNotes": "Use test accounts supplied privately in App Store Connect: one customer and one provider. Review request creation, provider acceptance, messaging, status updates, account deletion, password recovery, and SOS marketplace-assistance flows. ZOVRO SOS does not replace 911. Production secrets and review credentials are not stored in this repository. Push delivery should be evaluated only after the submitted signed build has a registered OneSignal device subscription.",
+    "releaseNotes": "Initial ZOVRO 1.0.0 internal release for validating customer/provider service requests, nearby matching, messaging, job status, account recovery and deletion, payments, location-dependent features, and notification readiness."
   },
   "googlePlay": {
     "appName": "ZOVRO",
@@ -34,7 +35,8 @@
       "local services",
       "roadside assistance",
       "moving"
-    ]
+    ],
+    "releaseNotes": "Initial ZOVRO 1.0.0 internal test build for validating customer and provider flows, nearby service requests, messaging, job tracking, account recovery and deletion, payments, location-dependent features, and notification readiness."
   },
   "screenshots": {
     "capturePolicy": "Capture only from the final signed release candidate with synthetic accounts, no personal data, no real customer addresses, and no production secrets or identifiers visible.",
