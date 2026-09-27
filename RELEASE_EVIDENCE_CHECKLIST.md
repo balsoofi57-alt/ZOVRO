@@ -48,7 +48,7 @@ Source: Render service/deploy tools and read-only endpoint/log checks refreshed 
 - Live URL: https://zovro-api-final.onrender.com
 - Latest runtime-verified deployed source: `7ce40e787d4ca01ccb724ade93fa72a2ddd7a3c4`.
 - Latest observed startup preflight reports `dbMirrorMode=durable`, `postgresRuntimeReady=true`, `durableOperational=true`, `blockers=[]`, and `externalLaunchReady=true`.
-- PostgreSQL is running in durable mode. The latest verified startup restore recovered 13 records and reported `verified=true`; isolated backup/restore and rollback evidence remains a separate operational gate.
+- PostgreSQL is running in durable mode. The latest verified production startup restore on 2026-09-27 recovered 40 records and reported `verified=true`; live health/readiness report `database=postgres-durable`, `mirrorMode=durable`, and `postgresOperational=true`. Provider-level backup/restore remains an external operational exercise.
 - Public [Privacy](https://zovro-web.onrender.com/privacy.html), [Terms](https://zovro-web.onrender.com/terms.html), and [Support](https://zovro-web.onrender.com/support.html) pages returned HTTP 200 during the latest verification. Inbox monitoring and legal approval are separate gates.
 
 ## Live Stripe observations
