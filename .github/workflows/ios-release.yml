@@ -50,3 +50,10 @@ jobs:
           retention-days: 14
           if-no-files-found: error
           path: ZOVRO-iOS-Simulator-Release.zip
+
+      # App Store signing is intentionally gated until Apple signing credentials are configured.
+      # Required repository secrets for the signed-device/TestFlight gate:
+      # ZOVRO_IOS_CERTIFICATE_P12_BASE64
+      # ZOVRO_IOS_CERTIFICATE_PASSWORD
+      # ZOVRO_IOS_PROVISIONING_PROFILE_BASE64
+      # ZOVRO_APPLE_TEAM_ID
