@@ -30,7 +30,7 @@
     const wrap=document.createElement('div');
     wrap.id='zLegalConsentWrap';
     wrap.className='field';
-    wrap.innerHTML='<label style="display:flex;gap:10px;align-items:flex-start;font-weight:700;line-height:1.45"><input id="zLegalConsent" type="checkbox" required style="width:20px;height:20px;flex:0 0 20px;margin-top:2px"><span>I agree to the <a href="terms.html" target="_blank" rel="noopener">Terms of Service</a> and acknowledge the <a href="privacy.html" target="_blank" rel="noopener">Privacy Policy</a>.</span></label><div id="zLegalConsentError" role="alert" aria-live="polite" style="display:none;margin-top:7px;color:#ffb4b4;font-size:12px">Please accept the Terms of Service and Privacy Policy to create your account.</div>';
+    wrap.innerHTML='<label style="display:flex;gap:10px;align-items:flex-start;font-weight:700;line-height:1.45"><input id="zLegalConsent" type="checkbox" required style="width:20px;height:20px;flex:0 0 20px;margin-top:2px"><span>I agree to the <a href="terms.html" target="_blank" rel="noopener">Terms of Service</a> and acknowledge the <a href="privacy.html" target="_blank" rel="noopener">Privacy Policy</a>.</span></label><fieldset id="zLawfulUseAttestation" style="margin:16px 0 0;border:1px solid #69717f;border-radius:12px;padding:14px"><legend style="font-weight:800;padding:0 6px">Lawful use & responsibility</legend><p style="margin:4px 0 12px;font-size:13px;line-height:1.55">Do you agree to use ZOVRO only for lawful purposes, comply with all laws and licensing requirements that apply to you, and accept responsibility for your own conduct, requests, services, statements, and transactions?</p><label style="display:flex;gap:8px;align-items:center;margin:8px 0"><input type="radio" name="zLawfulUse" value="yes"> <span>Yes, I agree</span></label><label style="display:flex;gap:8px;align-items:center;margin:8px 0"><input type="radio" name="zLawfulUse" value="no"> <span>No</span></label></fieldset><div id="zLegalConsentError" role="alert" aria-live="polite" style="display:none;margin-top:7px;color:#ffb4b4;font-size:12px">Please accept the Terms, Privacy Policy, and lawful-use responsibility statement to create your account.</div>';
     registerFields.appendChild(wrap);
   }
   function installRegistrationConsentTransport(){
@@ -43,8 +43,10 @@
         const consent=document.getElementById('zLegalConsent');
         if(consent?.checked){
           const headers=new Headers(init.headers||(input&&input.headers)||{});
-          headers.set('X-ZOVRO-Terms-Version','2026-09-09');
-          headers.set('X-ZOVRO-Privacy-Version','2026-09-09');
+          headers.set('X-ZOVRO-Terms-Version','2026-09-27');
+          headers.set('X-ZOVRO-Privacy-Version','2026-09-22');
+          const lawful=document.querySelector('input[name="zLawfulUse"]:checked');
+          if(lawful?.value==='yes')headers.set('X-ZOVRO-Lawful-Use-Attestation','accepted-v1');
           init={...init,headers};
         }
       }
@@ -153,7 +155,10 @@
           if(legacy)legacy.value=(firstValue+' '+lastValue).replace(/\s+/g,' ').trim();
           const consent=document.getElementById('zLegalConsent');
           const error=document.getElementById('zLegalConsentError');
+          const lawful=document.querySelector('input[name="zLawfulUse"]:checked');
           if(!consent?.checked){if(error)error.style.display='block';consent?.focus();call('toast','Please accept the Terms and Privacy Policy');return}
+          if(!lawful){if(error)error.style.display='block';document.getElementById('zLawfulUseAttestation')?.scrollIntoView({behavior:'smooth',block:'center'});call('toast','Please answer the lawful-use responsibility question');return}
+          if(lawful.value!=='yes'){if(error)error.style.display='block';call('toast','You must agree to lawful use and personal responsibility to create a ZOVRO account');return}
           if(error)error.style.display='none';
         }
         return originalSubmitAuth.apply(this,arguments);
