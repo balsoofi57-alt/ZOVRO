@@ -49,6 +49,28 @@ function load(env={}){
   assert.strictEqual(sms.deliveryStatus('sent'),'sent');
   assert.strictEqual(sms.deliveryStatus('unknown'),'ignore');
 
+  const deliveredRow={status:'sent'};
+  assert.strictEqual(sms.applyDeliveryStatus(deliveredRow,{MessageStatus:'delivered'},'2026-09-27T00:00:00.000Z'),true);
+  assert.strictEqual(deliveredRow.status,'delivered');
+  assert.strictEqual(deliveredRow.deliveryStatus,'delivered');
+  assert.strictEqual(deliveredRow.deliveredAt,'2026-09-27T00:00:00.000Z');
+  assert.strictEqual(sms.applyDeliveryStatus(deliveredRow,{MessageStatus:'sent'},'2026-09-27T00:01:00.000Z'),false);
+  assert.strictEqual(deliveredRow.status,'delivered');
+  assert.strictEqual(deliveredRow.deliveryStatus,'delivered');
+
+  const failedRow={status:'sent'};
+  assert.strictEqual(sms.applyDeliveryStatus(failedRow,{MessageStatus:'undelivered',ErrorCode:'30003'},'2026-09-27T00:02:00.000Z'),true);
+  assert.strictEqual(failedRow.status,'failed');
+  assert.strictEqual(failedRow.deliveryStatus,'failed');
+  assert.strictEqual(failedRow.failureCode,'30003');
+  assert.strictEqual(sms.applyDeliveryStatus(failedRow,{MessageStatus:'queued'},'2026-09-27T00:03:00.000Z'),false);
+  assert.strictEqual(failedRow.status,'failed');
+
+  const queuedRow={status:'sent'};
+  assert.strictEqual(sms.applyDeliveryStatus(queuedRow,{MessageStatus:'queued'},'2026-09-27T00:04:00.000Z'),true);
+  assert.strictEqual(queuedRow.status,'sent');
+  assert.strictEqual(queuedRow.deliveryStatus,'sent');
+
   sms=load({ZOVRO_SMS_ENABLED:'false',TWILIO_AUTH_TOKEN:token});
   s=sms.safeStatus();
   assert.strictEqual(s.enabled,false);
