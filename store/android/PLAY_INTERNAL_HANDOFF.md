@@ -45,3 +45,12 @@ Never upload:
 - GitHub secret values,
 - service-account JSON,
 - customer/provider production data.
+
+## Signed AAB version identity
+
+- Version name: `1.0.0`
+- Version code: `10301`
+- Source Android build: GitHub Actions `Build ZOVRO Android` run `36286478475` (run number 103, attempt 1).
+- Workflow version formula: `GITHUB_RUN_NUMBER * 100 + GITHUB_RUN_ATTEMPT`.
+- Package ID: `com.zovro.app`.
+- Signed AAB SHA-256: `33cafb468b038a120c4c937e9e3a5a4d1af8901acbae8114a82894256456c71d`.
