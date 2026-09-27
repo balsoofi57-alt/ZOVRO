@@ -29,20 +29,15 @@ Current release state (verified September 22, 2026):
 - PostgreSQL service: `zovro-production-db`.
 - Production is currently in `ZOVRO_DB_MIRROR_MODE=durable`.
 - Current production startup evidence reports `postgresRuntimeReady=true`, `durableOperational=true`, and no startup blockers.
-- The latest verified PostgreSQL restore on September 22, 2026 restored 13 records and reported `verified=true`.
+- The latest verified production startup restore on September 27, 2026 restored 40 records and reported `verified=true` (`users=4`, `requests=7`, `messages=1`, `audit=25`, `deviceSessions=3`, with remaining tracked tables at zero at that checkpoint).
 - Keep backup/restore and rollback procedures available and re-verify persistence after material database or deployment changes.
 
-Safe production cutover:
-1. Confirm the PostgreSQL service is available on a permanent plan with backup/restore capability.
-2. Keep `ZOVRO_DB_MIRROR_MODE=mirror`.
-3. Generate representative non-empty customer/provider/request/message/notification/session/audit data through the application.
-4. Run `cd backend && DATABASE_URL='***' npm run db:verify:postgres`.
-5. Run `cd backend && DATABASE_URL='***' npm run db:verify:cutover`.
-6. Require schema version 5, `nonEmpty=true`, equal SQLite/PostgreSQL row counts, matching SHA-256 content fingerprints for every domain table, and no mismatches.
-7. Restart/redeploy while still in mirror mode and rerun strict verification; the same records must remain present and matched.
-8. Test a PostgreSQL backup and restore into a separate verification database, then rerun schema/content verification against the restored database.
-9. Record the rollback path to the prior verified deployment.
-10. Only after every mirror check passes, switch to durable PostgreSQL and rerun health/readiness, strict persistence checks and the full end-to-end suite.
+Production cutover status:
+- The cutover from mirror validation to `ZOVRO_DB_MIRROR_MODE=durable` is complete.
+- Live `/api/health` reports `database=postgres-durable`.
+- Live `/api/ready` reports `ready=true`, `mirrorMode=durable`, and `postgresOperational=true`.
+- On every production startup, PostgreSQL state is restored into the local runtime cache and table counts are verified before the service is considered operational.
+- Keep backup/restore and rollback procedures available and repeat persistence validation after material schema, database, or deployment changes.
 
 ## Payments
 Do not enable paid production jobs until all of these exist:
