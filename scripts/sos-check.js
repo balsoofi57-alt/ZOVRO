@@ -24,11 +24,11 @@ async function frontend(){
 async function backend(){
  const data=fs.mkdtempSync(path.join(os.tmpdir(),'zovro-sos-'));
  const net=require('node:net');const probe=net.createServer();await new Promise(r=>probe.listen(0,'127.0.0.1',r));const port=probe.address().port;await new Promise(r=>probe.close(r));
- const server=spawn(process.execPath,['backend/server-core.js'],{cwd:root,env:{...process.env,PORT:String(port),NODE_ENV:'production',ZOVRO_DATA_DIR:data,ZOVRO_DB_MIRROR_MODE:'off',DATABASE_URL:'',ONESIGNAL_REST_API_KEY:'',ZOVRO_SECRET:'sos-local-test-secret-12345678901234567890',ZOVRO_OPS_TOKEN:'sos-local-test-ops-1234567890'},stdio:'ignore'});
+ let serverLog='';const server=spawn(process.execPath,['backend/server-core.js'],{cwd:root,env:{...process.env,PORT:String(port),NODE_ENV:'production',ZOVRO_DATA_DIR:data,ZOVRO_DB_MIRROR_MODE:'off',DATABASE_URL:'',ONESIGNAL_REST_API_KEY:'',ZOVRO_SECRET:'sos-local-test-secret-12345678901234567890',ZOVRO_OPS_TOKEN:'sos-local-test-ops-1234567890'},stdio:['ignore','pipe','pipe']});server.stdout.on('data',d=>{serverLog=(serverLog+d).slice(-8000)});server.stderr.on('data',d=>{serverLog=(serverLog+d).slice(-8000)});
  const base=`http://127.0.0.1:${port}`;
  const call=async(method,url,payload,token)=>{const r=await fetch(base+url,{method,headers:{'content-type':'application/json',...(token?{authorization:'Bearer '+token}:{})},body:payload?JSON.stringify(payload):undefined});return {status:r.status,data:await r.json()}};
  try{
-  let ready=false;for(let i=0;i<50;i++){try{if((await call('GET','/api/health')).status===200){ready=true;break}}catch{}await new Promise(r=>setTimeout(r,50))}assert.ok(ready,'Backend ready');
+  let ready=false;for(let i=0;i<200;i++){try{if((await call('GET','/api/health')).status===200){ready=true;break}}catch{}if(server.exitCode!==null||server.signalCode!==null)break;await new Promise(r=>setTimeout(r,50))}assert.ok(ready,'Backend ready. Startup log: '+serverLog);
   const register=async(role,phone)=>{const r=await call('POST','/api/auth/register',{name:'SOS Test '+role,phone,password:'StrongPass22!',role,service:'Roadside Assistance'});assert.equal(r.status,201);return r.data};
   const c=await register('customer','13135550101'),p=await register('provider','13135550102');
   await call('POST','/api/provider/location',{lat:42.32,lng:-83.18,accuracy:10},p.token);
