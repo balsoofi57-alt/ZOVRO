@@ -4,7 +4,7 @@ Checkpoint: 2026-09-27
 
 ## Authoritative current status — 2026-09-27
 
-All release gates that can be closed from the currently connected repository/Render environment are closed. The live Render runtime is `0520ef284712fb25266947815764b5d137fb1a6a`. The latest release-workflow hardening source `97a6b0666612259a322f7b87fda5a91b361195f1` passed Full QA, Android build, Android release verification, and iOS release verification. Changes after the live runtime are workflow and documentation hardening only.
+All release gates that can be closed from the currently connected repository/Render environment are closed. The live Render runtime is `aa6e040820314cd1515dd46635e5e8da0e6527b4`. The latest release-workflow hardening source `97a6b0666612259a322f7b87fda5a91b361195f1` passed Full QA, Android build, Android release verification, and iOS release verification. Changes after the live runtime are workflow and documentation hardening only.
 
 ### CLOSED — verified now
 - **Official-origin CORS compatibility:** CLOSED. A live browser smoke test on `https://zovro.work/` after CORS hardening showed the page fully rendered with `API Live - 1.0.0`, populated service data, and no CORS/network error. CI simultaneously enforces HTTP 403 for an untrusted `https://evil.example` origin, so the official origin remains functional while untrusted origins are rejected.
