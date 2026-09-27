@@ -45,13 +45,13 @@ All release gates that can be closed from the currently connected repository/Ren
 - **Legal-review packet preparation:** technical preparation is closed; final human legal approval remains external.
 
 ### OPEN — external evidence or credentials only
-- **APNs / Apple account:** Apple Developer authentication is not available in the current connected browser session. APNs key/capability, distribution certificate/profile, Apple team identity, and App Store Connect access cannot be completed from the current connection.
-- **Signed iOS distribution:** signed archive/IPA and TestFlight/App Store Connect upload require Apple signing credentials and authenticated Apple access.
+- **Apple account / APNs:** CSR generation and the repository-side iOS signing handoff are prepared. Remaining external evidence is authenticated Apple Developer/App Store Connect access, Apple Distribution certificate issuance, an App Store provisioning profile for exact `com.zovro.app` with `aps-environment=production`, Apple Team ID, and App Store Connect API access.
+- **Signed iOS distribution:** repository workflow, Xcode compatibility checks, CSR, and signing-secret preparation helper are complete. Remaining external evidence is the Apple-issued distribution certificate/provisioning profile, resulting signed archive/IPA, TestFlight processing, and signed-device acceptance.
 - **Android Play distribution:** the signed AAB and dedicated ZOVRO upload key are prepared and verified. Remaining external evidence is Google Play Console acceptance of that signed AAB, assignment of a Play version code, Internal testing rollout/availability, and signed-device installation/acceptance.
 - **Physical-device acceptance:** real iPhone/Android GPS, SOS, biometric/password AutoFill, payments, push delivery, foreground/background/terminated notification behavior, and notification tap routing require signed physical-device builds.
 - **Push end-to-end:** Android FCM is configured, but real device subscription/delivery evidence remains required; iOS additionally requires APNs.
 - **Twilio/SMS external activation:** production SMS remains intentionally disabled until Twilio authentication, A2P/sender readiness, physical-number or Messaging Service credentials, and real opt-in/reply/STOP evidence are available. Source-side SMS safety is CLOSED: production now fails closed unless both exact HTTPS callback routes are configured, verifies Twilio signatures, processes STOP/START/HELP preferences, tracks delivery status by `MessageSid`, and leaves SMS disabled when the status callback is absent.
-- **Store-console declarations/submission:** App Privacy/Data Safety reconciliation, final signed-build screenshots, content-rating/console tasks, and submission require authenticated Apple/Google console access.
+- **Store-console declarations/submission:** consolidated Data Safety/App Privacy/content-rating/reviewer-note handoff and signed-device screenshot policy are prepared in source. Remaining external work is entering/reconciling those answers against the final signed builds in authenticated Apple/Google consoles, capturing final signed-build screenshots, and completing submission.
 - **Final human legal approval:** technical packet is ready, but an authorized human reviewer must approve the launch documents.
 
 ### NON-BLOCKING OPERATIONS
