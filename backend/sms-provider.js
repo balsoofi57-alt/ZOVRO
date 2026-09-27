@@ -59,6 +59,26 @@ function deliveryStatus(v){
   if(['accepted','queued','sending','sent'].includes(s))return 'sent';
   return 'ignore';
 }
+function applyDeliveryStatus(row,params,now=new Date().toISOString()){
+  if(!row)return false;
+  const delivery=deliveryStatus(params?.MessageStatus||params?.SmsStatus);
+  if(delivery==='ignore')return false;
+  if(['delivered','failed'].includes(row.status)&&row.status!==delivery)return false;
+  let changed=row.deliveryStatus!==delivery;
+  row.deliveryStatus=delivery;
+  row.deliveryUpdatedAt=now;
+  if(delivery==='delivered'){
+    if(row.status!=='delivered')changed=true;
+    row.status='delivered';row.deliveredAt=now;delete row.failureCode;delete row.failedAt;
+  }else if(delivery==='failed'){
+    if(row.status!=='failed')changed=true;
+    row.status='failed';row.failedAt=now;row.failureCode=String(params?.ErrorCode||params?.MessageStatus||params?.SmsStatus||'delivery_failed').slice(0,64);
+  }else if(delivery==='sent'&&!['delivered','failed'].includes(row.status)){
+    if(row.status!=='sent')changed=true;
+    row.status='sent';
+  }
+  return changed;
+}
 function validTwilioSignature({signature,url,params}){
   if(!AUTH_TOKEN||!signature||!url)return false;
   const base=Object.keys(params||{}).sort().reduce((s,k)=>s+k+String(params[k]??''),url);
@@ -66,4 +86,4 @@ function validTwilioSignature({signature,url,params}){
   const a=Buffer.from(expected),b=Buffer.from(String(signature));
   return a.length===b.length&&crypto.timingSafeEqual(a,b);
 }
-module.exports={sendSms,safeStatus,inboundPreference,deliveryStatus,validTwilioSignature,MAX_ATTEMPTS};
+module.exports={sendSms,safeStatus,inboundPreference,deliveryStatus,applyDeliveryStatus,validTwilioSignature,MAX_ATTEMPTS};
