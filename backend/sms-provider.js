@@ -11,12 +11,12 @@ const INBOUND_URL=String(process.env.ZOVRO_SMS_INBOUND_URL||'').trim();
 const MAX_ATTEMPTS=Math.max(1,Math.min(5,Number(process.env.ZOVRO_SMS_MAX_ATTEMPTS||3)));
 const TIMEOUT_MS=Math.max(1000,Math.min(15000,Number(process.env.ZOVRO_SMS_TIMEOUT_MS||7000)));
 
-function httpsUrl(v){try{return new URL(String(v||'')).protocol==='https:'}catch{return false}}
+function httpsRoute(v,path){try{const u=new URL(String(v||''));return u.protocol==='https:'&&u.pathname===path}catch{return false}}
 function configured(){
-  return Boolean(ENABLED&&/^AC[a-f0-9]{32}$/i.test(ACCOUNT_SID)&&AUTH_TOKEN.length>=20&&(FROM||/^MG[a-f0-9]{32}$/i.test(MESSAGING_SERVICE_SID))&&httpsUrl(STATUS_CALLBACK)&&httpsUrl(INBOUND_URL));
+  return Boolean(ENABLED&&/^AC[a-f0-9]{32}$/i.test(ACCOUNT_SID)&&AUTH_TOKEN.length>=20&&(FROM||/^MG[a-f0-9]{32}$/i.test(MESSAGING_SERVICE_SID))&&httpsRoute(STATUS_CALLBACK,'/api/sms/twilio/status')&&httpsRoute(INBOUND_URL,'/api/sms/twilio/inbound'));
 }
 function safeStatus(){
-  return {enabled:ENABLED,configured:configured(),fromConfigured:Boolean(FROM||MESSAGING_SERVICE_SID),statusCallbackConfigured:httpsUrl(STATUS_CALLBACK),inboundUrlConfigured:httpsUrl(INBOUND_URL),maxAttempts:MAX_ATTEMPTS};
+  return {enabled:ENABLED,configured:configured(),fromConfigured:Boolean(FROM||MESSAGING_SERVICE_SID),statusCallbackConfigured:httpsRoute(STATUS_CALLBACK,'/api/sms/twilio/status'),inboundUrlConfigured:httpsRoute(INBOUND_URL,'/api/sms/twilio/inbound'),maxAttempts:MAX_ATTEMPTS};
 }
 function formBody(to,body){
   const p=new URLSearchParams({To:to,Body:body});
