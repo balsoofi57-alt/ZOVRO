@@ -3,7 +3,7 @@
 Version: 1.0.0
 Bundle/App ID: com.zovro.app
 
-This file is a submission-prep worksheet for Apple App Privacy and Google Play Data Safety. It reflects the current ZOVRO source and verified production integrations as of September 26, 2026. Recheck it after the final signed mobile build and after any future analytics, crash reporting, advertising, attribution, or additional third-party SDK is added.
+This file is a submission-prep worksheet for Apple App Privacy and Google Play Data Safety. It reflects the current ZOVRO source and verified production integrations as of September 27, 2026. Recheck it after the final signed mobile build and after any future analytics, crash reporting, advertising, attribution, or additional third-party SDK is added.
 
 ## Data currently handled by ZOVRO source
 
@@ -45,7 +45,7 @@ Purpose: application security, reliability, fraud/abuse prevention, and operatio
 - Location is requested only when a location-dependent feature is used.
 - Account deletion is available in-app.
 - Production payments use Stripe; payment-card details are handled by Stripe rather than being stored as raw card data by ZOVRO.
-- Push uses the OneSignal SDK and external user identity binding. The current OneSignal production credential is not yet verified and no physical-device subscription exists yet, so final device-ID/push declarations must be rechecked after the first signed-device registration.
+- Push uses the OneSignal SDK and external user identity binding. Production OneSignal server credentials and Android FCM configuration are verified. Physical-device subscription/delivery is not yet proven, and iOS APNs remains external, so final device-ID/push declarations must still be rechecked after signed-device registration.
 - ZOVRO uses durable PostgreSQL in production.
 - Support operates through support@zovro.work and in-app support workflows.
 - Production secrets must never be committed to the repository.
@@ -74,7 +74,7 @@ For each declared type, verify whether the final integration transmits data off-
 
 ## Final submission checks
 1. Stripe/payment integration has been technically verified; keep the declaration aligned with the actual signed mobile payment flow.
-2. Re-run after OneSignal/APNs/FCM device push is final and a real device subscription exists.
+2. Re-run after APNs and signed-device push are final and a real device subscription exists; Android FCM platform configuration is already verified.
 3. Re-run after final signed iOS and Android builds are produced.
 4. Re-run after any analytics, crash reporting, ads, or attribution SDK is added.
 5. Ensure store declarations match the live privacy policy exactly.
