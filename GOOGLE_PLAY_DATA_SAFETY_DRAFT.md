@@ -96,3 +96,13 @@ Inspected the generated `zovro-android-release-candidate` AAB from the successfu
 - Stripe and OneSignal resources/classes are present, consistent with the payment and push integrations already documented.
 
 This supports the Play Console Advertising ID declaration of **No** and confirms that location/push/payment SDK disclosures must be considered in Data Safety.
+
+
+## Third-party SDK evidence
+### Stripe mobile SDK
+Stripe documents that its mobile SDK may process payment information, customer/user identifiers, device characteristics, and product-interaction data for app functionality, analytics, and fraud prevention. ZOVRO uses Stripe PaymentSheet and customer-specific ephemeral keys when available. Treat payment information, purchase history, user/customer IDs, and SDK interaction data conservatively in the final Play disclosure.
+
+### OneSignal mobile SDK
+OneSignal documents processing of mobile/device identifiers, IP address, device/OS/network/language/time-zone information, app interaction/session information, and push-notification delivery/engagement data. OneSignal's current privacy policy states that it does not collect Android Advertising IDs or IDFAs. ZOVRO's current integration logs the ZOVRO external user ID into OneSignal and requests notification permission; it does not intentionally send precise service location to OneSignal.
+
+These SDK disclosures reinforce selecting Device or other IDs and App interactions in the Data Safety form and support keeping Advertising ID = No.
