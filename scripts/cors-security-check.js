@@ -15,6 +15,7 @@ const backend=path.resolve(__dirname,'../backend'),port=18923,base=`http://127.0
   r=await fetch(base+'/api/payments/config',{method:'OPTIONS',headers:{origin:'capacitor://localhost','access-control-request-method':'GET'}});
   if(r.status!==204||r.headers.get('access-control-allow-origin')!=='capacitor://localhost')throw new Error('CORS preflight failed');
   r=await fetch(base+'/api/payments/config',{headers:{origin:'https://evil.example'}});
+  if(r.status!==403)throw new Error('Untrusted origin was not rejected with HTTP 403');
   if(r.headers.get('access-control-allow-origin'))throw new Error('Untrusted origin was allowed');
   console.log('ZOVRO wrapper CORS/security check passed.');
  }finally{child.kill('SIGTERM');await sleep(200)}
