@@ -3,8 +3,8 @@ const http=require('http'),crypto=require('crypto');
 const {readDb,writeDb}=require('./database');
 const originalCreateServer=http.createServer.bind(http);
 const SECRET=String(process.env.ZOVRO_SECRET||'dev-only-change-before-production');
-const TERMS_VERSION='2026-09-09';
-const PRIVACY_VERSION='2026-09-09';
+const TERMS_VERSION='2026-09-27';
+const PRIVACY_VERSION='2026-09-22';
 const REQUEST_VERSION='service-request-v1';
 
 function json(res,code,obj){if(res.headersSent)return;res.writeHead(code,{'content-type':'application/json; charset=utf-8','cache-control':'no-store'});res.end(JSON.stringify(obj))}
