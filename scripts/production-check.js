@@ -9,6 +9,7 @@ const d=fs.readFileSync(path.join(root,'backend','database.js'),'utf8');if(!core
 const wrapper=fs.readFileSync(path.join(root,'backend','server.js'),'utf8'),payments=fs.readFileSync(path.join(root,'backend','payments.js'),'utf8');
 const preflight=fs.existsSync(preflightPath)?fs.readFileSync(preflightPath,'utf8'):'';
 for(const token of ['countMismatch','PostgreSQL restore table-count verification failed','mirrorWriteSafe=true']){if(!d.includes(token)){console.error('Durable database verification guard missing:',token);bad=true}}
+if(!d.includes("MIRROR_MODE==='durable'&&postgresOperational?'postgres-durable'")||!d.includes("MIRROR_MODE==='mirror'&&postgresOperational?'sqlite+postgres-mirror'")){console.error('Database engine labels must distinguish durable Postgres from mirror mode');bad=true}
 if(!wrapper.includes("require('./startup-preflight')")||!preflight.includes('postgresRuntimeReady')||!preflight.includes('mirrorOperational')||!preflight.includes('durableOperational')){console.error('Postgres readiness guard missing');bad=true}
 const mobileWrapperPath=path.join(root,'backend','server-mobile-payments.js');
 const directPayment=wrapper.includes('server-payments');
