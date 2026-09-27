@@ -45,6 +45,11 @@ local services, roadside assistance, handyman, mechanic, plumbing, electrical, H
 - Final store-console privacy/data-safety questionnaires based on the signed production build
 - Final legal review for launch jurisdictions
 
+## Release workflow safeguards
+- Android signing/upload requires exact `com.zovro.app`, verifies signed AABs, uploads only to the internal track as a draft, validates the Google Play edit before commit, and refuses to disturb an existing review.
+- iOS signing requires an exact `APPLE_TEAM_ID.com.zovro.app` provisioning identity, production APNs entitlement, and Xcode 26 or later before App Store archive/export.
+- Production signing materials are not stored in the repository.
+
 ## Current build status
 - Android release candidate: CI build completed successfully; unsigned release AAB requires Play upload signing.
 - iOS release candidate: CI simulator build completed successfully; App Store/TestFlight archive requires Apple signing.
