@@ -44,5 +44,21 @@
 ### Remaining store-release blocker
 The source/build gates are green, but the generated Android and iOS artifacts are not store-signable submissions. Production launch still requires the authorized store signing identity / upload key and authenticated Google Play / App Store Connect access. Do not mark the mobile app as publicly launched until those signed artifacts are accepted by the stores.
 
+## Google Play Console progress — 2026-09-27
+Verified and saved in Play Console for com.zovro.app:
+- Developer/account/organization/contact verification complete.
+- Privacy policy declaration complete: https://zovro.work/privacy.html
+- Ads declaration complete: app declared as not containing ads.
+- Government apps declaration complete: not a government app.
+- Health apps declaration complete: app does not have health features.
+- Advertising ID declaration complete: app declared as not using Advertising ID.
+- Financial features declaration complete: app does not provide the listed financial products; ordinary service marketplace payments are processed separately through Stripe.
+- Default store listing text saved as draft: app name, short description, and full description complete.
+- Dedicated Google Play reviewer customer account created and login verified; Play Console sign-in-details entry remains pending because automated insertion of the reviewer password is intentionally blocked as a sensitive credential action.
+- Content rating questionnaire inspected but not submitted; IARC Terms acceptance remains owner-controlled.
+- Target audience questionnaire inspected but not saved; age-target selection remains an owner/product policy decision.
+- Data Safety questionnaire inspected; evidence-backed draft completion is in progress. Do not certify/submit until the complete data-type mapping is verified.
+- Internal testing release exists as draft but has no signed AAB uploaded yet.
+
 ## Release rule
 Do not describe ZOVRO as fully launched or all external gates as closed until the external evidence above is verified. Do not enable live SMS merely to satisfy a test.
