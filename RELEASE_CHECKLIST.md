@@ -57,7 +57,9 @@ Verified and saved in Play Console for com.zovro.app:
 - Dedicated Google Play reviewer customer account created and login verified; Play Console sign-in-details entry remains pending because automated insertion of the reviewer password is intentionally blocked as a sensitive credential action.
 - Content rating questionnaire inspected but not submitted; IARC Terms acceptance remains owner-controlled.
 - Target audience questionnaire inspected but not saved; age-target selection remains an owner/product policy decision.
-- Data Safety questionnaire inspected; evidence-backed draft completion is in progress. Do not certify/submit until the complete data-type mapping is verified.
+- Data Safety questionnaire inspected; evidence-backed draft completion is in progress. Verified draft answers include collection=Yes, encryption in transit=Yes, username/password account creation, no external account login, and public deletion-request support at https://zovro.work/support.html#delete-account. Selected data types are being limited to those directly supported by source/privacy evidence; do not certify/submit until handling purposes are fully verified.
+- Store category is already set to Travel & Local; no category change is required.
+- Latest QA after lawful-use/account-deletion legal updates is green; Android and iOS release verification remain green.
 - Internal testing release exists as draft but has no signed AAB uploaded yet.
 
 ## Release rule
