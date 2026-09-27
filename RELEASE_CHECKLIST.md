@@ -1,6 +1,8 @@
 # ZOVRO 1.0 Launch Checklist
 
-## Completed in source/build
+Verified checkpoint: 2026-09-27
+
+## Completed in source/build/connected production
 - Production-connected web experience
 - Customer/provider registration and login
 - Nearby provider search and urgent dispatch
@@ -12,17 +14,28 @@
 - Mobile packaging preparation and release checks
 - Public support contact selected and embedded in source: `support@zovro.work`
 - Durable production PostgreSQL runtime with verified startup restore
-- Live Stripe account charge/payout readiness with successful live payment and linked refund evidence
-- Android/iOS source and unsigned release build verification
+- Isolated PostgreSQL backup/restore integration evidence in support-mail CI
+- Live Stripe account charge/payout readiness, signed webhook delivery, live payment and refund evidence
+- Stripe webhook signature verification, durable event receipt/idempotency and retry safety
+- Launch marketplace fee fixed at 0% in Render and as the server default
+- OneSignal backend credentials verified
+- Android FCM platform configuration verified
+- Android build + Android Release Verification successful on current verified runtime source
+- iOS Release Verification successful on current verified runtime source
+- `support@zovro.work` send/receive/policy-reply/monitoring evidence
+- Store metadata technical preparation
+- App Privacy / Google Play Data Safety worksheet technical preparation
+- Official `zovro.work` Privacy, Terms and Support URLs verified
+- Mobile signing/upload workflow code for Android and iOS
+- Legal review packet preparation
 
-## External launch gates
-- Verify isolated database backup/restore and rollback procedure
-- Capture successful signed live Stripe webhook POST delivery and processing evidence
-- Complete OneSignal APNs/FCM setup and signed physical-device push delivery/tap evidence
-- Complete Twilio sender/A2P readiness and physical-number opt-in/reply/STOP evidence before enabling live SMS
-- Verify final GPS/SOS behavior on signed physical-device builds
-- Verify `support@zovro.work` mailbox delivery and monitoring
-- Apple Developer/App Store Connect distribution signing, TestFlight and submission
-- Google Play Console production signing, test-track upload and submission
-- Final store privacy/data-safety declarations and public legal URL verification
-- Final legal review appropriate to launch jurisdictions
+## External launch gates still open
+- Apple Developer/App Store Connect authentication and APNs production configuration
+- iOS distribution signing, signed IPA, TestFlight processing and App Store submission
+- Android keystore/Play upload credentials, signed AAB, internal test-track acceptance and Play submission
+- Signed physical-device GPS/SOS/Face ID/payment/push tests
+- Real OneSignal device subscription/delivery/tap evidence; iOS additionally requires APNs
+- Twilio sender/A2P/number or Messaging Service readiness and real opt-in/reply/STOP evidence before enabling live SMS
+- Final signed-build screenshots and store-console privacy/data-safety/content-rating declarations
+- Final human legal review appropriate to launch jurisdictions
+- Provider-level production backup/restore exercise if desired for operational evidence; do not perform destructively against live production
