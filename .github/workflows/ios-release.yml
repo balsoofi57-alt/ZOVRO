@@ -60,7 +60,9 @@ jobs:
       - name: Require supported Xcode for App Store submission
         run: |
           set -euo pipefail
-          XCODE_VERSION=$(xcodebuild -version | awk '/Xcode/{print $2; exit}')
+          XCODE_INFO=$(xcodebuild -version)
+          printf '%s\n' "$XCODE_INFO"
+          XCODE_VERSION=$(printf '%s\n' "$XCODE_INFO" | awk '/^Xcode /{print $2}' | head -n 1)
           XCODE_MAJOR=${XCODE_VERSION%%.*}
           if [[ -z "$XCODE_MAJOR" || "$XCODE_MAJOR" -lt 26 ]]; then
             echo "::error::ZOVRO App Store builds require Xcode 26 or later; found Xcode $XCODE_VERSION."
