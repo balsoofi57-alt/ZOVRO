@@ -1,7 +1,7 @@
 # ZOVRO Store Submission Pack
 
 Version: 1.0.0
-Status checkpoint: September 26, 2026
+Status checkpoint: September 27, 2026
 App ID / Bundle ID: com.zovro.app
 App name: ZOVRO
 Public support email: support@zovro.work
@@ -42,12 +42,12 @@ local services, roadside assistance, handyman, mechanic, plumbing, electrical, H
 - Final store screenshots and promotional graphics
 - Apple Developer signing credentials and App Store Connect access
 - Google Play Console signing/upload credentials
-- Final privacy declarations/data-safety questionnaires based on the production configuration
+- Final store-console privacy/data-safety questionnaires based on the signed production build
 - Final legal review for launch jurisdictions
 
 ## Current build status
 - Android release candidate: CI build completed successfully; unsigned release AAB requires Play upload signing.
 - iOS release candidate: CI simulator build completed successfully; App Store/TestFlight archive requires Apple signing.
-- Production PostgreSQL durable operation, Stripe platform readiness, password recovery, and support-mail operations are technically closed. Remaining external gates are valid OneSignal/APNs/FCM credentials and real-device push evidence, mobile signing credentials and signed builds, store upload/screenshots/declaration reconciliation, and final human legal approval.
+- Production PostgreSQL durable operation, Stripe platform readiness, password recovery, and support-mail operations are technically closed. OneSignal server credentials and Android FCM platform configuration are closed. Remaining external gates are iOS APNs, real-device push evidence, mobile signing credentials and signed builds, store upload/screenshots/declaration reconciliation, and final human legal approval.
 
 Do not commit production secrets or signing credentials to this repository.
