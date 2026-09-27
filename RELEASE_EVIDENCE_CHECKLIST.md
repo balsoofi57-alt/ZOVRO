@@ -1,5 +1,25 @@
 # ZOVRO release evidence checklist
 
+## Authoritative update — 2026-09-27
+
+The current source/build/runtime evidence supersedes the older 2026-09-22 status below where they conflict.
+
+- Verified runtime source on Render: `c542b25fbec55ce192fc3b5d134ec90370a025fd`.
+- Full QA run `36281580127`: PASS.
+- Android Build run `36281580174`: PASS; debug APK and unsigned release AAB produced.
+- Android Release Verification run `36281580130`: PASS.
+- iOS Release Verification run `36281580276`: PASS; unsigned simulator artifact produced.
+- Production launch readiness: `launchReady=true`, `blockers=[]`.
+- Durable PostgreSQL startup restore: 34 records verified.
+- Stripe platform payment/webhook lifecycle: CLOSED based on live signed webhook acceptance/payment/refund evidence plus idempotency and failure-path regression tests.
+- Launch marketplace fee: 0% in production and 0% as the server fallback default.
+- OneSignal server credentials: VERIFIED; Android FCM platform configuration: CLOSED.
+- Support operations technical path: CLOSED; send/receive/policy replies/alerts verified. Current overdue queue corresponds to owner-generated verification traffic, not an unidentified customer backlog.
+- Isolated PostgreSQL dump/restore evidence: CLOSED via support-mail CI run `35997572052`; provider-level production backup/restore remains external.
+- Official store/legal URLs now use `https://zovro.work/privacy.html`, `/terms.html`, and `/support.html`.
+- App Privacy / Data Safety technical worksheet refreshed for verified OneSignal/FCM state.
+- Remaining launch gates are external only: Apple/APNs/signing/TestFlight, Android signing/Play, physical-device acceptance, Twilio/A2P/live SMS evidence, store-console declarations/screenshots, and final human legal approval.
+
 Verified checkpoint: 2026-09-22. Repository evidence refreshed after production-source reconciliation. Owner: ZOVRO release maintainer (automated checks performed by Codex).
 Release PR: [#1](https://github.com/balsoofi57-alt/ZOVRO/pull/1), Draft. Source and production branches remain separate; no store launch is claimed.
 
