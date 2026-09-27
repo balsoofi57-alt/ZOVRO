@@ -7,7 +7,7 @@ Checkpoint: 2026-09-27
 All release gates that can be closed from the currently connected repository/Render environment are closed and verified on production source `c542b25fbec55ce192fc3b5d134ec90370a025fd`.
 
 ### CLOSED — verified now
-- **Production source alignment:** GitHub branch `zovro-final-deploy` and live Render service `zovro-api-final` are aligned to commit `c542b25fbec55ce192fc3b5d134ec90370a025fd`.
+- **Production runtime alignment:** live Render service `zovro-api-final` runs verified runtime commit `c542b25fbec55ce192fc3b5d134ec90370a025fd`. Commits after that point in `zovro-final-deploy` are release-status documentation only and do not change runtime behavior.
 - **Full QA:** GitHub Actions run `36281580127` completed successfully on the production source.
 - **Android source/build verification:** `Build ZOVRO Android` run `36281580174` and `ZOVRO Android Release Verification` run `36281580130` completed successfully. Current artifacts include debug APK `10919291297`, unsigned release AAB `10918928089`, and Android release-candidate artifact `10919510492`.
 - **iOS source/build verification:** `ZOVRO iOS Release Verification` run `36281580276` completed successfully. Current unsigned simulator artifact is `10919431072`.
