@@ -87,3 +87,12 @@ Before the final Play Console certification:
 3. confirm OneSignal/Stripe disclosures against their current SDK behavior;
 4. verify which fields Google Play treats as "shared" versus service-provider processing;
 5. verify optional/required flags and purposes for every selected data type.
+
+## Native Android release artifact evidence — 2026-09-27
+Inspected the generated `zovro-android-release-candidate` AAB from the successful Android release workflow.
+- No `com.google.android.gms.permission.AD_ID` string present in the release DEX/manifest evidence inspected.
+- No Google Mobile Ads / AdMob SDK class strings detected.
+- Expected permissions detected: `ACCESS_FINE_LOCATION`, `ACCESS_COARSE_LOCATION`, `POST_NOTIFICATIONS`, and `INTERNET`.
+- Stripe and OneSignal resources/classes are present, consistent with the payment and push integrations already documented.
+
+This supports the Play Console Advertising ID declaration of **No** and confirms that location/push/payment SDK disclosures must be considered in Data Safety.
