@@ -160,7 +160,7 @@ async function createRequest(){
  }
  const attempt=requestAttempt;requestSending=true;lockRequestForm(true);button.disabled=true;button.textContent='Sending…';requestMessage('Sending your request…');
  try{
-  const out=await api('/requests',{method:'POST',headers:{'X-ZOVRO-Terms-Version':'2026-09-09','X-ZOVRO-Privacy-Version':'2026-09-09','X-ZOVRO-Request-Consent':'service-request-v1'},body:JSON.stringify(attempt.payload)});
+  const out=await api('/requests',{method:'POST',headers:{'X-ZOVRO-Terms-Version':'2026-09-27','X-ZOVRO-Privacy-Version':'2026-09-22','X-ZOVRO-Request-Consent':'service-request-v1'},body:JSON.stringify(attempt.payload)});
   if(!out.request?.id)throw Error('The server did not confirm your request.');
   if(me?.id!==owner||requestAttempt!==attempt)return;
   requestAttempt=null;closeModal('requestModal');
