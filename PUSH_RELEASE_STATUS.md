@@ -1,4 +1,12 @@
 
+## Connector-account discrepancy note — 2026-09-27
+
+- The currently connected OneSignal MCP session can list a different app ID (`7992b022-6c11-4a66-bad4-8cbd114266d0`) and cannot access production app ID `2d595bd4-61a1-40f2-9e8d-02900ab6f367` with its current API permissions.
+- This connector-session mismatch must **not** be used to overwrite the production mobile/backend App ID.
+- Render production logs repeatedly show the production OneSignal credential probe succeeding with `ok=true`, expected validation status `400`, `oneSignalCredentialsVerified=true`, and `blockers=[]` through the current live deployment.
+- Therefore the production OneSignal configuration remains authoritative until an authenticated OneSignal session with access to the production app proves otherwise.
+- Real-device subscription/delivery evidence is still required before end-to-end push is marked PASS.
+
 ## Live verification — 2026-09-26
 
 - Google Android (FCM) platform configuration is now **PASS**: Firebase project `ZOVRO` was created, the Firebase Admin SDK service-account JSON was uploaded directly to OneSignal, OneSignal confirmed settings and SDK selection saved, and Push & In-App is Active. Physical-device delivery is still pending a signed Android build and a real subscription.
