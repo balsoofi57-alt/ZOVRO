@@ -31,8 +31,8 @@
 ## External launch gates still requiring real-world/account evidence
 - Stripe durable webhook idempotency/receipt storage is verified and deployed: append-only receipts persist in PostgreSQL, concurrent deliveries are serialized, duplicate replays are rejected safely across restart scenarios, and signed delivery/signature verification are verified. Payout capability/readiness is enabled; no completed provider payout has yet been observed.
 - OneSignal physical-device delivery/tap evidence remains open; Android FCM configuration is already closed, while iOS APNs configuration remains open.
-- Twilio SMS: A2P/sender approval plus physical-number opt-in, reply, and STOP evidence before enabling live SMS.
-- Apple Developer/App Store Connect: distribution signing, archive/TestFlight, store metadata and submission.
+- Twilio source-side SMS safety is closed and live: exact inbound/status callback routes, Twilio signature validation, STOP/START/HELP handling, delivery-state persistence, duplicate-send prevention, and fail-closed activation are implemented. Remaining external work is only Twilio Business Profile/A2P correction/approval, sender configuration, and real opt-in/reply/STOP/delivery evidence.
+- Apple/iOS workflow readiness is closed in source: Xcode 26+ guard, exact Team/App ID validation, production APNs entitlement check, signed archive/IPA export, TestFlight validation/upload path, and temporary-secret cleanup are implemented. Remaining external work is Apple Developer/App Store Connect authentication plus the actual certificate/profile/API credentials, signed IPA/TestFlight processing, APNs and physical-device acceptance.
 - Google Play Console: Android upload-key readiness is verified (public certificate fingerprints and signed-AAB SHA-256 recorded; CI supports signed AAB creation). Remaining: authenticated Play upload/internal-track acceptance, console declarations, and submission.
 - Final legal review appropriate to launch jurisdictions.
 
