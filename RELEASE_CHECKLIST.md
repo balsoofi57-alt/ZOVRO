@@ -21,6 +21,7 @@
 - Stripe card_payments and transfers capabilities are active, and a default USD bank account is connected for payouts.
 - Stripe production webhook endpoint is enabled at the ZOVRO production API and subscribes to payment_intent.succeeded, payment_intent.payment_failed, charge.refunded and transfer.reversed.
 - A real live $1.00 PaymentIntent succeeded, and a real $1.00 refund for that PaymentIntent also succeeded.
+- Stripe production delivery/signature evidence is verified: payment_intent.succeeded and charge.refunded recovered successfully with HTTP 200, while an unsigned POST was rejected with HTTP 400.
 - The previous Stripe company.tax_id / EIN verification blocker is no longer present in current account requirements.
 - OneSignal app connection is confirmed, but message history currently contains 0 notifications; signed-device push delivery/open evidence is therefore still pending.
 
@@ -28,7 +29,7 @@
 - Support inbox delivery verified on 2026-09-28: messages sent to support@zovro.work reached the company inbox, automated policy replies were received, and overdue-review alerts were delivered successfully.
 
 ## External launch gates still requiring real-world/account evidence
-- Stripe: confirm signed production webhook POST delivery/signature-verification evidence for the live payment/refund events and preserve idempotency evidence. Payout capability/readiness is enabled; no completed payout has yet been observed.
+- Stripe: preserve durable production idempotency/receipt evidence across restarts and concurrent delivery; signed delivery and signature verification are already verified. Payout capability/readiness is enabled; no completed provider payout has yet been observed.
 - OneSignal/APNs/FCM: physical-device notification delivery and tap/open evidence.
 - Twilio SMS: A2P/sender approval plus physical-number opt-in, reply, and STOP evidence before enabling live SMS.
 - Apple Developer/App Store Connect: distribution signing, archive/TestFlight, store metadata and submission.
