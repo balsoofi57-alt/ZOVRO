@@ -27,6 +27,8 @@
 
 - Public store-review legal pages verified live on 2026-09-28: https://zovro.work/privacy.html includes current third-party SDK and deletion language, and https://zovro.work/support.html#delete-account exposes direct account-deletion instructions.
 - Support inbox delivery verified on 2026-09-28: messages sent to support@zovro.work reached the company inbox, automated policy replies were received, and overdue-review alerts were delivered successfully.
+- Live production recheck on 2026-09-28: `/api/health` returned `ok=true`, `/api/ready` returned `ready=true`, database=`postgres-durable`, and `/api/launch-readiness` returned `launchReady=true` with `blockers=[]`.
+- Support-mail cron remains operational on a 10-minute schedule; recent runs completed successfully and password-recovery email tasks were 0 at the latest checks.
 
 ## External launch gates still requiring real-world/account evidence
 - Stripe durable webhook idempotency/receipt storage is verified and deployed: append-only receipts persist in PostgreSQL, concurrent deliveries are serialized, duplicate replays are rejected safely across restart scenarios, and signed delivery/signature verification are verified. Payout capability/readiness is enabled; no completed provider payout has yet been observed.
