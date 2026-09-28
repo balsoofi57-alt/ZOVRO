@@ -25,6 +25,7 @@
 - OneSignal app connection is confirmed, but message history currently contains 0 notifications; signed-device push delivery/open evidence is therefore still pending.
 
 - Public store-review legal pages verified live on 2026-09-28: https://zovro.work/privacy.html includes current third-party SDK and deletion language, and https://zovro.work/support.html#delete-account exposes direct account-deletion instructions.
+- Support inbox delivery verified on 2026-09-28: messages sent to support@zovro.work reached the company inbox, automated policy replies were received, and overdue-review alerts were delivered successfully.
 
 ## External launch gates still requiring real-world/account evidence
 - Stripe: confirm signed production webhook POST delivery/signature-verification evidence for the live payment/refund events and preserve idempotency evidence. Payout capability/readiness is enabled; no completed payout has yet been observed.
@@ -32,7 +33,6 @@
 - Twilio SMS: A2P/sender approval plus physical-number opt-in, reply, and STOP evidence before enabling live SMS.
 - Apple Developer/App Store Connect: distribution signing, archive/TestFlight, store metadata and submission.
 - Google Play Console: production signing/internal testing, organization/phone verification, store metadata and submission.
-- Final support inbox verification and store-facing support/legal declarations.
 - Final legal review appropriate to launch jurisdictions.
 
 ## Final locked-design release verification — 2026-09-27
