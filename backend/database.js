@@ -64,7 +64,7 @@ async function initDurable(){
 function migrateLegacy(){const count=db.prepare('SELECT COUNT(*) n FROM users').get().n;if(count===0&&fs.existsSync(LEGACY)){try{const old=JSON.parse(fs.readFileSync(LEGACY,'utf8'));writeDb(old,{suppressMirror:true,suppressPush:true});fs.renameSync(LEGACY,LEGACY+'.stage13.backup');console.log('Migrated legacy JSON data to SQLite.')}catch(e){console.error('Legacy migration skipped:',e.message)}}}
 migrateLegacy();migrateWorkflowAudit();db.prepare("INSERT OR REPLACE INTO meta(key,value) VALUES('schemaVersion',?)").run(String(SCHEMA_VERSION));
 function closeDb(){try{db.exec('PRAGMA wal_checkpoint(TRUNCATE)')}catch{}try{db.close()}catch{}}
-function dbInfo(){return {engine:MIRROR_MODE==='off'?'sqlite':postgresOperational?'sqlite+postgres-mirror':'sqlite',schemaVersion:SCHEMA_VERSION,file:SQLITE,mirrorMode:MIRROR_MODE,postgresConfigured:mirror.enabled(),postgresOperational,postgresError,mirrorWriteSafe}}
+function dbInfo(){const engine=MIRROR_MODE==='durable'&&postgresOperational?'postgres-durable':MIRROR_MODE==='mirror'&&postgresOperational?'sqlite+postgres-mirror':'sqlite';return {engine,schemaVersion:SCHEMA_VERSION,file:SQLITE,mirrorMode:MIRROR_MODE,postgresConfigured:mirror.enabled(),postgresOperational,postgresError,mirrorWriteSafe}}
 // Receipts are append-only and deliberately outside replace-all application snapshots.
 async function findPaymentEventReceipt(eventId){
  if(MIRROR_MODE==='durable'){
