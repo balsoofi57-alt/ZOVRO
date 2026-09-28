@@ -24,6 +24,8 @@
 - The previous Stripe company.tax_id / EIN verification blocker is no longer present in current account requirements.
 - OneSignal app connection is confirmed, but message history currently contains 0 notifications; signed-device push delivery/open evidence is therefore still pending.
 
+- Public store-review legal pages verified live on 2026-09-28: https://zovro.work/privacy.html includes current third-party SDK and deletion language, and https://zovro.work/support.html#delete-account exposes direct account-deletion instructions.
+
 ## External launch gates still requiring real-world/account evidence
 - Stripe: confirm signed production webhook POST delivery/signature-verification evidence for the live payment/refund events and preserve idempotency evidence. Payout capability/readiness is enabled; no completed payout has yet been observed.
 - OneSignal/APNs/FCM: physical-device notification delivery and tap/open evidence.
