@@ -39,13 +39,13 @@
 ## Final locked-design release verification — 2026-09-27
 - FINAL_UI_DESIGN_LOCK.md is committed on main; approved visual direction is locked while preserving existing application behavior.
 - Full QA passed on the locked-design build (GitHub Actions run 36292990105).
-- Android release verification passed on the locked-design build (run 36292990073); artifact: zovro-android-release-candidate. The workflow currently produces a debug APK and an **unsigned** release AAB.
+- Android release verification passed on the locked-design build (run 36292990073). A dedicated upload key and signed ZOVRO 1.0.0 AAB are now prepared and verified separately; signed AAB SHA-256 is `33cafb468b038a120c4c937e9e3a5a4d1af8901acbae8114a82894256456c71d`. Play Console acceptance remains external.
 - iOS release verification passed on the locked-design build (run 36292990064); artifact: zovro-ios-release-candidate. The workflow currently produces an **unsigned simulator** app archive.
 - GitHub Pages deployment completed successfully after the design lock, and https://zovro.work is publicly reachable.
 - Automated Google Play Console inspection could not enter the authenticated console because no persistent Play Console browser profile/credentials were available. No store-submission state was changed.
 
 ### Remaining store-release blocker
-The source/build gates are green, but the generated Android and iOS artifacts are not store-signable submissions. Production launch still requires the authorized store signing identity / upload key and authenticated Google Play / App Store Connect access. Do not mark the mobile app as publicly launched until those signed artifacts are accepted by the stores.
+The source/build gates are green. Android now has a verified dedicated upload key and signed AAB ready for Play acceptance. iOS still lacks the Apple-issued signing credentials needed for a signed IPA. Production launch still requires authenticated Google Play/App Store Connect access, Play internal-track acceptance, iOS signing/TestFlight, and signed-device acceptance. Do not mark the mobile app as publicly launched until store/device evidence is complete.
 
 ## Google Play Console progress — 2026-09-27
 Verified and saved in Play Console for com.zovro.app:
