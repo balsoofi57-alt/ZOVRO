@@ -6,15 +6,17 @@ const ACCOUNT_SID=String(process.env.TWILIO_ACCOUNT_SID||'');
 const AUTH_TOKEN=String(process.env.TWILIO_AUTH_TOKEN||'');
 const FROM=String(process.env.TWILIO_FROM_NUMBER||'');
 const MESSAGING_SERVICE_SID=String(process.env.TWILIO_MESSAGING_SERVICE_SID||'');
-const STATUS_CALLBACK=String(process.env.ZOVRO_SMS_STATUS_CALLBACK_URL||'');
+const STATUS_CALLBACK=String(process.env.ZOVRO_SMS_STATUS_CALLBACK_URL||'').trim();
+const INBOUND_URL=String(process.env.ZOVRO_SMS_INBOUND_URL||'').trim();
 const MAX_ATTEMPTS=Math.max(1,Math.min(5,Number(process.env.ZOVRO_SMS_MAX_ATTEMPTS||3)));
 const TIMEOUT_MS=Math.max(1000,Math.min(15000,Number(process.env.ZOVRO_SMS_TIMEOUT_MS||7000)));
 
+function httpsRoute(v,path){try{const u=new URL(String(v||''));return u.protocol==='https:'&&u.pathname===path}catch{return false}}
 function configured(){
-  return Boolean(ENABLED&&/^AC[a-f0-9]{32}$/i.test(ACCOUNT_SID)&&AUTH_TOKEN.length>=20&&(FROM||/^MG[a-f0-9]{32}$/i.test(MESSAGING_SERVICE_SID)));
+  return Boolean(ENABLED&&/^AC[a-f0-9]{32}$/i.test(ACCOUNT_SID)&&AUTH_TOKEN.length>=20&&(FROM||/^MG[a-f0-9]{32}$/i.test(MESSAGING_SERVICE_SID))&&httpsRoute(STATUS_CALLBACK,'/api/sms/twilio/status')&&httpsRoute(INBOUND_URL,'/api/sms/twilio/inbound'));
 }
 function safeStatus(){
-  return {enabled:ENABLED,configured:configured(),fromConfigured:Boolean(FROM||MESSAGING_SERVICE_SID),statusCallbackConfigured:Boolean(STATUS_CALLBACK),maxAttempts:MAX_ATTEMPTS};
+  return {enabled:ENABLED,configured:configured(),fromConfigured:Boolean(FROM||MESSAGING_SERVICE_SID),statusCallbackConfigured:httpsRoute(STATUS_CALLBACK,'/api/sms/twilio/status'),inboundUrlConfigured:httpsRoute(INBOUND_URL,'/api/sms/twilio/inbound'),maxAttempts:MAX_ATTEMPTS};
 }
 function formBody(to,body){
   const p=new URLSearchParams({To:to,Body:body});
@@ -50,6 +52,33 @@ function inboundPreference(body,optOutType){
   if(['HELP','INFO'].includes(k))return 'help';
   return 'ignore';
 }
+function deliveryStatus(v){
+  const s=String(v||'').trim().toLowerCase();
+  if(['delivered'].includes(s))return 'delivered';
+  if(['failed','undelivered'].includes(s))return 'failed';
+  if(['accepted','queued','sending','sent'].includes(s))return 'sent';
+  return 'ignore';
+}
+function applyDeliveryStatus(row,params,now=new Date().toISOString()){
+  if(!row)return false;
+  const delivery=deliveryStatus(params?.MessageStatus||params?.SmsStatus);
+  if(delivery==='ignore')return false;
+  if(['delivered','failed'].includes(row.status)&&row.status!==delivery)return false;
+  let changed=row.deliveryStatus!==delivery;
+  row.deliveryStatus=delivery;
+  row.deliveryUpdatedAt=now;
+  if(delivery==='delivered'){
+    if(row.status!=='delivered')changed=true;
+    row.status='delivered';row.deliveredAt=now;delete row.failureCode;delete row.failedAt;
+  }else if(delivery==='failed'){
+    if(row.status!=='failed')changed=true;
+    row.status='failed';row.failedAt=now;row.failureCode=String(params?.ErrorCode||params?.MessageStatus||params?.SmsStatus||'delivery_failed').slice(0,64);
+  }else if(delivery==='sent'&&!['delivered','failed'].includes(row.status)){
+    if(row.status!=='sent')changed=true;
+    row.status='sent';
+  }
+  return changed;
+}
 function validTwilioSignature({signature,url,params}){
   if(!AUTH_TOKEN||!signature||!url)return false;
   const base=Object.keys(params||{}).sort().reduce((s,k)=>s+k+String(params[k]??''),url);
@@ -57,4 +86,4 @@ function validTwilioSignature({signature,url,params}){
   const a=Buffer.from(expected),b=Buffer.from(String(signature));
   return a.length===b.length&&crypto.timingSafeEqual(a,b);
 }
-module.exports={sendSms,safeStatus,inboundPreference,validTwilioSignature,MAX_ATTEMPTS};
+module.exports={sendSms,safeStatus,inboundPreference,deliveryStatus,applyDeliveryStatus,validTwilioSignature,MAX_ATTEMPTS};
