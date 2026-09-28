@@ -23,14 +23,14 @@
 - A real live $1.00 PaymentIntent succeeded, and a real $1.00 refund for that PaymentIntent also succeeded.
 - Stripe production delivery/signature evidence is verified: payment_intent.succeeded and charge.refunded recovered successfully with HTTP 200, while an unsigned POST was rejected with HTTP 400.
 - The previous Stripe company.tax_id / EIN verification blocker is no longer present in current account requirements.
-- OneSignal app connection is confirmed, but message history currently contains 0 notifications; signed-device push delivery/open evidence is therefore still pending.
+- OneSignal backend credentials are verified in production (`oneSignalCredentialsVerified=true` with successful credential probes), and Android FCM platform configuration is closed. Message history/device subscriptions still require signed physical-device delivery/open evidence; iOS APNs remains open.
 
 - Public store-review legal pages verified live on 2026-09-28: https://zovro.work/privacy.html includes current third-party SDK and deletion language, and https://zovro.work/support.html#delete-account exposes direct account-deletion instructions.
 - Support inbox delivery verified on 2026-09-28: messages sent to support@zovro.work reached the company inbox, automated policy replies were received, and overdue-review alerts were delivered successfully.
 
 ## External launch gates still requiring real-world/account evidence
 - Stripe durable webhook idempotency/receipt storage is verified and deployed: append-only receipts persist in PostgreSQL, concurrent deliveries are serialized, duplicate replays are rejected safely across restart scenarios, and signed delivery/signature verification are verified. Payout capability/readiness is enabled; no completed provider payout has yet been observed.
-- OneSignal/APNs/FCM: physical-device notification delivery and tap/open evidence.
+- OneSignal physical-device delivery/tap evidence remains open; Android FCM configuration is already closed, while iOS APNs configuration remains open.
 - Twilio SMS: A2P/sender approval plus physical-number opt-in, reply, and STOP evidence before enabling live SMS.
 - Apple Developer/App Store Connect: distribution signing, archive/TestFlight, store metadata and submission.
 - Google Play Console: production signing/internal testing, organization/phone verification, store metadata and submission.
