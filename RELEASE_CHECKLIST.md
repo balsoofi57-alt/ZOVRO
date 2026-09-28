@@ -33,7 +33,7 @@
 - OneSignal physical-device delivery/tap evidence remains open; Android FCM configuration is already closed, while iOS APNs configuration remains open.
 - Twilio SMS: A2P/sender approval plus physical-number opt-in, reply, and STOP evidence before enabling live SMS.
 - Apple Developer/App Store Connect: distribution signing, archive/TestFlight, store metadata and submission.
-- Google Play Console: production signing/internal testing, organization/phone verification, store metadata and submission.
+- Google Play Console: Android upload-key readiness is verified (public certificate fingerprints and signed-AAB SHA-256 recorded; CI supports signed AAB creation). Remaining: authenticated Play upload/internal-track acceptance, console declarations, and submission.
 - Final legal review appropriate to launch jurisdictions.
 
 ## Final locked-design release verification — 2026-09-27
