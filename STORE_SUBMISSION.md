@@ -16,9 +16,9 @@ Primary service areas include roadside assistance, mobile auto service, plumbing
 
 ZOVRO includes account security, provider verification workflows, job lifecycle tracking, messaging, notifications, ratings, account deletion, and safety guidance. Emergency-style ZOVRO requests do not replace police, fire, ambulance, or 911.
 
-## Suggested store category
-Primary: Lifestyle / Local Services
-Secondary: Utilities
+## Suggested store categories
+- Google Play: Travel & Local
+- Apple App Store: Lifestyle (primary), Utilities (secondary)
 
 ## Keywords
 local services, roadside assistance, handyman, mechanic, plumbing, electrical, HVAC, moving, home repair, service provider
