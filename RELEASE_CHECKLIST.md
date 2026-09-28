@@ -26,6 +26,7 @@
 - OneSignal backend credentials are verified in production (`oneSignalCredentialsVerified=true` with successful credential probes), and Android FCM platform configuration is closed. Message history/device subscriptions still require signed physical-device delivery/open evidence; iOS APNs remains open.
 
 - Public store-review legal pages verified live on 2026-09-28: https://zovro.work/privacy.html includes current third-party SDK and deletion language, and https://zovro.work/support.html#delete-account exposes direct account-deletion instructions.
+- Store submission source handoff is now consolidated on `main`: en-US listing metadata, reviewer notes, internal tester handoff, asset checklist, App Privacy/Data Safety worksheet, and final human legal-review packet are present and aligned with `com.zovro.app`, `support@zovro.work`, and Google Play category `Travel & Local`.
 - Support inbox delivery verified on 2026-09-28: messages sent to support@zovro.work reached the company inbox, automated policy replies were received, and overdue-review alerts were delivered successfully.
 - Live production recheck on 2026-09-28: `/api/health` returned `ok=true`, `/api/ready` returned `ready=true`, database=`postgres-durable`, and `/api/launch-readiness` returned `launchReady=true` with `blockers=[]`.
 - Support-mail cron remains operational on a 10-minute schedule; recent runs completed successfully and password-recovery email tasks were 0 at the latest checks.
