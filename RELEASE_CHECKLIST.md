@@ -29,7 +29,7 @@
 - Support inbox delivery verified on 2026-09-28: messages sent to support@zovro.work reached the company inbox, automated policy replies were received, and overdue-review alerts were delivered successfully.
 
 ## External launch gates still requiring real-world/account evidence
-- Stripe: preserve durable production idempotency/receipt evidence across restarts and concurrent delivery; signed delivery and signature verification are already verified. Payout capability/readiness is enabled; no completed provider payout has yet been observed.
+- Stripe durable webhook idempotency/receipt storage is verified and deployed: append-only receipts persist in PostgreSQL, concurrent deliveries are serialized, duplicate replays are rejected safely across restart scenarios, and signed delivery/signature verification are verified. Payout capability/readiness is enabled; no completed provider payout has yet been observed.
 - OneSignal/APNs/FCM: physical-device notification delivery and tap/open evidence.
 - Twilio SMS: A2P/sender approval plus physical-number opt-in, reply, and STOP evidence before enabling live SMS.
 - Apple Developer/App Store Connect: distribution signing, archive/TestFlight, store metadata and submission.
