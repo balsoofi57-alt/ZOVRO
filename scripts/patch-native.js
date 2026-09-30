@@ -16,12 +16,25 @@ function patchAndroidBuild(projectRoot=root){
 function patchAndroidMinSdk(projectRoot=root){
  const p=path.join(projectRoot,'android','variables.gradle');
  if(!fs.existsSync(path.dirname(p)))return;
- const s=fs.readFileSync(p,'utf8');
- const setting=/^(\s*minSdkVersion\s*=\s*)(\d+)(\s*(?:\/\/[^\n]*)?)$/m;
- const match=s.match(setting);
- if(!match)throw new Error('Cannot find numeric minSdkVersion in android/variables.gradle');
- // Google Play automatic protection requires API 24; preserve higher minimums.
- if(Number(match[2])<24)fs.writeFileSync(p,s.replace(setting,(_,prefix,value,suffix)=>prefix+'24'+suffix));
+ let s=fs.readFileSync(p,'utf8');
+ // Play protection requires min SDK 24; submissions require target SDK 36.
+ // Compile against at least the target API, preserving higher configured values.
+ for(const [key,minimum] of Object.entries({minSdkVersion:24,targetSdkVersion:36,compileSdkVersion:36})){
+  const setting=new RegExp('^([ \\t]*'+key+'[ \\t]*=[ \\t]*)(\\d+)([ \\t]*(?://[^\\n]*)?)$','m');
+  const match=s.match(setting);
+  if(!match)throw new Error('Cannot find numeric '+key+' in android/variables.gradle');
+  if(Number(match[2])<minimum)s=s.replace(setting,(_,prefix,value,suffix)=>prefix+minimum+suffix);
+ }
+ fs.writeFileSync(p,s);
+ const appBuild=path.join(projectRoot,'android','app','build.gradle');
+ if(fs.existsSync(appBuild)){
+  const appSource=fs.readFileSync(appBuild,'utf8');
+  const version=/\bversionCode\s+(?:=\s*)?(\d+)\b/;
+  const match=appSource.match(version);
+  if(!match)throw new Error('Cannot find numeric Android versionCode');
+  // Version 1 was uploaded during Play validation; the replacement must be new.
+  if(Number(match[1])<2)fs.writeFileSync(appBuild,appSource.replace(version,'versionCode 2'));
+ }
 }
 if(require.main===module){patchIOS();patchAndroid();patchAndroidBuild();patchAndroidMinSdk();}
 module.exports={patchAndroidBuild,patchAndroidMinSdk};
