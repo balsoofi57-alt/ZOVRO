@@ -3,6 +3,7 @@ const assert=require('node:assert/strict');
 const fs=require('fs'),os=require('os'),path=require('path'),http=require('http');
 const {servePublicFile,PUBLIC_FILES}=require('./static-assets');
 test('public assets are available but private paths and symlinks are blocked',async t=>{
+ assert.ok(PUBLIC_FILES.has('sms-terms.html'),'SMS consent terms must be publicly accessible');
  const root=fs.mkdtempSync(path.join(os.tmpdir(),'zovro-static-'));
  fs.mkdirSync(path.join(root,'backend'));
  fs.writeFileSync(path.join(root,'backend','probe.txt'),'LOCAL_TEST_ONLY');
