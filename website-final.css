@@ -62,7 +62,7 @@ body{
   background:linear-gradient(180deg,rgba(8,21,34,.98),rgba(12,27,43,.98))!important;
   border-bottom:1px solid rgba(223,228,234,.22)!important;
 }
-.z-official-brand{filter:saturate(.85) contrast(1.05)}
+.z-official-brand{filter:none}
 .hero{
   background:
     linear-gradient(180deg,rgba(8,21,34,.10),rgba(8,21,34,.80)),

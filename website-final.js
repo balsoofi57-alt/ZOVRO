@@ -56,9 +56,9 @@
   ready(()=>{
     try {
     installRegistrationConsentTransport();
-    document.title='ZOVRO — Anywhere, Anytime, Near to You.';
+    document.title='ZOVRO — Anywhere, Anytime, Near You.';
     const brand=document.querySelector('.brand');
-    if(brand&&!brand.querySelector('.z-official-brand'))brand.innerHTML='<img class="z-official-brand" src="assets/zovro-official-brand.webp" alt="ZOVRO — Anywhere, Anytime, Near to You.">';
+    if(brand&&!brand.querySelector('.z-official-brand'))brand.innerHTML='<img class="z-official-brand" src="assets/zovro-official-brand.webp" alt="ZOVRO — Anywhere, Anytime, Near You.">';
 
     const top=document.querySelector('.top');
     if(top){
@@ -72,7 +72,7 @@
     const hero=document.querySelector('.hero');
     if(hero){
       if(!hero.querySelector('.z-brand-showcase')){const art=document.createElement('img');art.className='z-brand-showcase';art.src='assets/zovro-official-brand.webp';art.alt='ZOVRO official brand';hero.prepend(art)}
-      const eyebrow=hero.querySelector('.eyebrow');if(eyebrow)eyebrow.textContent='● Anywhere, Anytime, Near to You.';
+      const eyebrow=hero.querySelector('.eyebrow');if(eyebrow)eyebrow.textContent='● Anywhere, Anytime, Near You.';
       const h1=hero.querySelector('h1');if(h1)h1.innerHTML='Everyday problems.<br><span>Nearby solutions.</span>';
       const p=h1?.nextElementSibling;if(p&&p.tagName==='P')p.textContent='From roadside help to home repairs. Find a local professional and keep every update in one place.';
       const bar=hero.querySelector('.bar');if(bar)bar.innerHTML='<button class="btn primary" id="zHeroHelp">Help Now</button><button class="btn ghost" id="zHeroProvider">Join as a Provider</button><button class="btn danger" id="sosButton" aria-label="SOS" aria-describedby="sosHelp sosStatus">SOS</button>';
@@ -137,7 +137,7 @@
     if(!document.getElementById('zMobileHelp')){const m=document.createElement('button');m.id='zMobileHelp';m.className='z-mobile-help';m.textContent='Help Now';m.onclick=()=>openHelp('');document.body.appendChild(m)}
 
     const shell=document.querySelector('.shell');
-    if(shell&&!document.querySelector('.z-site-footer')){const f=document.createElement('footer');f.className='z-site-footer';f.innerHTML='<div>© 2026 ZOVRO LLC · Anywhere, Anytime, Near to You.</div><div><a href="privacy.html">Privacy</a><a href="terms.html">Terms</a><a href="support.html">Support</a></div>';shell.appendChild(f)}
+    if(shell&&!document.querySelector('.z-site-footer')){const f=document.createElement('footer');f.className='z-site-footer';f.innerHTML='<div>© 2026 ZOVRO LLC · Anywhere, Anytime, Near You.</div><div><a href="privacy.html">Privacy</a><a href="terms.html">Terms</a><a href="support.html">Support</a></div>';shell.appendChild(f)}
 
     const originalRenderAuth=window.renderAuth;
     if(typeof originalRenderAuth==='function'&&!originalRenderAuth.__zovroNames){
