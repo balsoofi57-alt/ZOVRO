@@ -32,5 +32,43 @@
     // match an explicitly selected skill, never every skill in its category.
     return (service==='Roadside Assistance'||service==='Emergency Roadside Assistance')&&selected.some(s=>s==='Roadside Assistance'||roadside.has(s));
   }
-  return {groups,all,canonical,validateServices,servicesFor,matchesService};
+  // Conservative shared classification for both bundled clients and the API.
+  const aliases={
+    'Tree Service':['tree services','tree removal','tree trimming','trim trees','cut down a tree','stump removal','stump grinding'],
+    'Tire Change':['flat tire','change tire'],
+    'Jump Start':['dead battery','jumpstart'],
+    'Vehicle Lockout':['locked out of car','car lockout'],
+    'Towing':['need a tow','tow truck'],
+    'Plumbing':['leaking pipe','pipe leak','clogged drain','clogged toilet','plumber'],
+    'Electrical':['electrician','breaker keeps tripping'],
+    'HVAC':['air conditioner','furnace repair'],
+    'Lawn Mowing':['mow lawn','cut grass'],
+    'Snow Removal':['shovel snow'],
+    'Painting':['paint walls','house painting'],
+    'Moving':['need movers','move furniture']
+  };
+  for(const [service,words] of Object.entries({"Pest & Rodent Control":["bed bug","bedbug","bed bugs","bedbugs","cockroach","cockroaches","roach","roaches","termite","termites","ant infestation","ants","flea","fleas","ticks","tick bite","spider","spiders","wasp","wasps","hornet","hornets","yellow jacket","yellowjackets","mouse","mice","rat infestation","rats","rodent","rodents","droppings","gnaw marks","seal entry","entry point","holes in wall","prevent rodents","pest inspection","pest prevention","bugs in house","insects in house"],"Tire Change":["flat tire","tire blew","tire change","change tire"],"Jump Start":["dead battery","jump start","jumpstart"],"Vehicle Lockout":["locked out of car","car lockout"],"Towing":["need a tow","tow truck"],"Painting":["paint walls","house painting","interior painting","exterior painting"],"Flooring Installation & Repair":["install flooring","flooring repair","floor installation","install laminate","install hardwood"],"Roadside Assistance":["flat tire","tire blew","dead battery","jump start","jumpstart","locked out of car","car lockout","need a tow","tow truck","stuck on road","roadside"],"Mobile Mechanic":["car won’t start","car wont start","check engine","engine problem","brake problem","car overheating","alternator","starter motor","mechanic","car repair"],"Plumbing":["leaking pipe","pipe leak","water leak","clogged drain","clogged toilet","toilet overflowing","faucet leak","water heater","no hot water","plumber","sewer backup"],"Electrical":["power outlet","outlet not working","breaker keeps tripping","circuit breaker","electrical short","sparks from outlet","light switch","electrician","power issue"],"HVAC":["ac not working","air conditioner","no heat","heater not working","furnace","hvac","thermostat","house too hot","house too cold"],"Appliance Repair":["refrigerator not cooling","fridge not cooling","washer not working","dryer not heating","dishwasher not working","oven not heating","appliance repair"],"Moving":["need movers","moving furniture","move furniture","moving boxes","help moving","small move","搬家"],"Lawn & Snow":["mow lawn","lawn mowing","cut grass","yard work","snow removal","shovel snow","plow driveway","leaf cleanup"]}))aliases[service]=[...(aliases[service]||[]),...words];
+  aliases['Roadside Assistance']=(aliases['Roadside Assistance']||[]).filter(word=>!Object.entries(aliases).some(([name,words])=>name!=='Roadside Assistance'&&words.includes(word)));
+  const normalize=text=>String(text||'').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();
+  function inferService(details){
+    if(typeof details!=='string'||details.length>1000)return null;
+    const text=' '+normalize(details)+' ';
+    // Negation and multiple distinct services need the customer's own selection.
+    if(/\b(no|not|without|dont|don t|instead|rather)\b/.test(text))return null;
+    const hits=[];
+    for(const item of all){
+      for(const phrase of [item.label,...(aliases[item.label]||[])]){
+        const needle=' '+normalize(phrase)+' ';
+        if(text.includes(needle))hits.push({service:item.label,phrase:needle.trim()});
+      }
+    }
+    const specific=hits.filter(hit=>!hits.some(other=>other.service!==hit.service&&other.phrase.length>hit.phrase.length&&(' '+other.phrase+' ').includes(' '+hit.phrase+' ')));
+    const choices=[...new Set(specific.map(hit=>hit.service))];
+    return choices.length===1?choices[0]:null;
+  }
+  function correctRequestService(request){
+    if(request.source==='sos'||request.serviceSelectionManual===true)return request.service;
+    return inferService(request.details)||request.service;
+  }
+  return {groups,all,canonical,validateServices,servicesFor,matchesService,inferService,correctRequestService};
 });
