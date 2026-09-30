@@ -264,7 +264,7 @@ body.z-silver-layout .z-smart-actions{display:grid;grid-template-columns:1fr 104
 body.z-silver-layout #zVoice{position:absolute;right:8px;top:8px;min-width:52px;padding:9px!important;font-size:12px!important}
 body.z-silver-layout .z-smart-status{font-size:12px;margin-top:8px}
 body.z-silver-layout #zLocationShortcut{width:100%;display:flex;justify-content:space-between;align-items:center;text-align:left}
-body.z-silver-layout .trust,body.z-silver-layout #howItWorks,body.z-silver-layout #services,body.z-silver-layout .z-view-all-wrap,body.z-silver-layout #zFullServiceCatalog,body.z-silver-layout #zSupportStrip{display:none!important}
+body.z-silver-layout .trust,body.z-silver-layout #home #howItWorks,body.z-silver-layout #services,body.z-silver-layout .z-view-all-wrap,body.z-silver-layout #zFullServiceCatalog,body.z-silver-layout #zSupportStrip{display:none!important}
 .z-service-heading{display:flex;align-items:center;justify-content:space-between;margin:20px 0 12px}.z-service-heading h2{margin:0}
 .z-service-heading button{border:0;background:transparent;color:#34465a;min-height:44px;cursor:pointer}
 .z-category-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}

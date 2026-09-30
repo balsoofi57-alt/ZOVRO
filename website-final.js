@@ -241,6 +241,7 @@
     const home=document.getElementById('home'),smart=document.getElementById('smartMatch');
     if(!home||!smart)return;
     document.body.classList.add('z-silver-layout');
+    const webNav=document.querySelector('.z-web-nav');if(webNav){webNav.innerHTML='<a href="#home">Home</a><a href="#zCategoryGrid">Services</a><a href="#profile">More</a><a href="support.html">Support</a>';for(const a of webNav.querySelectorAll('a[href^="#"]'))a.onclick=()=>{document.querySelectorAll('.bottom button')[a.hash==='#profile'?3:0]?.click()}}
     const tabs=[...document.querySelectorAll('.bottom button')];
     const iconPaths={car:'M3 15V9l3-5h12l3 5v6M3 10h18M5 15v4M19 15v4M6 13h2M16 13h2M3 15h18',home:'M3 11 12 3l9 8M5 10v11h5v-7h4v7h5V10',clean:'m14 3-6 11M6 12l8 5-4 5-7-4zM18 4v5M16 6h4',tree:'M12 3c-4 0-5 3-4 5-5 1-5 7-1 8h10c4-1 4-7-1-8 1-2 0-5-4-5zM12 16v6',truck:'M2 5h12v12H2zM14 10h4l4 4v3h-8M5 17a2 2 0 1 0 4 0M16 17a2 2 0 1 0 4 0',more:'M4 12h1M11 12h1M18 12h1',pin:'M12 22S4 13 4 9a8 8 0 1 1 16 0c0 4-8 13-8 13zM9 9a3 3 0 1 0 6 0 3 3 0 1 0-6 0',account:'M8 7a4 4 0 1 0 8 0 4 4 0 1 0-8 0M4 22v-3a8 8 0 0 1 16 0v3z',requests:'M6 3h12v19H6zM9 8h6M9 12h6M9 16h4'};
     const icon=name=>'<svg viewBox="0 0 24 26" aria-hidden="true"><path d="'+iconPaths[name]+'"/></svg>';
@@ -259,7 +260,8 @@
       if(!catalog){catalog=document.createElement('div');catalog.id='zSilverCatalog';catalog.className='modal';catalog.innerHTML='<div class="sheet" role="dialog" aria-modal="true" aria-labelledby="zCatalogTitle"><div class="z-service-heading"><h2 id="zCatalogTitle"></h2><button type="button" id="zCatalogClose" aria-label="Close services">Close</button></div><div class="field"><label for="zCatalogSearch">Find a service</label><input id="zCatalogSearch" type="search" placeholder="Search services"></div><div class="z-catalog-list"></div></div>';document.body.appendChild(catalog);document.getElementById('zCatalogClose').onclick=()=>window.closeModal(catalog.id);catalog.addEventListener('click',e=>{if(e.target===catalog)window.closeModal(catalog.id)});catalog.addEventListener('keydown',e=>{if(e.key==='Escape')window.closeModal(catalog.id)})}
       document.getElementById('zCatalogTitle').textContent=title||'All services';const list=catalog.querySelector('.z-catalog-list');list.replaceChildren();
       const groups=window.ZOVRO_CATALOG?.SERVICE_CATALOG||[];const seen=new Set();
-      for(const g of groups){if(categoryId&&g.id!==categoryId)continue;for(const service of g.services){if(seen.has(service.id))continue;seen.add(service.id);list.appendChild(button(service.label.en,()=>{window.closeModal(catalog.id);window.startService(service.label.en)}))}}
+      for(const g of groups){if(categoryId&&g.id!==categoryId)continue;for(const service of g.services){if(seen.has(service.id))continue;seen.add(service.id);seen.add(service.label.en);list.appendChild(button(service.label.en,()=>{window.closeModal(catalog.id);window.startService(service.label.en)}))}}
+      if(!categoryId){for(const group of window.ZOVRO_PROVIDER_SERVICES?.groups||[]){for(const service of group.services){if(seen.has(service.label))continue;seen.add(service.label);list.appendChild(button(service.label,()=>{window.closeModal(catalog.id);window.startService(service.label)}))}}}
       const search=document.getElementById('zCatalogSearch');search.value='';search.oninput=()=>{const q=search.value.trim().toLowerCase();for(const b of list.children)b.hidden=!b.textContent.toLowerCase().includes(q)};window.openModal(catalog.id);search.focus();
     }
     categories.querySelector('.z-service-heading').appendChild(button('See all  ›',()=>openCatalog()));
@@ -268,6 +270,7 @@
     for(const [label,small,glyph,i] of [['Nearby Providers','See available pros','pin',2],['Track My Request','Live status updates','requests',1]]){const b=button('',()=>showTab(i),'z-quick');b.innerHTML=icon(glyph)+'<span>'+label+'<small>'+small+'</small></span>';quick.appendChild(b)}categories.appendChild(quick);
     document.querySelector('#zAccountMenu>summary').textContent='My Account · Profile & security';
     document.querySelector('#zSupportMenu>summary').textContent='Get help · Support & legal';
+    const how=document.getElementById('howItWorks');if(how)document.getElementById('zSupportMenu').appendChild(how);
     const provider=document.querySelector('#zProviderMenu>summary');if(provider)provider.textContent='Work with ZOVRO';
     const support=document.getElementById('zSupportMenu');const links=document.createElement('div');links.innerHTML='<a class="z-menu-row" href="support.html">Help Center <span>›</span></a><a class="z-menu-row" href="mailto:support@zovro.work">Contact Support <span>›</span></a>';support.insertBefore(links,support.children[1]);
     const manage=document.createElement('section');manage.id='zManageMenu';manage.className='z-menu-group';manage.innerHTML='<h3>Manage</h3>';
