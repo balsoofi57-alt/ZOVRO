@@ -233,3 +233,47 @@
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',simplify);else simplify();
 })();
+
+// Owner-approved silver layout: reuse original request/account handlers.
+(function(){
+  function ready(){
+    if(document.getElementById('zCategoryGrid'))return;
+    const home=document.getElementById('home'),smart=document.getElementById('smartMatch');
+    if(!home||!smart)return;
+    document.body.classList.add('z-silver-layout');
+    const tabs=[...document.querySelectorAll('.bottom button')];
+    const iconPaths={car:'M3 15V9l3-5h12l3 5v6M3 10h18M5 15v4M19 15v4M6 13h2M16 13h2M3 15h18',home:'M3 11 12 3l9 8M5 10v11h5v-7h4v7h5V10',clean:'m14 3-6 11M6 12l8 5-4 5-7-4zM18 4v5M16 6h4',tree:'M12 3c-4 0-5 3-4 5-5 1-5 7-1 8h10c4-1 4-7-1-8 1-2 0-5-4-5zM12 16v6',truck:'M2 5h12v12H2zM14 10h4l4 4v3h-8M5 17a2 2 0 1 0 4 0M16 17a2 2 0 1 0 4 0',more:'M4 12h1M11 12h1M18 12h1',pin:'M12 22S4 13 4 9a8 8 0 1 1 16 0c0 4-8 13-8 13zM9 9a3 3 0 1 0 6 0 3 3 0 1 0-6 0',account:'M8 7a4 4 0 1 0 8 0 4 4 0 1 0-8 0M4 22v-3a8 8 0 0 1 16 0v3z',requests:'M6 3h12v19H6zM9 8h6M9 12h6M9 16h4'};
+    const icon=name=>'<svg viewBox="0 0 24 26" aria-hidden="true"><path d="'+iconPaths[name]+'"/></svg>';
+    const button=(text,action,cls='btn ghost')=>{const b=document.createElement('button');b.type='button';b.className=cls;b.textContent=text;b.onclick=action;return b};
+    const showTab=i=>{tabs[i]?.click();window.scrollTo({top:0,behavior:'smooth'})};
+    const account=button('',()=>{showTab(3);document.getElementById('zAccountMenu').open=true},'z-account-shortcut');account.setAttribute('aria-label','My account');account.innerHTML=icon('account');document.querySelector('.top').appendChild(account);
+    const location=button('⌖  Set your location  ›',()=>window.startRequestWithLocation({details:document.getElementById('zProblem').value.trim(),useLocation:true}));location.id='zLocationShortcut';smart.prepend(location);
+    const sos=document.getElementById('sosButton');if(sos)document.querySelector('.z-smart-actions').appendChild(sos);
+    document.getElementById('zSmartGo').onclick=()=>window.startRequestWithLocation({details:document.getElementById('zProblem').value.trim()});
+    for(const id of ['sosHelp','sosStatus','sosView']){const el=document.getElementById(id);if(el)smart.appendChild(el)}
+    const services=document.getElementById('services');const oldHeading=services.previousElementSibling;if(oldHeading?.classList.contains('sectionHead'))oldHeading.hidden=true;
+    const categories=document.createElement('section');categories.id='zCategoryGrid';categories.innerHTML='<div class="z-service-heading"><h2>Services</h2></div><div class="z-category-grid"></div>';
+    smart.insertAdjacentElement('afterend',categories);
+    let catalog;
+    function openCatalog(categoryId,title){
+      if(!catalog){catalog=document.createElement('div');catalog.id='zSilverCatalog';catalog.className='modal';catalog.innerHTML='<div class="sheet" role="dialog" aria-modal="true" aria-labelledby="zCatalogTitle"><div class="z-service-heading"><h2 id="zCatalogTitle"></h2><button type="button" id="zCatalogClose" aria-label="Close services">Close</button></div><div class="field"><label for="zCatalogSearch">Find a service</label><input id="zCatalogSearch" type="search" placeholder="Search services"></div><div class="z-catalog-list"></div></div>';document.body.appendChild(catalog);document.getElementById('zCatalogClose').onclick=()=>window.closeModal(catalog.id);catalog.addEventListener('click',e=>{if(e.target===catalog)window.closeModal(catalog.id)});catalog.addEventListener('keydown',e=>{if(e.key==='Escape')window.closeModal(catalog.id)})}
+      document.getElementById('zCatalogTitle').textContent=title||'All services';const list=catalog.querySelector('.z-catalog-list');list.replaceChildren();
+      const groups=window.ZOVRO_CATALOG?.SERVICE_CATALOG||[];const seen=new Set();
+      for(const g of groups){if(categoryId&&g.id!==categoryId)continue;for(const service of g.services){if(seen.has(service.id))continue;seen.add(service.id);list.appendChild(button(service.label.en,()=>{window.closeModal(catalog.id);window.startService(service.label.en)}))}}
+      const search=document.getElementById('zCatalogSearch');search.value='';search.oninput=()=>{const q=search.value.trim().toLowerCase();for(const b of list.children)b.hidden=!b.textContent.toLowerCase().includes(q)};window.openModal(catalog.id);search.focus();
+    }
+    categories.querySelector('.z-service-heading').appendChild(button('See all  ›',()=>openCatalog()));
+    for(const [label,id,glyph] of [['Roadside Assistance','auto-roadside','car'],['Home Repairs','home-services','home'],['Cleaning','cleaning','clean'],['Outdoor & Tree Care','outdoor-seasonal','tree'],['Moving & Hauling','moving-hauling','truck'],['More Services',null,'more']]){const b=button('',()=>openCatalog(id,label),'z-category');b.innerHTML=icon(glyph)+'<span>'+label+'</span>';categories.querySelector('.z-category-grid').appendChild(b)}
+    const quick=document.createElement('div');quick.className='z-home-shortcuts';
+    for(const [label,small,glyph,i] of [['Nearby Providers','See available pros','pin',2],['Track My Request','Live status updates','requests',1]]){const b=button('',()=>showTab(i),'z-quick');b.innerHTML=icon(glyph)+'<span>'+label+'<small>'+small+'</small></span>';quick.appendChild(b)}categories.appendChild(quick);
+    document.querySelector('#zAccountMenu>summary').textContent='My Account · Profile & security';
+    document.querySelector('#zSupportMenu>summary').textContent='Get help · Support & legal';
+    const provider=document.querySelector('#zProviderMenu>summary');if(provider)provider.textContent='Work with ZOVRO';
+    const support=document.getElementById('zSupportMenu');const links=document.createElement('div');links.innerHTML='<a class="z-menu-row" href="support.html">Help Center <span>›</span></a><a class="z-menu-row" href="mailto:support@zovro.work">Contact Support <span>›</span></a>';support.insertBefore(links,support.children[1]);
+    const manage=document.createElement('section');manage.id='zManageMenu';manage.className='z-menu-group';manage.innerHTML='<h3>Manage</h3>';
+    manage.appendChild(button('Notifications  ›',()=>{const d=document.getElementById('zAccountMenu');d.open=true;const field=document.getElementById('smsNotifications');if(field){field.scrollIntoView({block:'center'});field.focus()}else{window.toast('Manage ZOVRO notifications in your device settings. Provider SMS preferences are in your account.')}},'z-menu-row'));
+    const payments=document.createElement('a');payments.className='z-menu-row';payments.href='support.html';payments.textContent='Payment help  ›';manage.appendChild(payments);
+    document.getElementById('zMoreMenu').insertBefore(manage,support);
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',ready);else ready();
+})();

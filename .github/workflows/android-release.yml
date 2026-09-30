@@ -5,7 +5,9 @@ on:
   push:
     branches: [main, store-release-prep, zovro-final-deploy]
     paths:
-      - 'index.html'
+      - '*.html'
+      - '*.js'
+      - '*.css'
       - 'assets/**'
       - 'scripts/**'
       - 'capacitor.config.json'
