@@ -209,3 +209,19 @@ body{background:linear-gradient(rgba(8,21,34,.56),rgba(8,21,34,.56)),url('assets
 .z-full-service-catalog>input{width:100%;padding:14px;border:1px solid #69717f;border-radius:12px;font:inherit;font-size:16px;background:#eef1f4;color:#111820}
 .z-full-service-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px}.z-full-service-list .btn{text-align:left}
 .z-full-service-catalog [hidden]{display:none!important}
+
+/* Fewer primary actions; secondary tools stay available under More. */
+.bottom.z-simple-nav{grid-template-columns:repeat(3,minmax(0,1fr))}
+.bottom .z-secondary-tab,.z-duplicate-help{display:none!important}
+#zMoreMenu{display:grid;gap:12px;margin:16px 0 24px}
+.z-menu-group{border:1px solid var(--line,#687481);border-radius:14px;background:var(--z-card,#282d35);overflow:hidden}
+.z-menu-group>summary{cursor:pointer;padding:18px 20px;min-height:52px;font-size:16px;font-weight:700;color:var(--ink,#10243a);list-style-position:inside}
+.z-menu-group[open]>summary{border-bottom:1px solid var(--line,#687481)}
+.z-menu-group> :not(summary){margin:14px;max-width:calc(100% - 28px)}
+.z-menu-group .sectionHead{margin-top:12px}
+#zMoreMenu #providerJoin{display:block;padding:16px}
+#zMoreMenu #providerJoin .btn{margin-top:12px}
+.z-request-options{margin:12px 0;background:transparent}
+.z-request-options>summary{color:inherit;font-size:14px;padding:12px}
+
+#zAvailableNow[hidden],.sectionHead[hidden]{display:none!important}
