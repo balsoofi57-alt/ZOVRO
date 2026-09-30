@@ -200,3 +200,6 @@ body{background:linear-gradient(rgba(8,21,34,.56),rgba(8,21,34,.56)),url('assets
  .z-brand-showcase{width:100%;max-width:440px;float:none;margin:0 auto 24px!important}
  .z-official-brand{width:144px;height:56px}
 }
+
+/* Owner-requested readable brand promise. */
+.hero .eyebrow{font-size:clamp(17px,2.2vw,24px)!important;line-height:1.5!important;font-weight:650!important;letter-spacing:.025em!important;text-transform:none!important;color:#e1c784!important}
