@@ -1,4 +1,4 @@
-const CACHE='zovro-web-v7-brand-20260930';
+const CACHE='zovro-web-v8-support-20260930';
 const CORE=['./','./index.html','./privacy.html','./terms.html','./support.html','./manifest.webmanifest','./assets/zovro-icon.svg','./assets/zovro-icon-1024.png','./assets/zovro-official-brand.webp','./website-final.css','./website-final.js'];
 
 self.addEventListener('install',event=>{
