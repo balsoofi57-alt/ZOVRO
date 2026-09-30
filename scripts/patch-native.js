@@ -36,5 +36,18 @@ function patchAndroidMinSdk(projectRoot=root){
   if(Number(match[1])<2)fs.writeFileSync(appBuild,appSource.replace(version,'versionCode 2'));
  }
 }
-if(require.main===module){patchIOS();patchAndroid();patchAndroidBuild();patchAndroidMinSdk();require('./patch-brand-assets').patchBrandAssets();}
-module.exports={patchAndroidBuild,patchAndroidMinSdk};
+function patchAndroidWallet(projectRoot=root){
+ const p=path.join(projectRoot,'android','app','src','main','AndroidManifest.xml');
+ if(!fs.existsSync(p))return;
+ let s=fs.readFileSync(p,'utf8');
+ const metadata='<meta-data android:name="com.google.android.gms.wallet.api.enabled" android:value="true" />';
+ const existing=/<meta-data\b[^>]*android:name=["']com\.google\.android\.gms\.wallet\.api\.enabled["'][^>]*\/\s*>/g;
+ if(existing.test(s))s=s.replace(existing,metadata);
+ else {
+  if(!s.includes('</application>'))throw new Error('Cannot find Android application element for Google Pay');
+  s=s.replace('</application>',`    ${metadata}\n    </application>`);
+ }
+ fs.writeFileSync(p,s);
+}
+if(require.main===module){patchIOS();patchAndroid();patchAndroidWallet();patchAndroidBuild();patchAndroidMinSdk();require('./patch-brand-assets').patchBrandAssets();}
+module.exports={patchAndroidBuild,patchAndroidMinSdk,patchAndroidWallet};
