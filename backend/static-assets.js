@@ -34,6 +34,8 @@ const PUBLIC_FILES = new Set([
   "assets/zovro-icon.svg",
   "assets/zovro-icon-1024.png",
   "assets/brand/zovro-email.jpg",
+  "assets/brand/zovro-trades-background.webp",
+  "assets/brand/zovro-logo-transparent.webp",
   "assets/zovro-official-brand.webp",
   "src/advanced-workflows.js",
   "src/product-features.js",
