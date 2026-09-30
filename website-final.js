@@ -192,3 +192,44 @@
     }
   })
 })();
+
+// Keep secondary actions reachable in one menu without changing their handlers.
+(function(){
+  function simplify(){
+    const profile=document.getElementById('profile'),bottom=document.querySelector('.bottom');
+    if(!profile||!bottom||document.getElementById('zMoreMenu'))return;
+    const tabs=[...bottom.querySelectorAll('button')];
+    if(tabs.length!==4)return;
+    tabs[1].textContent='Requests';
+    tabs[2].classList.add('z-secondary-tab');
+    tabs[3].textContent='More';
+    bottom.classList.add('z-simple-nav');
+    const title=profile.querySelector('.sectionHead h2'),subtitle=profile.querySelector('.sectionHead p');
+    if(title)title.textContent='More';
+    if(subtitle)subtitle.textContent='Account, nearby providers and support in one place.';
+    const menu=document.createElement('div');menu.id='zMoreMenu';
+    profile.insertBefore(menu,profile.querySelector('#profileBox'));
+    function group(label,id){const d=document.createElement('details');d.className='z-menu-group';d.id=id;const s=document.createElement('summary');s.textContent=label;d.appendChild(s);menu.appendChild(d);return d}
+    const account=group('Account & security','zAccountMenu');
+    for(const id of ['profileBox','accountActions']){const node=document.getElementById(id);if(node)account.appendChild(node)}
+    const homeAccount=document.getElementById('accountBox');if(homeAccount){const h=homeAccount.previousElementSibling;if(h?.classList.contains('sectionHead'))h.hidden=true;account.appendChild(homeAccount)}
+    const nearby=group('Find nearby providers','zNearbyMenu');
+    const find=document.createElement('button');find.type='button';find.className='btn primary';find.textContent='Find nearby providers';find.onclick=()=>{tabs[2].click();tabs[2].classList.remove('active');tabs[3].classList.add('active')};nearby.appendChild(find);
+    const support=group('Help, support & legal','zSupportMenu');
+    const legal=profile.querySelector('.legal');if(legal){const heading=legal.previousElementSibling;if(heading?.classList.contains('sectionHead'))heading.hidden=true;support.appendChild(legal)}
+    function collectSupport(){const node=document.getElementById('zovroSupportCenter');if(node&&node.parentElement!==support)support.appendChild(node)}
+    collectSupport();new MutationObserver(collectSupport).observe(profile,{childList:true});
+    const provider=document.getElementById('providerJoin');if(provider){group('Become a service provider','zProviderMenu').appendChild(provider)}
+    const heroProvider=document.getElementById('zHeroProvider');if(heroProvider){const d=document.getElementById('zProviderMenu')||group('Become a service provider','zProviderMenu');d.appendChild(heroProvider)}
+    const nearbyCta=document.getElementById('zAvailableNow');if(nearbyCta)nearbyCta.hidden=true;
+    if(document.getElementById('zHeroHelp'))document.getElementById('nativeMobileHelp')?.classList.add('z-duplicate-help');
+    document.getElementById('zMobileHelp')?.classList.add('z-duplicate-help');
+    // Preserve the existing tab order because request flows reference it.
+    const oldNav=window.nav;window.nav=function(id,b){const result=oldNav.apply(this,arguments);if(id==='nearby'){tabs[2].classList.remove('active');tabs[3].classList.add('active')}return result};
+    // Links to the provider section now open its menu before scrolling.
+    for(const link of document.querySelectorAll('a[href="#providerJoin"]'))link.addEventListener('click',event=>{event.preventDefault();tabs[3].click();const d=document.getElementById('zProviderMenu');if(d)d.open=true;d?.scrollIntoView({block:'start',behavior:'smooth'})});
+    const sheet=document.querySelector('#requestModal .sheet');
+    if(sheet){const view=[...sheet.children].find(n=>n.tagName==='BUTTON'&&/View my requests/i.test(n.textContent));if(view){const d=document.createElement('details');d.className='z-menu-group z-request-options';const s=document.createElement('summary');s.textContent='More options';d.appendChild(s);view.replaceWith(d);d.appendChild(view)}}
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',simplify);else simplify();
+})();
