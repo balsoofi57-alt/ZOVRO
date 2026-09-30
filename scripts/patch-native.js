@@ -36,5 +36,5 @@ function patchAndroidMinSdk(projectRoot=root){
   if(Number(match[1])<2)fs.writeFileSync(appBuild,appSource.replace(version,'versionCode 2'));
  }
 }
-if(require.main===module){patchIOS();patchAndroid();patchAndroidBuild();patchAndroidMinSdk();}
+if(require.main===module){patchIOS();patchAndroid();patchAndroidBuild();patchAndroidMinSdk();require('./patch-brand-assets').patchBrandAssets();}
 module.exports={patchAndroidBuild,patchAndroidMinSdk};
