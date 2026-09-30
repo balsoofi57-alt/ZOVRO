@@ -10,6 +10,27 @@
     if(b){b.click();return}
     document.getElementById('nearby')?.scrollIntoView({behavior:'smooth'});
   }
+  function fullServiceDirectory(){
+    const directory=document.createElement('section');
+    directory.id='zFullServiceCatalog';directory.className='z-full-service-catalog hidden';
+    const label=document.createElement('label');label.htmlFor='zServiceSearch';label.textContent='Search all services';
+    const search=document.createElement('input');search.id='zServiceSearch';search.type='search';search.placeholder='Try tree, tire, plumbing or painting';
+    const status=document.createElement('p');status.className='muted';status.setAttribute('aria-live','polite');
+    directory.append(label,search,status);
+    const seen=new Set(),groups=[];
+    for(const group of window.ZOVRO_PROVIDER_SERVICES?.groups||[]){
+      const section=document.createElement('section'),heading=document.createElement('h3'),list=document.createElement('div');
+      heading.textContent=group.label;list.className='z-full-service-list';const rows=[];
+      for(const service of group.services){
+        if(seen.has(service.label))continue;seen.add(service.label);
+        const button=document.createElement('button');button.type='button';button.className='btn ghost';button.textContent=service.label;
+        button.addEventListener('click',()=>call('startService',service.label));list.appendChild(button);rows.push(button);
+      }
+      if(rows.length){section.append(heading,list);directory.appendChild(section);groups.push({section,rows})}
+    }
+    function filter(){let count=0;const q=search.value.trim().toLowerCase();for(const group of groups){let visible=0;for(const button of group.rows){button.hidden=!!q&&!button.textContent.toLowerCase().includes(q);if(!button.hidden)visible++}group.section.hidden=!visible;count+=visible}status.textContent=count?count+' services available':'No matching services. Try a different word.'}
+    search.addEventListener('input',filter);filter();return directory;
+  }
   function enhanceRegistrationNames(){
     const legacy=document.getElementById('name');
     if(!legacy||document.getElementById('firstName'))return;
@@ -106,7 +127,7 @@
     if(services&&!document.getElementById('zViewAll')){
       setTimeout(()=>{
         const cards=[...services.children];cards.slice(8).forEach(c=>c.classList.add('z-service-extra'));
-        if(cards.length>8){const wrap=document.createElement('div');wrap.className='z-view-all-wrap';wrap.innerHTML='<button class="btn ghost" id="zViewAll">View All Services</button>';services.insertAdjacentElement('afterend',wrap);document.getElementById('zViewAll').onclick=e=>{const expanded=services.classList.toggle('z-all-services');e.currentTarget.textContent=expanded?'Show Popular Services':'View All Services'}}
+        if(cards.length>8){const wrap=document.createElement('div');wrap.className='z-view-all-wrap';wrap.innerHTML='<button class="btn ghost" id="zViewAll">View All Services</button>';services.insertAdjacentElement('afterend',wrap);const directory=fullServiceDirectory();wrap.insertAdjacentElement('afterend',directory);document.getElementById('zViewAll').setAttribute('aria-controls',directory.id);document.getElementById('zViewAll').setAttribute('aria-expanded','false');document.getElementById('zViewAll').onclick=e=>{const expanded=directory.classList.contains('hidden');directory.classList.toggle('hidden',!expanded);e.currentTarget.setAttribute('aria-expanded',String(expanded));e.currentTarget.textContent=expanded?'Show Popular Services':'View All Services';if(expanded)directory.querySelector('input').focus()}}
       },350);
     }
 
