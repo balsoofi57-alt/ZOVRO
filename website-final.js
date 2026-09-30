@@ -58,7 +58,7 @@
     installRegistrationConsentTransport();
     document.title='ZOVRO — Anywhere, Anytime, Near You.';
     const brand=document.querySelector('.brand');
-    if(brand&&!brand.querySelector('.z-official-brand'))brand.innerHTML='<img class="z-official-brand" src="assets/zovro-official-brand.webp" alt="ZOVRO — Anywhere, Anytime, Near You.">';
+    if(brand&&!brand.querySelector('.z-official-brand'))brand.innerHTML='<img class="z-official-brand" src="assets/brand/zovro-logo-transparent.webp" alt="ZOVRO — Anywhere, Anytime, Near You.">';
 
     const top=document.querySelector('.top');
     if(top){
@@ -71,7 +71,7 @@
 
     const hero=document.querySelector('.hero');
     if(hero){
-      if(!hero.querySelector('.z-brand-showcase')){const art=document.createElement('img');art.className='z-brand-showcase';art.src='assets/zovro-official-brand.webp';art.alt='ZOVRO official brand';hero.prepend(art)}
+      if(!hero.querySelector('.z-brand-showcase')){const art=document.createElement('img');art.className='z-brand-showcase';art.src='assets/brand/zovro-logo-transparent.webp';art.alt='ZOVRO official brand';hero.prepend(art)}
       const eyebrow=hero.querySelector('.eyebrow');if(eyebrow)eyebrow.textContent='● Anywhere, Anytime, Near You.';
       const h1=hero.querySelector('h1');if(h1)h1.innerHTML='Everyday problems.<br><span>Nearby solutions.</span>';
       const p=h1?.nextElementSibling;if(p&&p.tagName==='P')p.textContent='From roadside help to home repairs. Find a local professional and keep every update in one place.';

@@ -15,3 +15,6 @@ Approved master Library identity: `libfile_2f2385658d448191ac4b128d62b49e46` (10
 Use proportional resizing only; do not stretch, recolor, redraw, substitute stock marks, or remove the final-O wheel. Do not claim nationwide coverage, verified providers, or store availability through added badges without supporting release evidence.
 
 Native icons are applied by `scripts/patch-brand-assets.js` after Capacitor scaffold generation. Existing installed apps require a new signed release to receive the new assets. An email signature file does not itself change mailbox settings or send email.
+
+## Continuous app background — September 30, 2026
+The owner requested one continuous trades-tool background throughout the app, with no rectangular divider around the company logo, and approved the background preview. `assets/brand/zovro-trades-background.webp` supplies the shared decorative surface; `assets/brand/zovro-logo-transparent.webp` is the transparent display derivative for this surface. The canonical full artwork and store/app icons remain the approved originals. Keep form controls legible and decorative imagery non-interactive.

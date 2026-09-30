@@ -182,3 +182,21 @@ body{
   .svc{padding:12px 8px!important;min-height:122px!important}
   .svc span{width:42px;height:42px}
 }
+
+/* Approved continuous trades backdrop: one surface behind logo and content. */
+html{background:#081522!important}
+body{background:linear-gradient(rgba(8,21,34,.56),rgba(8,21,34,.56)),url('assets/brand/zovro-trades-background.webp') repeat #081522!important;background-size:640px 640px!important;min-height:100vh}
+.shell{background:transparent!important}
+.top{background:rgba(8,21,34,.40)!important;border:0!important;box-shadow:none!important;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+.hero{background:transparent!important;border:0!important;box-shadow:none!important;border-radius:0!important;overflow:visible!important}
+.z-official-brand,.z-brand-showcase{border:0!important;border-radius:0!important;background:transparent!important;box-shadow:none!important;filter:none!important}
+.z-brand-showcase{width:42%;max-width:390px;max-height:none!important}
+.svc,.card,.feature,.trustItem,.z-steps>div,.z-smart-match,.z-nearby-cta,.z-provider-join,.z-support-strip{background:rgba(15,31,48,.78)!important;box-shadow:none!important}
+.z-site-footer{border-top:0!important}
+.z-document .wrap,.admin-wrap{background:transparent!important}
+@media(max-width:700px){
+ body{background-size:460px 460px!important}
+ .hero{padding:12px 0 24px!important;margin-top:12px!important}
+ .z-brand-showcase{width:100%;max-width:440px;float:none;margin:0 auto 24px!important}
+ .z-official-brand{width:144px;height:56px}
+}
