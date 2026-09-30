@@ -1,7 +1,7 @@
 const {test}=require('node:test');
 const assert=require('node:assert/strict');
 const fs=require('fs'),path=require('path'),os=require('os');
-const {patchAndroidBuild,patchAndroidMinSdk}=require('./patch-native');
+const {patchAndroidBuild,patchAndroidMinSdk,patchAndroidWallet}=require('./patch-native');
 test('Android memory patch replaces defaults, preserves settings and is idempotent',t=>{
  const root=fs.mkdtempSync(path.join(os.tmpdir(),'zovro-gradle-'));
  t.after(()=>fs.rmSync(root,{recursive:true,force:true}));
@@ -37,4 +37,25 @@ test('Android minimum SDK supports Play protection without lowering future minim
  assert.match(fs.readFileSync(appBuild,'utf8'),/versionCode 3/);
  fs.writeFileSync(file,'ext { minSdkVersion = unknown }');
  assert.throws(()=>patchAndroidMinSdk(root),/Cannot find numeric minSdkVersion/);
+});
+
+test('Google Pay manifest configuration survives repeated native preparation',t=>{
+ const root=fs.mkdtempSync(path.join(os.tmpdir(),'zovro-wallet-'));
+ t.after(()=>fs.rmSync(root,{recursive:true,force:true}));
+ patchAndroidWallet(root);
+ assert.equal(fs.existsSync(path.join(root,'android')),false);
+ const file=path.join(root,'android/app/src/main/AndroidManifest.xml');
+ fs.mkdirSync(path.dirname(file),{recursive:true});
+ for(const previous of ['', '<meta-data android:name="com.google.android.gms.wallet.api.enabled" android:value="false" />']){
+  fs.writeFileSync(file,`<manifest xmlns:android="http://schemas.android.com/apk/res/android"><application android:label="ZOVRO">${previous}<activity android:name=".MainActivity" /></application></manifest>`);
+  patchAndroidWallet(root);
+  const result=fs.readFileSync(file,'utf8');
+  assert.match(result,/<application[^>]*>[\s\S]*<meta-data android:name="com.google.android.gms.wallet.api.enabled" android:value="true" \/>[\s\S]*<\/application>/);
+  assert.match(result,/<activity android:name=".MainActivity" \/>/);
+  assert.equal(result.split('com.google.android.gms.wallet.api.enabled').length-1,1);
+  patchAndroidWallet(root);
+  assert.equal(fs.readFileSync(file,'utf8'),result);
+ }
+ fs.writeFileSync(file,'<manifest />');
+ assert.throws(()=>patchAndroidWallet(root),/Cannot find Android application/);
 });
