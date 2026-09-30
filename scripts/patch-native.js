@@ -32,8 +32,8 @@ function patchAndroidMinSdk(projectRoot=root){
   const version=/\bversionCode\s+(?:=\s*)?(\d+)\b/;
   const match=appSource.match(version);
   if(!match)throw new Error('Cannot find numeric Android versionCode');
-  // Version 1 was uploaded during Play validation; the replacement must be new.
-  if(Number(match[1])<2)fs.writeFileSync(appBuild,appSource.replace(version,'versionCode 2'));
+  // Play versions 1 and 2 are already uploaded; the silver update is version 3.
+  if(Number(match[1])<3)fs.writeFileSync(appBuild,appSource.replace(version,'versionCode 3'));
  }
 }
 function patchAndroidWallet(projectRoot=root){
