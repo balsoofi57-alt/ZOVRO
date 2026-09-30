@@ -1,4 +1,4 @@
-const CACHE='zovro-web-v10-tagline-20260930';
+const CACHE='zovro-web-v11-services-20260930';
 const CORE=['./','./index.html','./privacy.html','./terms.html','./support.html','./manifest.webmanifest','./assets/zovro-icon.svg','./assets/zovro-icon-1024.png','./assets/zovro-official-brand.webp','./assets/brand/zovro-trades-background.webp','./assets/brand/zovro-logo-transparent.webp','./website-final.css','./website-final.js'];
 
 self.addEventListener('install',event=>{
