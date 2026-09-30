@@ -28,6 +28,7 @@ const PUBLIC_FILES = new Set([
   "support-policy-page.js",
   "support-policy.js",
   "support.html",
+  "sms-terms.html",
   "terms.html",
   "website-final.css",
   "website-final.js",
