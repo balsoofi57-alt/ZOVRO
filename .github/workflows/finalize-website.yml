@@ -27,7 +27,7 @@ jobs:
         run: |
           grep -q 'website-final.css' index.html
           grep -q 'website-final.js' index.html
-          grep -q 'Anywhere, Anytime, Near to You.' website-final.js
+          grep -q 'Anywhere, Any Time, Near You.' website-final.js
           grep -Fq 'data-support-chat' website-final.js
       - name: Commit generated index
         run: |

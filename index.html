@@ -17,7 +17,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="ZOVRO">
 <link rel="icon" href="assets/zovro-icon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="website-final.css?v=silver-20260930">
+<link rel="stylesheet" href="website-final.css?v=silver-20260930-2">
 </head>
 <body>
 <div class="shell">
@@ -188,7 +188,7 @@ async function shareProviderLocation(){if(providerLocationWatch!==null){stopProv
 function handleStripeConnectReturn(){const q=new URLSearchParams(location.search),state=q.get('stripe_connect');if(!state)return;if(state==='return'){toast('Payout setup returned to ZOVRO. Checking status…');setTimeout(()=>{if(me?.role==='provider')loadPayoutStatus()},600)}else if(state==='refresh'){toast('Payout setup link expired. Open Profile and continue payout setup.')}q.delete('stripe_connect');const next=location.pathname+(q.toString()?'?'+q.toString():'')+location.hash;history.replaceState({},'',next)}
 async function logout(){invalidateRequestLocation();requestIntent=null;requestAttempt=null;closeModal('requestModal');stopProviderLiveLocation(true);try{if(token)await api('/auth/logout',{method:'POST',body:'{}'})}catch{}token='';me=null;localStorage.removeItem('zovroToken');renderAccount();toast('Signed out')}async function deleteAccount(){if(!confirm('Permanently delete your ZOVRO account?'))return;try{await api('/me',{method:'DELETE',body:JSON.stringify({confirm:'DELETE'})});token='';me=null;localStorage.removeItem('zovroToken');renderAccount();toast('Account deleted')}catch(e){toast(e.message)}}boot().catch(e=>{console.error('ZOVRO boot rejected',e);const state=$('state');if(state){state.textContent='ZOVRO loaded · some features unavailable';state.style.color='#b45309'}try{renderAccount()}catch(_){}});if(new URLSearchParams(location.search).get('sms-opt-in')==='1')setTimeout(openSmsOptIn,900);setTimeout(handleStripeConnectReturn,900);setInterval(()=>{if(me)loadJobs()},10000);
 </script>
-<script src="website-final.js?v=silver-20260930"></script>
+<script src="website-final.js?v=silver-20260930-2"></script>
 <script src="profile-security-client.js?v=7"></script>
 <script src="support-policy.js?v=1"></script>
 <script src="support-assistant.js?v=1"></script>
