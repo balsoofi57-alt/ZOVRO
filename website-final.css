@@ -305,3 +305,60 @@ body.z-silver-layout .bottom{
 body.z-silver-layout .shell{
   padding-bottom:calc(24px + env(safe-area-inset-bottom))!important;
 }
+
+/* 2026-10-01: visual service options inside the silver catalog. */
+.z-catalog-list button.z-service-option{
+  position:relative;
+  display:flex!important;
+  align-items:center;
+  gap:12px;
+  min-height:64px;
+  padding:12px 16px!important;
+  border-width:1px!important;
+  font-weight:850!important;
+  letter-spacing:-.01em;
+  overflow:hidden;
+}
+.z-catalog-list button.z-service-option::before{
+  content:attr(data-z-service-icon);
+  width:38px;
+  height:38px;
+  flex:0 0 38px;
+  display:grid;
+  place-items:center;
+  border-radius:12px;
+  font-size:20px;
+  background:rgba(255,255,255,.62);
+  border:1px solid rgba(92,104,118,.22);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.55);
+}
+.z-catalog-list button.z-service-option::after{
+  content:'›';
+  margin-left:auto;
+  font-size:24px;
+  color:rgba(16,32,57,.58);
+}
+.z-catalog-list button.z-service-option:hover,
+.z-catalog-list button.z-service-option:focus-visible{
+  transform:translateY(-1px)!important;
+  filter:none!important;
+  border-color:rgba(50,71,94,.35)!important;
+}
+.z-catalog-list .z-tone-clean{background:linear-gradient(135deg,#f4fbff,#d8eaf7)!important}
+.z-catalog-list .z-tone-outdoor{background:linear-gradient(135deg,#f3fbf1,#d7ecd1)!important}
+.z-catalog-list .z-tone-moving{background:linear-gradient(135deg,#fff8ed,#f2dfbf)!important}
+.z-catalog-list .z-tone-auto{background:linear-gradient(135deg,#fff7df,#ead59b)!important}
+.z-catalog-list .z-tone-home{background:linear-gradient(135deg,#f6f4ff,#dedcf3)!important}
+.z-catalog-list .z-tone-plumbing{background:linear-gradient(135deg,#eff9ff,#cfe8f8)!important}
+.z-catalog-list .z-tone-electrical{background:linear-gradient(135deg,#fffbe6,#f2df83)!important}
+.z-catalog-list .z-tone-hvac{background:linear-gradient(135deg,#f3fbff,#d6eef5)!important}
+.z-catalog-list .z-tone-appliance{background:linear-gradient(135deg,#f5f7fb,#dfe6ee)!important}
+.z-catalog-list .z-tone-pest{background:linear-gradient(135deg,#fff1ed,#f0d0c6)!important}
+.z-catalog-list .z-tone-construction{background:linear-gradient(135deg,#f8f4ee,#e1d1bd)!important}
+.z-catalog-list .z-tone-business{background:linear-gradient(135deg,#f4f7fb,#d9e1ec)!important}
+.z-catalog-list .z-tone-emergency{background:linear-gradient(135deg,#fff1f2,#efc5c9)!important}
+.z-catalog-list .z-tone-other{background:linear-gradient(135deg,#f8fafc,#e0e5eb)!important}
+@media(max-width:700px){
+  .z-catalog-list button.z-service-option{min-height:72px;padding:13px 16px!important}
+  .z-catalog-list button.z-service-option::before{width:42px;height:42px;flex-basis:42px;font-size:22px}
+}
