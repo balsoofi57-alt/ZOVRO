@@ -7,7 +7,8 @@ const EMAIL_TTL = 30 * 60 * 1000;
 const EMAIL_RESERVATION_MS = 5 * 60 * 1000;
 function normalizeRecoveryPhone(value) {
   let phone=String(value||'').replace(/[\s()-]/g,'');
-  if(/^1[0-9]{10}$/.test(phone))phone='+'+phone;
+  if(/^[0-9]{10}$/.test(phone))phone='+1'+phone;
+  else if(/^1[0-9]{10}$/.test(phone))phone='+'+phone;
   return /^\+[1-9][0-9]{7,14}$/.test(phone)?phone:null;
 }
 const unavailable = {error:'Password recovery is temporarily unavailable. Contact support@zovro.work for help.'};
