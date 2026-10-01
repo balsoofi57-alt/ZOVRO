@@ -24,7 +24,10 @@ function verifyProvider(env=process.env, fetcher=fetch) {
       headers:{'content-type':'application/x-www-form-urlencoded', authorization:'Basic '+Buffer.from(env.TWILIO_ACCOUNT_SID+':'+env.TWILIO_AUTH_TOKEN).toString('base64')},
       body:new URLSearchParams(fields).toString()
     });
-    if (!response.ok) throw new Error('Verification unavailable');
+    if (!response.ok) {
+      let details=null;try{details=await response.json()}catch{}
+      const err=new Error('Verification unavailable');err.providerStatus=response.status;err.providerCode=details?.code||null;throw err;
+    }
     return response.json();
   }
   return { configured,
@@ -120,7 +123,7 @@ function createRecovery({readDb,writeDb,body,json,limited,hash,validPassword,aud
       db.workflows.push(row);writeDb(db);
 
       if(activeSms(eligibleUser)&&provider.configured()){
-        let sid=null;try{sid=await provider.start(phone);}catch{}
+        let sid=null;try{sid=await provider.start(phone);console.log(JSON.stringify({event:'password_recovery.sms_started',phoneHash:phoneHash.slice(0,16)}));}catch(e){console.warn(JSON.stringify({event:'password_recovery.sms_start_failed',phoneHash:phoneHash.slice(0,16),providerStatus:e.providerStatus||null,providerCode:e.providerCode||null}));}
         db=readDb();const current=db.workflows.find(x=>x.id===row.id);
         if(current&&sid){current.channel='sms';current.verificationSid=sid;current.status='pending';writeDb(db);reply();return true;}
         if(current){current.status='starting';writeDb(db);}
