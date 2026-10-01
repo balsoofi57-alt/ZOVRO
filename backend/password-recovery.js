@@ -114,7 +114,7 @@ function createRecovery({readDb,writeDb,body,json,limited,hash,validPassword,aud
       const challenge=crypto.randomBytes(32).toString('hex'),timestamp=now(),phoneHash=digest(phone);
       const reply=()=>json(res,202,{challenge,message:'If this number belongs to an eligible account, a verification code will arrive by text message or account email. The code expires soon.'});
       let db=readDb();
-      const recent=db.workflows.filter(x=>x.type===TYPE&&x.phoneHash===phoneHash&&x.createdMs>timestamp-3600000);
+      const recent=db.workflows.filter(x=>x.type===TYPE&&x.phoneHash===phoneHash&&x.createdMs>timestamp-3600000&&x.status!=='unavailable');
       if(recent.length>=3||recent.some(x=>x.createdMs>timestamp-60000)){reply();return true;}
       const matches=db.users.filter(u=>normalizeRecoveryPhone(u.phone)===phone);
       const user=matches.length===1?matches[0]:null;
