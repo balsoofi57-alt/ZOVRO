@@ -287,3 +287,21 @@ body.z-silver-layout .trust,body.z-silver-layout #home #howItWorks,body.z-silver
 @media(prefers-reduced-transparency:reduce){.card,.z-menu-group,.bottom{background:#e9edf1!important}}
 
 body.z-silver-layout #smartMatch #sosHelp{display:block!important;font-size:12px!important;line-height:1.5;margin:10px 0}
+
+
+/* 2026-09-30: remove obsolete standalone white navigation panel. */
+body.z-silver-layout nav.bottom,
+body.z-silver-layout .bottom.z-simple-nav,
+body.z-silver-layout .bottom{
+  display:none!important;
+  visibility:hidden!important;
+  height:0!important;
+  min-height:0!important;
+  padding:0!important;
+  margin:0!important;
+  border:0!important;
+  overflow:hidden!important;
+}
+body.z-silver-layout .shell{
+  padding-bottom:calc(24px + env(safe-area-inset-bottom))!important;
+}
