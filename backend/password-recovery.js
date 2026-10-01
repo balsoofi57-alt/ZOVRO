@@ -61,7 +61,7 @@ function sixDigitCode(){return String(crypto.randomInt(0,1000000)).padStart(6,'0
 function createRecovery({readDb,writeDb,body,json,limited,hash,validPassword,audit,provider=verifyProvider(),now=Date.now,workerToken=process.env.ZOVRO_RECOVERY_WORKER_TOKEN||''}) {
   const emailConfigured=()=>String(workerToken).length>=32;
   const active=u=>u&&(u.accountStatus||'active')==='active';
-  const activeSms=u=>active(u)&&u.phoneVerified===true;
+  const activeSms=u=>active(u);
   const workerAuthorized=req=>emailConfigured()&&safeEqual(req.headers?.['x-zovro-recovery-worker-token']||'',workerToken);
   const generic=challenge=>jsonResponse=>jsonResponse(202,{challenge,message:'If this number belongs to an eligible account, a verification code will arrive by text message or account email. The code expires soon.'});
 
@@ -122,8 +122,8 @@ function createRecovery({readDb,writeDb,body,json,limited,hash,validPassword,aud
       if(activeSms(eligibleUser)&&provider.configured()){
         let sid=null;try{sid=await provider.start(phone);}catch{}
         db=readDb();const current=db.workflows.find(x=>x.id===row.id);
-        if(current){current.channel='sms';current.verificationSid=sid;current.status=sid?'pending':'unavailable';writeDb(db);}
-        reply();return true;
+        if(current&&sid){current.channel='sms';current.verificationSid=sid;current.status='pending';writeDb(db);reply();return true;}
+        if(current){current.status='starting';writeDb(db);}
       }
 
       if(eligibleUser&&emailConfigured()&&validRecoveryEmail(eligibleUser.email)){
