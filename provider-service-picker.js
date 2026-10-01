@@ -22,10 +22,14 @@
   }
   function search(input){
     const query=input.value.trim().toLowerCase();
+    const smart=new Set((window.ZOVRO_CATALOG?.smartMatch?.(query,{limit:12})||[]).map(x=>x?.service?.label?.en).filter(Boolean));
     for(const group of input.closest('fieldset').querySelectorAll('details')){
       let matches=0;
       for(const row of group.querySelectorAll('.provider-service-choice')){
-        row.hidden=!!query&&!row.textContent.toLowerCase().includes(query);
+        const label=row.textContent.trim();
+        const direct=label.toLowerCase().includes(query);
+        const intelligent=!!query&&smart.has(label);
+        row.hidden=!!query&&!direct&&!intelligent;
         if(!row.hidden)matches++;
       }
       group.hidden=matches===0;
