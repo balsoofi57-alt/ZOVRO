@@ -248,23 +248,68 @@
     const button=(text,action,cls='btn ghost')=>{const b=document.createElement('button');b.type='button';b.className=cls;b.textContent=text;b.onclick=action;return b};
     const serviceVisual=(label,categoryId='')=>{
       const text=String(label||'').toLowerCase();
-      const categoryTone={ 'auto-roadside':['auto','🚗'], 'home-services':['home','🏠'], 'emergency-sos':['emergency','🚨'], 'construction-property':['construction','🏗️'], 'outdoor-seasonal':['outdoor','🌳'], cleaning:['clean','🧹'], 'moving-hauling':['moving','🚚'], 'business-services':['business','🏢'], 'other-help':['other','✨'] };
-      if(categoryTone[categoryId])return categoryTone[categoryId];
-      const tests=[
-        [/clean|maid|carpet|window|construction cleanup/,['clean','🧹']],
-        [/tree|stump|branch|landscap|lawn|yard|snow|gutter/,['outdoor','🌳']],
-        [/mov|haul|junk|load|unload|furniture|box/,['moving','🚚']],
-        [/roadside|tire|jump|tow|lockout|battery|auto|mechanic|brake|oil|vehicle|car/,['auto','🚗']],
-        [/plumb|water|drain|toilet|pipe|faucet|sewer/,['plumbing','🚿']],
-        [/electric|outlet|breaker|wiring|light/,['electrical','⚡']],
-        [/hvac|furnace|heat|air condition|thermostat|duct/,['hvac','❄️']],
-        [/appliance|washer|dryer|dishwasher|oven|refrigerator|fridge/,['appliance','🧰']],
-        [/pest|bug|rodent|mice|rat|termite|ant|roach|bed bug|spider|wasp|hornet/,['pest','🐜']],
-        [/paint|drywall|floor|tile|roof|concrete|deck|fence|contractor|construction/,['construction','🏗️']],
-        [/business|commercial|office|security|janitorial/,['business','🏢']]
+      const direct=[
+        [/roadside|emergency roadside/,['roadside','🛟']],
+        [/tire/,['tire','🛞']],
+        [/jump|battery/,['battery','🔋']],
+        [/lockout|locked/,['lock','🔐']],
+        [/tow/,['tow','🪝']],
+        [/mechanic|engine|brake|oil|vehicle|auto|car repair/,['mechanic','🔧']],
+        [/handyman|repair/,['handyman','🛠️']],
+        [/plumb|pipe|faucet|sewer/,['plumbing','🚿']],
+        [/drain|toilet/,['drain','🚽']],
+        [/electric|outlet|breaker|wiring/,['electrical','⚡']],
+        [/light/,['lighting','💡']],
+        [/hvac|air condition|ac\b|thermostat/,['hvac','❄️']],
+        [/furnace|heat/,['heat','🔥']],
+        [/appliance/,['appliance','🧰']],
+        [/washer/,['washer','🫧']],
+        [/dryer/,['dryer','🌬️']],
+        [/dishwasher/,['dishwasher','🍽️']],
+        [/oven/,['oven','♨️']],
+        [/refrigerator|fridge/,['fridge','🧊']],
+        [/roof/,['roof','🏠']],
+        [/paint/,['paint','🎨']],
+        [/floor|tile|hardwood|laminate/,['floor','▰']],
+        [/drywall/,['drywall','⬚']],
+        [/concrete/,['concrete','◼']],
+        [/deck/,['deck','▤']],
+        [/fence/,['fence','▥']],
+        [/contractor|construction/,['construction','🏗️']],
+        [/landscap/,['landscape','🌿']],
+        [/lawn|grass|mowing/,['lawn','🌱']],
+        [/yard cleanup|yard clean|leaf/,['yard','🍂']],
+        [/snow/,['snow','❄️']],
+        [/tree|branch|arborist|prun/,['tree','🌳']],
+        [/stump/,['stump','🪵']],
+        [/gutter/,['gutter','💧']],
+        [/house clean|maid/,['houseclean','🏡']],
+        [/deep clean/,['deepclean','✨']],
+        [/move-in/,['movein','📥']],
+        [/move-out/,['moveout','📤']],
+        [/carpet|rug/,['carpet','▣']],
+        [/window clean|clean windows/,['window','🪟']],
+        [/commercial cleaning|office cleaning|janitorial/,['commercialclean','🏢']],
+        [/post-construction/,['postconstruction','🏗️']],
+        [/moving$/,['moving','🚚']],
+        [/furniture/,['furniture','🛋️']],
+        [/loading|unloading/,['loading','📦']],
+        [/junk|debris|haul/,['junk','🧱']],
+        [/pest|bug|insect/,['pest','🐜']],
+        [/bed bug/,['bedbug','▦']],
+        [/termite/,['termite','🪵']],
+        [/roach|cockroach/,['roach','⬢']],
+        [/ant/,['ant','🐜']],
+        [/spider/,['spider','✳']],
+        [/wasp|hornet/,['wasp','◇']],
+        [/mice|mouse/,['mouse','⌁']],
+        [/rat|rodent/,['rodent','◉']],
+        [/security/,['security','🛡️']],
+        [/business|commercial|office/,['business','🏢']]
       ];
-      for(const [pattern,result] of tests){if(pattern.test(text))return result}
-      return ['other','✨'];
+      for(const [pattern,result] of direct){if(pattern.test(text))return result}
+      const categoryTone={ 'auto-roadside':['auto','🚗'], 'home-services':['home','🏠'], 'emergency-sos':['emergency','🚨'], 'construction-property':['construction','🏗️'], 'outdoor-seasonal':['outdoor','🌳'], cleaning:['clean','🧹'], 'moving-hauling':['moving','🚚'], 'business-services':['business','🏢'], 'other-help':['other','✨'] };
+      return categoryTone[categoryId]||['other','✨'];
     };
     const styleServiceButton=(b,label,categoryId)=>{const [tone,icon]=serviceVisual(label,categoryId);b.classList.add('z-service-option','z-tone-'+tone);b.dataset.zServiceIcon=icon;return b};
     const showTab=i=>{tabs[i]?.click();window.scrollTo({top:0,behavior:'smooth'})};
