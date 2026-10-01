@@ -33,7 +33,7 @@
   }
   // Conservative shared classification for both bundled clients and the API.
   const aliases={
-    'Tree Service':['tree services','tree removal','tree trimming','trim trees','cut down a tree','stump removal','stump grinding','tree','trees','shajara','ashjar','شجرة','الشجرة','اشجار','الأشجار','اشجار','خدمة الاشجار','خدمة الأشجار','قص شجرة','قطع شجرة','تقليم شجرة','تقليم الاشجار','تقليم الأشجار','ازالة شجرة','إزالة شجرة','ازالة الاشجار','إزالة الأشجار','جذع شجرة','طحن الجذع'],
+    'Tree Service':['tree services','tree service','tree removal','tree trimming','trim trees','cut down a tree','stump removal','stump grinding','tree','trees','branch','branches','tree branch','fallen tree','fallen branch','remove tree','cut tree','trim tree','stump','shajara','ashjar','شجرة','الشجرة','اشجار','الأشجار','اشجار','خدمة الاشجار','خدمة الأشجار','قص شجرة','قطع شجرة','تقليم شجرة','تقليم الاشجار','تقليم الأشجار','ازالة شجرة','إزالة شجرة','ازالة الاشجار','إزالة الأشجار','جذع شجرة','طحن الجذع'],
     'Tire Change':['flat tire','change tire'],
     'Jump Start':['dead battery','jumpstart'],
     'Vehicle Lockout':['locked out of car','car lockout'],
@@ -51,19 +51,29 @@
   const normalize=text=>String(text||'').toLowerCase().replace(/[^\p{L}\p{N}]+/gu,' ').trim();
   function inferService(details){
     if(typeof details!=='string'||details.length>1000)return null;
-    const text=' '+normalize(details)+' ';
+    const normalized=normalize(details);
+    const text=' '+normalized+' ';
     // Negation and multiple distinct services need the customer's own selection.
     if(/\b(no|not|without|dont|don t|instead|rather)\b/.test(text))return null;
-    const hits=[];
+    const scores=new Map();
+    const add=(service,points)=>scores.set(service,(scores.get(service)||0)+points);
     for(const item of all){
       for(const phrase of [item.label,...(aliases[item.label]||[])]){
-        const needle=' '+normalize(phrase)+' ';
-        if(text.includes(needle))hits.push({service:item.label,phrase:needle.trim()});
+        const p=normalize(phrase);
+        if(!p)continue;
+        const needle=' '+p+' ';
+        const words=p.split(' ').filter(Boolean);
+        if(text.includes(needle)){
+          add(item.label,Math.max(4,words.length*4));
+          continue;
+        }
+        if(words.length>1&&words.every(word=>text.includes(' '+word+' ')))add(item.label,words.length*2);
       }
     }
-    const specific=hits.filter(hit=>!hits.some(other=>other.service!==hit.service&&other.phrase.length>hit.phrase.length&&(' '+other.phrase+' ').includes(' '+hit.phrase+' ')));
-    const choices=[...new Set(specific.map(hit=>hit.service))];
-    return choices.length===1?choices[0]:null;
+    const ranked=[...scores.entries()].sort((a,b)=>b[1]-a[1]);
+    if(!ranked.length)return null;
+    const [best,bestScore]=ranked[0], secondScore=ranked[1]?.[1]||0;
+    return bestScore>=4&&bestScore>=secondScore+2?best:null;
   }
   function correctRequestService(request){
     if(request.source==='sos'||request.serviceSelectionManual===true)return request.service;
