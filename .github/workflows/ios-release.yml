@@ -106,6 +106,7 @@ jobs:
           IOS_PROVISIONING_PROFILE_BASE64: ${{ secrets.ZOVRO_IOS_PROVISIONING_PROFILE_BASE64 }}
           APPLE_TEAM_ID: ${{ secrets.ZOVRO_APPLE_TEAM_ID }}
         run: |
+          set -euo pipefail
           if [[ -z "$IOS_CERTIFICATE_P12_BASE64" || -z "$IOS_CERTIFICATE_PASSWORD" || -z "$IOS_PROVISIONING_PROFILE_BASE64" || -z "$APPLE_TEAM_ID" ]]; then
             echo "Apple signing secrets are incomplete; keeping the verified unsigned simulator artifact."
             echo "available=false" >> "$GITHUB_OUTPUT"
