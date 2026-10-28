@@ -384,3 +384,7 @@ body.z-silver-layout .z-category svg,body.z-silver-layout .z-quick svg{color:#11
 body.z-silver-layout #zProblem{background:#17385e!important;color:#fff!important;border:1px solid #8ea7c1!important}
 body.z-silver-layout #zProblem::placeholder{color:#d5e0ed!important}
 body.z-silver-layout #sosButton{background:#e3e6eb!important;color:#a91520!important;border:2px solid #b4232c!important}
+
+/* Search must override the service-card display rule. */
+.z-catalog-list button.z-service-option[hidden]{display:none!important}
+#zSilverCatalog .z-service-heading h2{color:#102039!important}
