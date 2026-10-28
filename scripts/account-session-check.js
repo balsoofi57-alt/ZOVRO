@@ -3,7 +3,7 @@ const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('nod
 const html=fs.readFileSync(path.join(__dirname,'../index.html'),'utf8');
 const nodes=new Map(),pending=[],messages=[];
 function node(id){if(!nodes.has(id)){const hidden=new Set();nodes.set(id,{innerHTML:'',classList:{toggle(k,on){if(on)hidden.add(k);else hidden.delete(k)},contains:k=>hidden.has(k)},insertAdjacentHTML(){}})}return nodes.get(id)}
-const c=vm.createContext({$:node,me:{id:'old',role:'provider',name:'Provider'},token:'old-session',jobs:[{id:'old-job'}],activeJob:'old-job',esc:String,ZOVRO_PROVIDER_SERVICES:{servicesFor:()=>[]},ZOVRO_SERVICE_PICKER:{markup:()=>''},loadProviderStats(){},loadPayoutStatus(){},toast:m=>messages.push(m),api:()=>new Promise((resolve,reject)=>pending.push({resolve,reject}))});
+const c=vm.createContext({$:node,me:{id:'old',role:'provider',name:'Provider'},token:'old-session',jobs:[{id:'old-job'}],activeJob:'old-job',esc:String,ZOVRO_PROVIDER_SERVICES:{servicesFor:()=>[]},ZOVRO_SERVICE_PICKER:{markup:()=>''},loadProviderStats(){},loadPayoutStatus(){},loadProviderEarnings(){},toast:m=>messages.push(m),api:()=>new Promise((resolve,reject)=>pending.push({resolve,reject}))});
 vm.runInContext(html.match(/^function renderAccount\(\).*$/m)[0],c);
 vm.runInContext(html.match(/async function loadJobs\(\)[\s\S]*?(?=function jobHtml)/)[0],c);
 c.jobHtml=j=>j.id;
