@@ -16,7 +16,7 @@ mustContain("service:'Pest & Rodent Control'",'pest Smart Match rule');
 mustContain("sub:'Bed Bugs'",'bed bug subservice rule');
 mustContain("sub:'Mice'",'mice subservice rule');
 mustContain("sub:'Rats'",'rats subservice rule');
-mustContain("oninput=\"smartMatchDetails()\"",'live Smart Match input hook');
+assert(/oninput="(?:requestServiceManual=false;)?smartMatchDetails\(\)"/.test(html),'Missing live Smart Match input hook');
 mustContain("Smart Match: ${match.service}",'visible Smart Match confirmation');
 mustContain("smartMatchDetails();const selectedService=$('reqService').value",'pre-submit Smart Match enforcement');
 mustContain("service=smart?.service||selectedService",'Smart Match canonical service mapping');
