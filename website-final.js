@@ -326,9 +326,23 @@
       if(!catalog){catalog=document.createElement('div');catalog.id='zSilverCatalog';catalog.className='modal';catalog.innerHTML='<div class="sheet" role="dialog" aria-modal="true" aria-labelledby="zCatalogTitle"><div class="z-service-heading"><h2 id="zCatalogTitle"></h2><button type="button" id="zCatalogClose" aria-label="Close services">Close</button></div><div class="field"><label for="zCatalogSearch">Find a service</label><input id="zCatalogSearch" type="search" placeholder="Search services"></div><div class="z-catalog-list"></div></div>';document.body.appendChild(catalog);document.getElementById('zCatalogClose').onclick=()=>window.closeModal(catalog.id);catalog.addEventListener('click',e=>{if(e.target===catalog)window.closeModal(catalog.id)});catalog.addEventListener('keydown',e=>{if(e.key==='Escape')window.closeModal(catalog.id)})}
       document.getElementById('zCatalogTitle').textContent=title||'All services';const list=catalog.querySelector('.z-catalog-list');list.replaceChildren();
       const groups=window.ZOVRO_CATALOG?.SERVICE_CATALOG||[];const seen=new Set();
-      for(const g of groups){if(categoryId&&g.id!==categoryId)continue;for(const service of g.services){if(seen.has(service.id))continue;seen.add(service.id);seen.add(service.label.en);const item=styleServiceButton(button(service.label.en,()=>{window.closeModal(catalog.id);window.startService(service.label.en)}),service.label.en,service.categoryId||g.id);list.appendChild(item)}}
+      const related=[
+        {label:'Tire Services',ids:['tire-change','mobile-tire-service','flat-tire-repair']},
+        {label:'Doors & Windows',ids:['doors-windows','windows-doors']},
+        {label:'Snow Removal & Plowing',ids:['snow-removal','snow-plowing']},
+        {label:'Plumbing',ids:['plumbing','emergency-plumber']},
+        {label:'Electrical',ids:['electrical','emergency-electrician']},
+        {label:'Heating & Air Conditioning',ids:['hvac','emergency-hvac']},
+        {label:'Locksmith',ids:['locksmith','emergency-locksmith']},
+        {label:'Roadside Assistance',ids:['roadside-assistance','emergency-roadside']},
+        {label:'Mobile Mechanic',ids:['mobile-mechanic','emergency-mechanic']},
+        {label:'Towing',ids:['towing','emergency-towing']}
+      ];
+      const all=groups.flatMap(g=>g.services);const displayedGroups=new Set();
+      const addService=(service)=>{const item=styleServiceButton(button(service.label.en,()=>{window.closeModal(catalog.id);window.startService(service.label.en)}),service.label.en,service.categoryId);item.dataset.searchTerms=service.label.en.toLowerCase();list.appendChild(item)};
+      for(const g of groups){if(categoryId&&g.id!==categoryId)continue;for(const service of g.services){if(seen.has(service.id)||seen.has(service.label.en))continue;const family=related.find(x=>x.ids.includes(service.id));if(family){if(displayedGroups.has(family.label))continue;displayedGroups.add(family.label);const choices=all.filter(x=>family.ids.includes(x.id));for(const choice of choices){seen.add(choice.id);seen.add(choice.label.en)}const item=styleServiceButton(button(family.label,()=>{list.replaceChildren();document.getElementById('zCatalogTitle').textContent=family.label;const back=button('‹ Back to services',()=>openCatalog(categoryId,title));list.appendChild(back);choices.forEach(addService)}),family.label,g.id);item.dataset.searchTerms=(family.label+' '+choices.map(x=>x.label.en).join(' ')).toLowerCase();list.appendChild(item);continue}seen.add(service.id);seen.add(service.label.en);addService(service)}}
       if(!categoryId){for(const group of window.ZOVRO_PROVIDER_SERVICES?.groups||[]){for(const service of group.services){if(seen.has(service.label))continue;seen.add(service.label);const item=styleServiceButton(button(service.label,()=>{window.closeModal(catalog.id);window.startService(service.label)}),service.label,group.id);list.appendChild(item)}}}
-      const search=document.getElementById('zCatalogSearch');search.value='';search.oninput=()=>{const q=search.value.trim().toLowerCase();for(const b of list.children)b.hidden=!b.textContent.toLowerCase().includes(q)};window.openModal(catalog.id);search.focus();
+      const search=document.getElementById('zCatalogSearch');search.value='';search.oninput=()=>{const q=search.value.trim().toLowerCase();for(const b of list.children)b.hidden=!(b.dataset.searchTerms||b.textContent.toLowerCase()).includes(q)};window.openModal(catalog.id);search.focus();
     }
     categories.querySelector('.z-service-heading').appendChild(button('See all  ›',()=>openCatalog()));
     for(const [label,id,glyph] of [['Roadside Assistance','auto-roadside','car'],['Home Repairs','home-services','home'],['Cleaning','cleaning','clean'],['Outdoor & Tree Care','outdoor-seasonal','tree'],['Moving & Hauling','moving-hauling','truck'],['More Services',null,'more']]){const b=button('',()=>openCatalog(id,label),'z-category');b.innerHTML=icon(glyph)+'<span>'+label+'</span>';categories.querySelector('.z-category-grid').appendChild(b)}
