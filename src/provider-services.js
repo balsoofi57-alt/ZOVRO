@@ -71,13 +71,26 @@
     'Roofing':'roof roofing shingles leak gutter',
     'Pest & Rodent Control':'pest bugs insect insects roach cockroach mouse mice rat rats termite bedbug ants'
   };
-  function inferService(details){
+  function inferService(details, checkMultiple=true){
     if(typeof details!=='string'||details.length>1000)return null;
     const normalized=normalize(details);
     const text=' '+normalized+' ';
     if(!normalized)return null;
     // Negation and multiple distinct services need the customer's own selection.
     if(/\b(no|not|without|dont|don t|instead|rather)\b/.test(text))return null;
+    // Exact catalog names (including urgent variants) take priority over
+    // overlapping broad terms such as "roadside".
+    const exact=all.find(item=>normalize(item.label)===normalized);
+    if(exact)return exact.label;
+    // Two independently identifiable requests should not be silently routed
+    // to just one trade. Related or inconclusive fragments retain normal scoring.
+    if(checkMultiple){
+      const parts=normalized.split(/\s+(?:and|plus)\s+/).filter(Boolean);
+      if(parts.length>1){
+        const identified=new Set(parts.map(part=>inferService(part,false)).filter(Boolean));
+        if(identified.size>1)return null;
+      }
+    }
     const tokens=new Set(normalized.split(' ').filter(w=>w.length>1));
     const scores=new Map();
     const add=(service,points)=>scores.set(service,(scores.get(service)||0)+points);
