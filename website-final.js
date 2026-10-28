@@ -104,7 +104,7 @@
 
     if(hero&&!document.getElementById('smartMatch')){
       const sm=document.createElement('section');sm.id='smartMatch';sm.className='z-smart-match';
-      sm.innerHTML='<div class="z-section-kicker">Smart Match</div><h2>What do you need help with?</h2><p>Describe the problem in your own words. ZOVRO will start the right request flow for you.</p><div class="z-smart-box"><textarea id="zProblem" rows="2" placeholder="Example: My car will not start, or water is leaking under my sink"></textarea><div class="z-smart-actions"><button class="btn primary" id="zSmartGo">Help Now</button><button class="btn ghost" id="zVoice">🎙 Voice</button></div></div><div id="zSmartStatus" class="z-smart-status">No need to know the service category — just describe the problem.</div>';
+      sm.innerHTML='<div class="z-section-kicker">Smart Match</div><h2>What do you need help with?</h2><p>Describe the problem in your own words. ZOVRO will start the right request flow for you.</p><div class="z-smart-box"><textarea id="zProblem" rows="2" placeholder="Example: My car will not start, or water is leaking under my sink"></textarea><div class="z-smart-actions"><button class="btn primary" id="zSmartGo">Help Now</button><button class="btn ghost" id="zVoice">🎙 Voice</button></div></div><div id="zSmartStatus" class="z-smart-status" role="status" aria-live="polite"></div>';
       hero.insertAdjacentElement('afterend',sm);
       document.getElementById('zSmartGo').addEventListener('click',()=>{const q=document.getElementById('zProblem').value.trim();if(!q){document.getElementById('zProblem').focus();return}openHelp(q)});
       document.getElementById('zVoice').addEventListener('click',()=>{
