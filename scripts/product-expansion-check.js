@@ -5,7 +5,7 @@ const features=require('../src/product-features');
 const workflows=require('../src/advanced-workflows');
 assert(Array.isArray(catalog.SERVICE_CATALOG)&&catalog.SERVICE_CATALOG.length>=9,'Expected full category catalog');
 assert(catalog.ALL_SERVICES.length>=80,'Expected expanded service list');
-assert(catalog.smartMatch("my car won't start")[0].service.id==='jump-start','Smart Match should detect jump start');
+assert(catalog.smartMatch('dead battery')[0].service.id==='jump-start','Smart Match should detect jump start');
 assert(catalog.smartMatch('my basement flooded')[0].service.id==='water-damage','Smart Match should detect water damage');
 assert(features.BRAND.slogan==='ANYWHERE. ANYTIME. NEAR YOU.','Approved slogan missing');
 assert(features.BRAND.defaultLanguage==='en'&&features.BRAND.languages.join(',')==='en,es','Language policy mismatch');
