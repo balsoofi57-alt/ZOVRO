@@ -24,8 +24,8 @@ test('one chosen bundle registers exact services and dispatch matches each one',
 });
 test('existing partial selections stay unchanged until explicitly changed',()=>{
  const html=picker().api.markup('test',['Plumbing']);
- assert.match(html,/currently saved: Plumbing/);
- assert.match(html,/Select to add all; clear to remove all/);
+ assert.match(html,/Currently saved: Plumbing/);
+ assert.match(html,/Remove these from selection/);
  const input={checked:false,dataset:{members:JSON.stringify(['Plumbing','Emergency Plumber']),original:JSON.stringify(['Plumbing'])}};
  const {api,fieldset}=picker([input]);
  assert.deepEqual([...api.read('test')],['Plumbing']);
@@ -43,4 +43,16 @@ test('mechanic and seasonal bundles cover the requested related jobs',()=>{
    const selected=picker([input]).api.read('test');
    for(const service of services)assert.equal(model.matchesService({services:selected},service),true);
  }
+});
+
+test('remove a partial bundle without enabling other services',()=>{
+ const input={checked:false,dataset:{members:JSON.stringify(['Plumbing','Emergency Plumber']),original:JSON.stringify(['Plumbing'])}};
+ const other={checked:true,value:'Electrical',dataset:{}};
+ const {api,fieldset}=picker([input,other]);
+ let removed=false;
+ const row={querySelector:selector=>selector.startsWith('input')?input:{remove:()=>{removed=true}}};
+ const button={closest:selector=>selector==='fieldset'?fieldset:row};
+ api.removePartial(button);
+ assert.equal(removed,true);
+ assert.deepEqual([...api.read('test')],['Electrical']);
 });
