@@ -84,13 +84,7 @@
     if(exact)return exact.label;
     // Two independently identifiable requests should not be silently routed
     // to just one trade. Related or inconclusive fragments retain normal scoring.
-    if(checkMultiple){
-      const parts=normalized.split(/\s+(?:and|plus)\s+/).filter(Boolean);
-      if(parts.length>1){
-        const identified=new Set(parts.map(part=>inferService(part,false)).filter(Boolean));
-        if(identified.size>1)return null;
-      }
-    }
+    if(checkMultiple && hasMultipleServices(details))return null;
     const tokens=new Set(normalized.split(' ').filter(w=>w.length>1));
     const scores=new Map();
     const add=(service,points)=>scores.set(service,(scores.get(service)||0)+points);
@@ -114,9 +108,15 @@
     const [best,bestScore]=ranked[0], secondScore=ranked[1]?.[1]||0;
     return bestScore>=5&&bestScore>=secondScore+3?best:null;
   }
+  function hasMultipleServices(details){
+    const normalized=normalize(details);
+    if(!normalized||all.some(item=>normalize(item.label)===normalized))return false;
+    const parts=normalized.split(/\s+(?:and|plus)\s+/).filter(Boolean);
+    return parts.length>1 && new Set(parts.map(part=>inferService(part,false)).filter(Boolean)).size>1;
+  }
   function correctRequestService(request){
     if(request.source==='sos'||request.serviceSelectionManual===true)return request.service;
     return inferService(request.details)||request.service;
   }
-  return {groups,all,canonical,validateServices,servicesFor,matchesService,inferService,correctRequestService};
+  return {groups,all,canonical,validateServices,servicesFor,matchesService,inferService,hasMultipleServices,correctRequestService};
 });
