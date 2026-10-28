@@ -370,3 +370,17 @@ body.z-silver-layout .shell{
 .z-catalog-list .z-tone-business{background:linear-gradient(135deg,#f4f7fb,#dae2ec)!important}
 .z-catalog-list .z-tone-auto,.z-catalog-list .z-tone-home,.z-catalog-list .z-tone-clean,.z-catalog-list .z-tone-outdoor,.z-catalog-list .z-tone-emergency,.z-catalog-list .z-tone-other{background:linear-gradient(135deg,#f8fafc,#e0e5eb)!important}
 @media(max-width:700px){.z-catalog-list button.z-service-option{min-height:72px;padding:13px 16px!important}.z-catalog-list button.z-service-option::before{width:42px;height:42px;flex-basis:42px;font-size:22px}}
+
+/* Navy and soft silver-blue home theme. Keep the status region usable. */
+body.z-silver-layout{background:#071c38!important;color:#f4f7fc!important}
+body.z-silver-layout .top{background:#0b2344!important;border-bottom:1px solid #b69b5f!important}
+body.z-silver-layout .hero .z-brand-showcase{display:none!important}
+body.z-silver-layout .hero{min-height:0!important;padding:0!important;margin:0!important}
+body.z-silver-layout #smartMatch #sosHelp{display:none!important}
+body.z-silver-layout #smartMatch .z-smart-status:empty{display:none!important}
+body.z-silver-layout #smartMatch h2,body.z-silver-layout .z-service-heading h2{color:#f4f7fc!important}
+body.z-silver-layout .z-category,body.z-silver-layout .z-quick,body.z-silver-layout #zLocationShortcut,body.z-silver-layout #zSmartGo,body.z-silver-layout .z-service-heading button{background:linear-gradient(135deg,#e2e9f1,#9db2c8)!important;color:#0a1c3a!important;border:1px solid #b69b5f!important}
+body.z-silver-layout .z-category svg,body.z-silver-layout .z-quick svg{color:#112b4f!important}
+body.z-silver-layout #zProblem{background:#17385e!important;color:#fff!important;border:1px solid #8ea7c1!important}
+body.z-silver-layout #zProblem::placeholder{color:#d5e0ed!important}
+body.z-silver-layout #sosButton{background:#e3e6eb!important;color:#a91520!important;border:2px solid #b4232c!important}
