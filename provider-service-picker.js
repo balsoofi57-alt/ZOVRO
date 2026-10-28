@@ -26,9 +26,10 @@
           if(seen.has('bundle:'+bundle.label))return '';
           seen.add('bundle:'+bundle.label);
           const original=bundle.members.filter(x=>chosen.has(x));
-          return `<label class="provider-service-choice"><input type="checkbox" value="${esc(bundle.label)}" data-members="${esc(JSON.stringify(bundle.members))}" data-original="${esc(JSON.stringify(original))}" ${original.length===bundle.members.length?'checked':''}><span>${esc(bundle.label)} <small>(${esc(bundle.members.join(', '))})</small>${original.length&&original.length<bundle.members.length?` — currently saved: ${esc(original.join(', '))}. Select to add all; clear to remove all.`:''}</span></label>`;
+          const partial=original.length>0&&original.length<bundle.members.length;
+          return `<div class="provider-service-row"><label class="provider-service-choice"><input type="checkbox" value="${esc(bundle.label)}" data-members="${esc(JSON.stringify(bundle.members))}" data-original="${esc(JSON.stringify(original))}" ${original.length===bundle.members.length?'checked':''}><span>${esc(bundle.label)} <small>(${esc(bundle.members.join(', '))})</small></span></label>${partial?`<div class="provider-service-partial"><small>Currently saved: ${esc(original.join(', '))}. Select the group to offer every listed service; save changes to apply.</small> <button type="button" onclick="ZOVRO_SERVICE_PICKER.removePartial(this)">Remove these from selection</button></div>`:''}</div>`;
         }
-        return `<label class="provider-service-choice"><input type="checkbox" value="${esc(s.label)}" ${chosen.has(s.label)?'checked':''}><span>${esc(s.label)}</span></label>`;
+        return `<div class="provider-service-row"><label class="provider-service-choice"><input type="checkbox" value="${esc(s.label)}" ${chosen.has(s.label)?'checked':''}><span>${esc(s.label)}</span></label></div>`;
       }).join('');
       if(!items)return '';
       return `<details class="provider-service-group" ${group.services.some(s=>chosen.has(s.label))?'open':''}><summary>${esc(group.label)}</summary>${items}</details>`;
@@ -48,16 +49,25 @@
   }
   function update(fieldset,event){
     const input=event?.target;
-    if(input?.dataset?.members)input.dataset.original='[]';
-    const count=fieldset.querySelectorAll('input[type="checkbox"]:checked').length;
+    if(input?.dataset?.members){input.dataset.original='[]';input.closest?.('.provider-service-row')?.querySelector('.provider-service-partial')?.remove()} 
+    const count=[...fieldset.querySelectorAll('input[type="checkbox"]')].filter(choice=>choice.checked||(choice.dataset.original&&JSON.parse(choice.dataset.original).length>0)).length;
     fieldset.querySelector('.provider-service-count').textContent=`${count} choices selected`;
+  }
+  function removePartial(button){
+    const row=button.closest('.provider-service-row');
+    const fieldset=button.closest('fieldset');
+    const input=row.querySelector('input[type="checkbox"]');
+    input.dataset.original='[]';
+    input.checked=false;
+    row.querySelector('.provider-service-partial')?.remove();
+    update(fieldset);
   }
   function search(input){
     const query=input.value.trim().toLowerCase();
     const smart=new Set((window.ZOVRO_CATALOG?.smartMatch?.(query,{limit:12})||[]).map(x=>x?.service?.label?.en).filter(Boolean));
     for(const group of input.closest('fieldset').querySelectorAll('details')){
       let matches=0;
-      for(const row of group.querySelectorAll('.provider-service-choice')){
+      for(const row of group.querySelectorAll('.provider-service-row')){
         const label=row.textContent.trim();
         const members=row.querySelector('input')?.dataset.members;
         const direct=label.toLowerCase().includes(query);
@@ -73,5 +83,5 @@
     const seen=new Set();
     return model.groups.map(g=>`<optgroup label="${esc(g.label)}">${g.services.filter(s=>!seen.has(s.label)&&seen.add(s.label)).map(s=>`<option value="${esc(s.label)}">${esc(s.label)}</option>`).join('')}</optgroup>`).join('');
   }
-  window.ZOVRO_SERVICE_PICKER={markup,read,update,search,options};
+  window.ZOVRO_SERVICE_PICKER={markup,read,update,removePartial,search,options};
 })();
