@@ -19,3 +19,12 @@ test('old clients get corrected before provider matching; explicit overrides and
  assert.equal(correctRequestService({...request,serviceSelectionManual:true}),'Roadside Assistance');
  assert.equal(correctRequestService({...request,source:'sos'}),'Roadside Assistance');
 });
+
+test('exact service names and multiple trades are handled conservatively',()=>{
+ assert.equal(inferService('Emergency Plumber'),'Emergency Plumber');
+ assert.equal(inferService('Emergency Roadside Assistance'),'Emergency Roadside Assistance');
+ assert.equal(inferService('plumbing and electrical'),null);
+ assert.equal(inferService('tree service plus plumbing'),null);
+ assert.equal(correctRequestService({service:'Other / I Need Help',details:'plumbing and electrical'}),'Other / I Need Help');
+ assert.equal(inferService('Lawn & Snow'),'Lawn & Snow');
+});
