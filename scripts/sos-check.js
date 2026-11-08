@@ -5,6 +5,23 @@ const root=path.resolve(__dirname,'..');
 async function frontend(){
  const html=fs.readFileSync(path.join(root,'index.html'),'utf8');
  const script=html.match(/<script>([\s\S]*?)<\/script>/)[1].replace(/boot\(\);setInterval\([\s\S]*$/, '');
+ const home=html.split('<section id="home">')[1]?.split('<section id="jobs"')[0]||'';
+ const profile=html.split('<section id="profile"')[1]?.split('</section>')[0]||'';
+ const enhancement=fs.readFileSync(path.join(root,'website-final.js'),'utf8');
+ const theme=fs.readFileSync(path.join(root,'website-final.css'),'utf8');
+ assert.ok(home&&profile,'Home and Profile sections must exist');
+ assert.doesNotMatch(home,/id="sosButton"|id="sosHelp"|id="sosStatus"|id="sosView"/,'SOS controls must not appear on Home');
+ assert.match(profile,/<details id="moreSettings"[^>]*>/,'More options must be collapsible in Profile');
+ assert.match(profile,/<summary>More options<\/summary>/);
+ assert.match(profile,/id="sosButton"[^>]*onclick="quickSOS\(\)"/,'SOS action must remain in Profile');
+ assert.match(profile,/id="sosHelp"/);
+ assert.match(profile,/id="sosStatus"/);
+ assert.match(profile,/id="sosView"/);
+ assert.equal((html.match(/id="sosButton"/g)||[]).length,1,'There must be exactly one SOS action');
+ assert.doesNotMatch(enhancement,/id="sosButton"/,'Hero enhancement must not put SOS back on Home');
+ assert.doesNotMatch(theme,/#sosHelp,#sosStatus,#sosView\{display:none!important\}/,'Authenticated layout must not hide SOS status');
+ console.log('SOS placement: Profile > More options only; request action and feedback kept.');
+
  const nodes=new Map(),node=id=>{if(!nodes.has(id))nodes.set(id,{textContent:'',innerHTML:'',disabled:false,style:{},classList:{add(){},remove(){},toggle(){}},insertAdjacentHTML(){},querySelectorAll(){return []}});return nodes.get(id)};
  let geoCount=0,calls=[],mode='ok',release;
  const context=vm.createContext({crypto,AbortController,setTimeout:(fn,ms)=>ms>=500?0:setTimeout(fn,ms),clearTimeout,setInterval:()=>0,clearInterval(){},window:{},localStorage:{getItem(){return null},setItem(){},removeItem(){}},navigator:{},document:{getElementById:node,querySelectorAll(){return []}},ZOVRO_SERVICE_PICKER:{options(){return ''},subOptions(){return ''}},console});
