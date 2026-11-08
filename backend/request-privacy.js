@@ -99,8 +99,13 @@ function rewriteJsonResponse(res,transform){
       const parsed=JSON.parse(Buffer.concat(chunks).toString('utf8'));
       const transformed=transform(parsed);
       return originalEnd(Buffer.from(JSON.stringify(transformed)),undefined,cb);
-    }catch{}
-    return originalEnd(Buffer.concat(chunks),undefined,cb);
+    }catch{
+      // Never release unfiltered discovery data when the privacy sanitizer fails.
+      if(!res.headersSent){
+        res.writeHead(500,{'content-type':'application/json; charset=utf-8','cache-control':'no-store'});
+      }
+      return originalEnd(Buffer.from(JSON.stringify({error:'Privacy-safe response unavailable'})),undefined,cb);
+    }
   };
 }
 
