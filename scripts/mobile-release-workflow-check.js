@@ -77,6 +77,9 @@ requireTokens('iOS workflow', ios, [
   'ZOVRO_APP_STORE_CONNECT_ISSUER_ID',
   'ZOVRO_APP_STORE_CONNECT_API_PRIVATE_KEY_BASE64',
   'EXPECTED_PROFILE_APP_ID="$APPLE_TEAM_ID.com.zovro.app"',
+  'Scope App Store provisioning to app target only',
+  "Xcodeproj::Project.open('ios/App/App.xcodeproj')",
+  "release_config.build_settings['PROVISIONING_PROFILE_SPECIFIER'] = ENV.fetch('PROFILE_UUID')",
   'PROFILE_APP_ID" != "$EXPECTED_PROFILE_APP_ID',
   'PRODUCT_BUNDLE_IDENTIFIER=com.zovro.app',
   'CURRENT_PROJECT_VERSION="$GITHUB_RUN_NUMBER.$GITHUB_RUN_ATTEMPT"',
@@ -101,6 +104,7 @@ forbidTokens('Android workflow', android, [
 ]);
 
 forbidTokens('iOS workflow', ios, [
+  'PROVISIONING_PROFILE_SPECIFIER="$PROFILE_UUID"', // never pass a global app profile to all Pods targets
   '--submit-for-review',
   'submitForReview',
   'automaticRelease'
