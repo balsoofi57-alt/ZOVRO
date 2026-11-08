@@ -30,7 +30,7 @@ local services, roadside assistance, handyman, mechanic, plumbing, electrical, H
 - Approved public support email: support@zovro.work. Bidirectional delivery, automated policy replies, and monitoring alerts have been verified.
 - Privacy, Terms, and Support pages are included in the production web package and the live website branch uses the current support@zovro.work contact.
 - Account deletion is supported in-app and must be rechecked in the signed release build.
-- SOS/urgent service requests are marketplace requests and are not a replacement for emergency services.
+- Urgent roadside and other service requests are marketplace requests and are not a replacement for emergency services.
 
 ## Submission preparation documents
 - APP_PRIVACY_DATA_SAFETY.md — Apple App Privacy / Google Data Safety worksheet
