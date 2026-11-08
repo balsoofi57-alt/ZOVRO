@@ -42,7 +42,7 @@ Screenshot story should match the Apple sequence where possible for brand consis
 - Use real production-like data with no real customer personal information.
 - Do not show private phone numbers, emails, exact home addresses, API keys, test credentials, or internal tokens.
 - Clearly show ZOVRO branding.
-- Do not imply that ZOVRO replaces 911.
+- Do not imply that SOS replaces 911.
 - Do not show unsupported payment, tracking, or verification claims.
 - Keep status bar/time/battery presentation clean and consistent.
 
@@ -50,7 +50,7 @@ Screenshot story should match the Apple sequence where possible for brand consis
 - App name: ZOVRO
 - Bundle/App ID: com.zovro.app
 - Core message: local pros for roadside, auto, home, moving and urgent service requests
-- Safety message: ZOVRO urgent service requests are marketplace assistance and do not replace emergency services
+- Safety message: ZOVRO urgent/SOS requests are marketplace assistance and do not replace emergency services
 
 ## Final validation
 Before upload, compare every screenshot and store claim against the submitted binary. Remove any asset that promises functionality not enabled in the release build. Support mailbox delivery and monitoring have already been technically verified. Reconfirm only if the mailbox or routing configuration changes before submission.

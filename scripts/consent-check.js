@@ -28,12 +28,11 @@ assert.match(inject,/consent-client\.js/,'web HTML must load consent client');
 for(const header of ['X-ZOVRO-Terms-Version','X-ZOVRO-Privacy-Version','X-ZOVRO-Request-Consent','X-ZOVRO-Request-Kind'])assert.ok(cors.includes(header),`CORS must allow ${header}`);
 assert.match(client,/legalAccountConsent/,'account consent checkbox missing');
 assert.match(client,/legalRequestConsent/,'service request consent checkbox missing');
-assert.match(client,/SOS dispatch is discontinued/,'Retired SOS requests must be blocked in the client');
-assert.match(guard,/v.kind==='sos'\)return json\(res,410/,'Legacy SOS header must be refused by the consent guard');
+assert.match(client,/window\.confirm\('Before sending SOS roadside assistance/,'SOS explicit legal confirmation missing');
 assert.match(client,/X-ZOVRO-Terms-Version/,'client terms version header missing');
 assert.match(client,/X-ZOVRO-Privacy-Version/,'client privacy version header missing');
 assert.match(client,/X-ZOVRO-Request-Consent/,'client request consent header missing');
 assert.ok(prep.includes("'consent-client.js'"),'mobile bundle must copy consent client');
 assert.ok(prep.includes('<script src="consent-client.js"></script>'),'mobile bundle must load consent client');
 
-console.log('Legal consent QA passed: displayed legal dates match enforced versions; account and service-request consent are explicit, versioned, server-enforced, audited, CORS-enabled and included in web/mobile delivery.');
+console.log('Legal consent QA passed: displayed legal dates match enforced versions; account, service-request and SOS consent are explicit, versioned, server-enforced, audited, CORS-enabled and included in web/mobile delivery.');

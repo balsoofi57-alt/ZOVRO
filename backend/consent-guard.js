@@ -33,10 +33,10 @@ http.createServer=function(handler,...args){return originalCreateServer((req,res
   }
   if(creating){
     const me=currentUser(req);if(!me)return handler(req,res);
-    if(v.kind==='sos')return json(res,410,{error:'SOS dispatch is discontinued. Choose Roadside Assistance or another regular service.'});
     if(v.terms!==TERMS_VERSION||v.privacy!==PRIVACY_VERSION)return json(res,428,{error:'Current Terms and Privacy acceptance is required',termsVersion:TERMS_VERSION,privacyVersion:PRIVACY_VERSION});
-    if(v.request!==REQUEST_VERSION)return json(res,428,{error:'Service request consent is required',requestConsentVersion:REQUEST_VERSION});
-    captureJson(res,payload=>{const requestId=payload?.request?.id;if(!requestId)return;const db=readDb();appendConsent(db,{userId:me.uid,type:'service_request',termsVersion:TERMS_VERSION,privacyVersion:PRIVACY_VERSION,requestVersion:REQUEST_VERSION,requestId});writeDb(db)});
+    const sos=v.kind==='sos';
+    if(!sos&&v.request!==REQUEST_VERSION)return json(res,428,{error:'Service request consent is required',requestConsentVersion:REQUEST_VERSION});
+    captureJson(res,payload=>{const requestId=payload?.request?.id;if(!requestId)return;const db=readDb();appendConsent(db,{userId:me.uid,type:sos?'sos_request':'service_request',termsVersion:TERMS_VERSION,privacyVersion:PRIVACY_VERSION,requestVersion:sos?'sos-v1':REQUEST_VERSION,requestId});writeDb(db)});
   }
   return handler(req,res);
 },...args)};
