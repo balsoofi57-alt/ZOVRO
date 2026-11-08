@@ -1,66 +1,50 @@
 'use strict';
-const assert=require('node:assert/strict'),fs=require('node:fs'),os=require('node:os'),path=require('node:path'),vm=require('node:vm'),crypto=require('node:crypto');
+const assert=require('node:assert/strict');
+const fs=require('node:fs'),os=require('node:os'),path=require('node:path'),crypto=require('node:crypto');
 const {spawn}=require('node:child_process');
 const root=path.resolve(__dirname,'..');
-async function frontend(){
- const html=fs.readFileSync(path.join(root,'index.html'),'utf8');
- const script=html.match(/<script>([\s\S]*?)<\/script>/)[1].replace(/boot\(\);setInterval\([\s\S]*$/, '');
- const home=html.split('<section id="home">')[1]?.split('<section id="jobs"')[0]||'';
- const profile=html.split('<section id="profile"')[1]?.split('</section>')[0]||'';
- const enhancement=fs.readFileSync(path.join(root,'website-final.js'),'utf8');
- const theme=fs.readFileSync(path.join(root,'website-final.css'),'utf8');
- assert.ok(home&&profile,'Home and Profile sections must exist');
- assert.doesNotMatch(home,/id="sosButton"|id="sosHelp"|id="sosStatus"|id="sosView"/,'SOS controls must not appear on Home');
- assert.match(profile,/<details id="moreSettings"[^>]*>/,'More options must be collapsible in Profile');
- assert.match(profile,/<summary>More options<\/summary>/);
- assert.match(profile,/id="sosButton"[^>]*onclick="quickSOS\(\)"/,'SOS action must remain in Profile');
- assert.match(profile,/id="sosHelp"/);
- assert.match(profile,/id="sosStatus"/);
- assert.match(profile,/id="sosView"/);
- assert.equal((html.match(/id="sosButton"/g)||[]).length,1,'There must be exactly one SOS action');
- assert.doesNotMatch(enhancement,/id="sosButton"/,'Hero enhancement must not put SOS back on Home');
- assert.doesNotMatch(theme,/#sosHelp,#sosStatus,#sosView\{display:none!important\}/,'Authenticated layout must not hide SOS status');
- console.log('SOS placement: Profile > More options only; request action and feedback kept.');
+const read=p=>fs.readFileSync(path.join(root,p),'utf8');
 
- const nodes=new Map(),node=id=>{if(!nodes.has(id))nodes.set(id,{textContent:'',innerHTML:'',disabled:false,style:{},classList:{add(){},remove(){},toggle(){}},insertAdjacentHTML(){},querySelectorAll(){return []}});return nodes.get(id)};
- let geoCount=0,calls=[],mode='ok',release;
- const context=vm.createContext({crypto,AbortController,setTimeout:(fn,ms)=>ms>=500?0:setTimeout(fn,ms),clearTimeout,setInterval:()=>0,clearInterval(){},window:{},localStorage:{getItem(){return null},setItem(){},removeItem(){}},navigator:{},document:{getElementById:node,querySelectorAll(){return []}},ZOVRO_SERVICE_PICKER:{options(){return ''},subOptions(){return ''}},console});
- vm.runInContext(script,context);
- context.testGeo=async()=>{geoCount++;if(mode==='deny')throw {code:1};if(mode==='wait')await new Promise(r=>release=r);return {lat:42.315,lng:-83.19,accuracy:10,capturedAt:new Date().toISOString()}};
- context.testApi=async(p,o)=>{calls.push(JSON.parse(o.body));if(mode==='network')throw Error('Offline');return {request:{id:'request-1'},dispatch:{notifiedProviders:0}}};
- vm.runInContext("me={id:'customer-1',role:'customer'};geo=testGeo;api=testApi;loadJobs=()=>{};openAuth=()=>{}",context);
- const run=()=>vm.runInContext('quickSOS()',context);
- mode='wait';const pending=run();await run();assert.equal(geoCount,1);release();await pending;
- assert.equal(calls.length,1);assert.equal(calls[0].source,'sos');assert.equal(calls[0].urgent,true);assert.equal(calls[0].location.lat,42.315);assert.match(node('sosStatus').textContent,/no available nearby providers/i);
- mode='deny';await run();assert.equal(calls.length,1);assert.match(node('sosStatus').textContent,/No SOS request was sent/);assert.equal(node('sosButton').disabled,false);
- mode='network';await run();const first=calls.at(-1);mode='ok';await run();assert.deepEqual(calls.at(-1),first,'Uncertain delivery must retry the identical request');
- vm.runInContext("me={id:'provider-1',role:'provider'}",context);const count=calls.length;await run();assert.equal(calls.length,count);
- vm.runInContext('me=null',context);await run();assert.equal(calls.length,count);assert.match(node('sosStatus').textContent,/Sign in/);
- console.log('SOS UI: one tap, double tap, GPS denial, uncertain retry, no-provider message and account guards passed.');
-}
-async function backend(){
- const data=fs.mkdtempSync(path.join(os.tmpdir(),'zovro-sos-'));
- const net=require('node:net');const probe=net.createServer();await new Promise(r=>probe.listen(0,'127.0.0.1',r));const port=probe.address().port;await new Promise(r=>probe.close(r));
- let serverLog='';const server=spawn(process.execPath,['backend/server-core.js'],{cwd:root,env:{...process.env,PORT:String(port),NODE_ENV:'production',ZOVRO_DATA_DIR:data,ZOVRO_DB_MIRROR_MODE:'off',DATABASE_URL:'',ONESIGNAL_REST_API_KEY:'',ZOVRO_SECRET:'sos-local-test-secret-12345678901234567890',ZOVRO_OPS_TOKEN:'sos-local-test-ops-1234567890'},stdio:['ignore','pipe','pipe']});server.stdout.on('data',d=>{serverLog=(serverLog+d).slice(-8000)});server.stderr.on('data',d=>{serverLog=(serverLog+d).slice(-8000)});
- const base=`http://127.0.0.1:${port}`;
+// SOS is retired from both public web and packaged Capacitor source.
+const html=read('index.html'),website=read('website-final.js'),consent=read('consent-client.js');
+const features=require('../src/product-features.js');
+const listing=JSON.parse(read('store/listing.en-US.json'));
+assert(!html.includes('id="sosButton"')&&!html.includes('quickSOS('),'SOS must not appear in public mobile/web UI');
+assert(!website.includes('id="sosButton"')&&!website.includes('quickSOS'),'Website must not add SOS again');
+assert.equal(features.PRODUCT_FEATURES.launchCore.sosDispatch,false,'SOS flag must be disabled');
+assert.match(consent,/SOS dispatch is discontinued/,'Old SOS submissions must be blocked by consent client');
+assert(!listing.apple.description.includes('SOS')&&!listing.googlePlay.fullDescription.includes('SOS'),'Store copy must not advertise retired SOS');
+
+// Validate old installed clients cannot create a new SOS request, but normal
+// urgent roadside service requests still work and preserve their lifecycle.
+(async()=>{
+ const data=fs.mkdtempSync(path.join(os.tmpdir(),'zovro-retired-sos-'));
+ const net=require('node:net'),probe=net.createServer();
+ await new Promise(ok=>probe.listen(0,'127.0.0.1',ok));const port=probe.address().port;await new Promise(ok=>probe.close(ok));
+ let log='';
+ const server=spawn(process.execPath,['backend/server-core.js'],{cwd:root,env:{...process.env,PORT:String(port),NODE_ENV:'production',ZOVRO_DATA_DIR:data,ZOVRO_DB_MIRROR_MODE:'off',DATABASE_URL:'',ONESIGNAL_REST_API_KEY:'',ZOVRO_SECRET:'retired-sos-test-secret-12345678901234567890',ZOVRO_OPS_TOKEN:'retired-sos-test-ops-1234567890'},stdio:['ignore','pipe','pipe']});
+ server.stdout.on('data',d=>{log=(log+d).slice(-8000)});server.stderr.on('data',d=>{log=(log+d).slice(-8000)});
+ const base='http://127.0.0.1:'+port;
  const call=async(method,url,payload,token)=>{const r=await fetch(base+url,{method,headers:{'content-type':'application/json',...(token?{authorization:'Bearer '+token}:{})},body:payload?JSON.stringify(payload):undefined});return {status:r.status,data:await r.json()}};
  try{
-  let ready=false;for(let i=0;i<200;i++){try{if((await call('GET','/api/health')).status===200){ready=true;break}}catch{}if(server.exitCode!==null||server.signalCode!==null)break;await new Promise(r=>setTimeout(r,50))}assert.ok(ready,'Backend ready. Startup log: '+serverLog);
-  const register=async(role,phone)=>{const r=await call('POST','/api/auth/register',{name:'SOS Test '+role,phone,password:'StrongPass22!',role,service:'Roadside Assistance'});assert.equal(r.status,201);return r.data};
-  const c=await register('customer','13135550101'),p=await register('provider','13135550102');
-  await call('POST','/api/provider/location',{lat:42.32,lng:-83.18,accuracy:10},p.token);
-  const payload={source:'sos',clientRequestId:crypto.randomUUID(),service:'Roadside Assistance',details:'SOS test',urgent:true,location:{lat:42.315,lng:-83.19,accuracy:10,capturedAt:new Date().toISOString()}};
-  assert.equal((await call('POST','/api/requests',payload)).status,401);
-  assert.equal((await call('POST','/api/requests',payload,p.token)).status,403);
-  for(const location of [null,{...payload.location,lat:91},{...payload.location,lng:null},{...payload.location,capturedAt:'2000-01-01T00:00:00Z'},{...payload.location,accuracy:5000}])assert.equal((await call('POST','/api/requests',{...payload,location},c.token)).status,400);
-  const created=await call('POST','/api/requests',payload,c.token);assert.equal(created.status,201);assert.equal(created.data.dispatch.notifiedProviders,1);const id=created.data.request.id;
-  for(const clientRequestId of [payload.clientRequestId,crypto.randomUUID()]){const r=await call('POST','/api/requests',{...payload,clientRequestId},c.token);assert.equal(r.status,200);assert.equal(r.data.request.id,id);assert.equal(r.data.reused,true)}
-  const notes=await call('GET','/api/notifications',null,p.token);assert.equal(notes.data.notifications.filter(n=>n.meta.requestId===id).length,1,'Retries must not repeat dispatch');
-  const rows=await call('GET','/api/requests',null,c.token);assert.equal(rows.data.requests.length,1);
-  await call('POST',`/api/requests/${id}/cancel`,{reason:'Test complete'},c.token);
-  const replay=await call('POST','/api/requests',payload,c.token);assert.equal(replay.data.request.id,id);assert.equal(replay.data.request.status,'Cancelled');
-  const next=await call('POST','/api/requests',{...payload,clientRequestId:crypto.randomUUID()},c.token);assert.equal(next.status,201);assert.notEqual(next.data.request.id,id);
-  console.log('SOS API: authentication, coordinates/freshness, nearby dispatch, retry/active-request deduplication and cancellation passed.');
- }finally{server.kill('SIGTERM');await new Promise(r=>{if(server.exitCode!==null||server.signalCode!==null)return r();server.once('exit',r)});fs.rmSync(data,{recursive:true,force:true})}
-}
-(async()=>{await frontend();await backend()})().catch(e=>{console.error(e);process.exitCode=1});
+  let started=false;
+  for(let i=0;i<200;i++){try{if((await call('GET','/api/health')).status===200){started=true;break}}catch{}if(server.exitCode!==null||server.signalCode!==null)break;await new Promise(ok=>setTimeout(ok,50))}
+  assert(started,'Backend did not start: '+log);
+  const registration=await call('POST','/api/auth/register',{name:'Customer',phone:'13135550991',password:'StrongPass22!',role:'customer'});
+  assert.equal(registration.status,201);
+  const token=registration.data.token;
+  const sos={source:'sos',clientRequestId:crypto.randomUUID(),service:'Roadside Assistance',details:'Legacy SOS',urgent:true,location:{lat:42.315,lng:-83.19,accuracy:10,capturedAt:new Date().toISOString()}};
+  assert.equal((await call('POST','/api/requests',sos)).status,401,'Unauthenticated old client remains blocked');
+  const refused=await call('POST','/api/requests',sos,token);
+  assert.equal(refused.status,410,'New SOS attempts must be retired');
+  assert.match(refused.data.error,/SOS dispatch is discontinued/);
+  const normal=await call('POST','/api/requests',{service:'Roadside Assistance',serviceSelectionManual:true,details:'Flat tire, need help',urgent:true,clientRequestId:crypto.randomUUID()},token);
+  assert.equal(normal.status,201,'Urgent roadside assistance must remain available');
+  assert.equal(normal.data.request.service,'Roadside Assistance');
+  assert.equal(normal.data.request.urgent,true);
+  const rows=await call('GET','/api/requests',null,token);
+  assert.equal(rows.data.requests.length,1,'Retired SOS must not create records or erase ordinary requests');
+  assert.equal(rows.data.requests[0].id,normal.data.request.id);
+  console.log('SOS retirement QA passed: public UI/store copy removed, new SOS rejected, urgent roadside preserved.');
+ }finally{server.kill('SIGTERM');await new Promise(ok=>{if(server.exitCode!==null||server.signalCode!==null)return ok();server.once('exit',ok)});fs.rmSync(data,{recursive:true,force:true})}
+})().catch(e=>{console.error(e);process.exitCode=1});
