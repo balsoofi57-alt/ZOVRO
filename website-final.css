@@ -413,18 +413,3 @@ body.z-silver-layout .z-category:focus-visible,body.z-silver-layout .z-quick:foc
 body.z-silver-layout .z-quick-label small{color:#3c5874!important}
 @media(max-width:700px){body.z-silver-layout #smartMatch h2{font-size:23px!important}body.z-silver-layout .z-category{min-height:88px;padding:11px;gap:9px}body.z-silver-layout .z-icon-badge{width:42px;height:42px;flex-basis:42px;border-radius:12px}body.z-silver-layout .z-icon-badge svg{width:24px;height:24px}body.z-silver-layout .z-category-label{font-size:13px}body.z-silver-layout .z-quick{min-height:78px}}
 @media(prefers-reduced-motion:reduce){body.z-silver-layout .z-category,body.z-silver-layout .z-quick{transition:none}body.z-silver-layout .z-category:hover,body.z-silver-layout .z-quick:hover{transform:none}}
-
-/* SOS is a non-prominent option inside the More tab; preserve accessibility and feedback. */
-#profile .z-secondary-assistance{margin-top:12px;padding:0!important;border-radius:16px!important;overflow:hidden}
-#profile .z-secondary-assistance summary{display:list-item;cursor:pointer;min-height:48px;padding:15px 18px;color:#526176!important;font-weight:700;list-style-position:inside}
-#profile .z-secondary-assistance summary:focus-visible{outline:3px solid #2764d7;outline-offset:-3px}
-#profile .z-secondary-assistance-content{padding:0 18px 18px;border-top:1px solid #bfcbd8}
-#profile .z-secondary-assistance-content h3{font-size:15px;margin:14px 0 10px;color:#152a46}
-body.z-silver-layout #profile .z-secondary-assistance #sosButton,
-#profile .z-secondary-assistance #sosButton{font-size:13px!important;min-height:44px!important;border:1px solid #cbd5e1!important;background:#f1f5fa!important;color:#34465d!important;text-align:left}
-body.z-silver-layout #profile .z-secondary-assistance #sosHelp,
-#profile .z-secondary-assistance #sosHelp{font-size:12px!important;line-height:1.5!important;color:#5b6b80!important;margin:10px 0 0;background:transparent!important}
-body.z-silver-layout #profile .z-secondary-assistance #sosStatus,
-#profile .z-secondary-assistance #sosStatus{font-size:13px!important;margin-top:10px;color:#253a53!important;background:transparent!important;white-space:pre-wrap}
-#profile .z-secondary-assistance #sosStatus:empty{display:none}
-#profile .z-secondary-assistance #sosView{margin-top:10px}

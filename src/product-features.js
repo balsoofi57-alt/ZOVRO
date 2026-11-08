@@ -2,7 +2,7 @@
 const BRAND={name:'ZOVRO',slogan:'ANYWHERE. ANYTIME. NEAR YOU.',defaultLanguage:'en',languages:['en','es'],languageDisplay:'English | Spanish'};
 const PRODUCT_FEATURES={
 branding:{nightCityTheme:true,blueGoldBlack:true,noPeople:true,englishPrimary:true,spanishOptional:true},
-launchCore:{sosDispatch:true,nearbyProviders:true,messaging:true,locationSharing:true,ratings:true,securePayments:true,requestLifecycle:true,providerAvailability:true,smartMatch:true,iNeedHelp:true},
+launchCore:{sosDispatch:false,nearbyProviders:true,messaging:true,locationSharing:true,ratings:true,securePayments:true,requestLifecycle:true,providerAvailability:true,smartMatch:true,iNeedHelp:true},
 requestExperience:{typedProblemDescription:true,voiceProblemDescription:true,photoAttachments:true,videoAttachments:true,availableNow:true,scheduleForLater:true,multipleQuotes:true,instantJob:true,beforeAfterPhotos:true,recurringServices:true,partsMaterialsDisclosure:true},
 trustSafety:{identityVerifiedBadge:true,licensedBadge:true,insuredBadge:true,pinJobStart:true,providerCheckInOut:true,disputeCenter:true,cancellationNoShowRules:true,emergencyContactSharing:true,fraudAbuseProtection:true,zovroGuaranteeFramework:true},
 providerTools:{portfolio:true,serviceRadius:true,onlineBusyOffline:true,workingHours:true,providerCalendar:true,teamAccounts:true,performanceMetrics:true,serviceQualityScore:true},
@@ -12,7 +12,7 @@ jobControl:{estimates:true,customerApproval:true,changeOrders:true,warrantyRecor
 platform:{englishSpanishTranslation:true,accessibility:true,customerProviderBusinessModes:true,adminCommandCenter:true,supportSystem:true}
 };
 const LAUNCH_PHASES=[
-{id:'launch',name:'Launch Core',priorities:['Auto & Roadside','Home Services','Emergency / SOS','Nearby provider discovery','Messaging','Location sharing','Payments','Ratings','Smart Match / I Need Help']},
+{id:'launch',name:'Launch Core',priorities:['Auto & Roadside','Home Services','Nearby provider discovery','Messaging','Location sharing','Payments','Ratings','Smart Match / I Need Help']},
 {id:'growth',name:'Growth',priorities:['Schedule for Later','Multiple Quotes','Photo / video requests','Before & After','Favorites and rebooking','Recurring services','Business accounts','Property Manager Mode','Fleet Accounts']},
 {id:'scale',name:'Scale & Operations',priorities:['Admin Command Center','Provider teams','Performance scoring','Dispute Center','Fraud protection','Guarantee framework','Referral rewards','Provider subscriptions']}
 ];
