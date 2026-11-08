@@ -44,10 +44,9 @@
       const eyebrow=hero.querySelector('.eyebrow');if(eyebrow)eyebrow.textContent='● Anywhere, Anytime, Near to You.';
       const h1=hero.querySelector('h1');if(h1)h1.innerHTML='Everyday problems.<br><span>Nearby solutions.</span>';
       const p=h1?.nextElementSibling;if(p&&p.tagName==='P')p.textContent='From roadside help to home repairs. Find a local professional and keep every update in one place.';
-      const bar=hero.querySelector('.bar');if(bar)bar.innerHTML='<button class="btn primary" id="zHeroHelp">Help Now</button><button class="btn ghost" id="zHeroProvider">Join as a Provider</button><button class="btn danger" id="sosButton" aria-label="SOS" aria-describedby="sosHelp sosStatus">SOS</button>';
+      const bar=hero.querySelector('.bar');if(bar)bar.innerHTML='<button class="btn primary" id="zHeroHelp">Help Now</button><button class="btn ghost" id="zHeroProvider">Join as a Provider</button>';
       document.getElementById('zHeroHelp')?.addEventListener('click',()=>document.getElementById('smartMatch')?.scrollIntoView({behavior:'smooth'}));
       document.getElementById('zHeroProvider')?.addEventListener('click',()=>{document.getElementById('providerJoin')?.scrollIntoView({behavior:'smooth'});setTimeout(()=>call('openAuth'),350)});
-      document.getElementById('sosButton')?.addEventListener('click',()=>call('quickSOS'));
     }
 
     if(hero&&!document.getElementById('smartMatch')){
