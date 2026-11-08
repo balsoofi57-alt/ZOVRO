@@ -190,27 +190,25 @@ jobs:
           release_config.build_settings['CODE_SIGN_STYLE'] = 'Manual'
           release_config.build_settings['CODE_SIGN_IDENTITY'] = 'Apple Distribution'
           release_config.build_settings['DEVELOPMENT_TEAM'] = ENV.fetch('APPLE_TEAM_ID')
+          # Keep the application identifier and release version scoped to App,
+          # otherwise frameworks inherit the app bundle id at IPA export.
+          release_config.build_settings['PRODUCT_BUNDLE_IDENTIFIER'] = 'com.zovro.app'
+          release_config.build_settings['MARKETING_VERSION'] = '1.0.0'
+          release_config.build_settings['CURRENT_PROJECT_VERSION'] = ENV.fetch('GITHUB_RUN_NUMBER') + '.' + ENV.fetch('GITHUB_RUN_ATTEMPT')
           project.save
           RUBY
 
       - name: Archive signed App Store build
         if: steps.signing.outputs.available == 'true'
-        env:
-          APPLE_TEAM_ID: ${{ secrets.ZOVRO_APPLE_TEAM_ID }}
         run: |
+          # Signing identity, profile, bundle id and version are configured
+          # only on the App Release target, never globally on CocoaPods.
           xcodebuild \
             -workspace ios/App/App.xcworkspace \
             -scheme App \
             -configuration Release \
             -destination 'generic/platform=iOS' \
             -archivePath build/ZOVRO.xcarchive \
-            DEVELOPMENT_TEAM="$APPLE_TEAM_ID" \
-            CODE_SIGN_STYLE=Manual \
-            CODE_SIGN_IDENTITY="Apple Distribution" \
-            PRODUCT_BUNDLE_IDENTIFIER=com.zovro.app \
-            MARKETING_VERSION=1.0.0 \
-            CURRENT_PROJECT_VERSION="$GITHUB_RUN_NUMBER.$GITHUB_RUN_ATTEMPT" \
-            OTHER_CODE_SIGN_FLAGS="--keychain $ZOVRO_KEYCHAIN_PATH" \
             archive
           codesign --verify --deep --strict build/ZOVRO.xcarchive/Products/Applications/App.app
 
