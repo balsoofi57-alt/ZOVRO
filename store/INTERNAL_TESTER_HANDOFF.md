@@ -16,7 +16,7 @@ Initial ZOVRO 1.0.0 internal test build for validating customer and provider flo
 3. Confirm service discovery loads.
 4. Allow location only when prompted by a location-dependent action.
 5. Create a normal request.
-6. Create an urgent/SOS marketplace request and verify the app does not imply replacement of 911.
+6. Create an urgent Roadside Assistance marketplace request and verify the app does not imply replacement of 911.
 7. Exchange in-app messages with the provider.
 8. Verify request/job status updates.
 9. Exercise password recovery.
