@@ -172,11 +172,31 @@ jobs:
             echo "ZOVRO_PROFILE_PATH=$PROFILE_INSTALL_DIR/$PROFILE_UUID.mobileprovision"
           } >> "$GITHUB_ENV"
 
+      - name: Scope App Store provisioning to app target only
+        if: steps.signing.outputs.available == 'true'
+        env:
+          PROFILE_UUID: ${{ steps.signing.outputs.profile_uuid }}
+          APPLE_TEAM_ID: ${{ secrets.ZOVRO_APPLE_TEAM_ID }}
+        run: |
+          # The app's profile must not be applied to third-party CocoaPods targets.
+          ruby <<'RUBY'
+          require 'xcodeproj'
+          project = Xcodeproj::Project.open('ios/App/App.xcodeproj')
+          app_target = project.targets.find { |target| target.name == 'App' }
+          abort 'ZOVRO App target not found' unless app_target
+          release_config = app_target.build_configurations.find { |config| config.name == 'Release' }
+          abort 'ZOVRO Release configuration not found' unless release_config
+          release_config.build_settings['PROVISIONING_PROFILE_SPECIFIER'] = ENV.fetch('PROFILE_UUID')
+          release_config.build_settings['CODE_SIGN_STYLE'] = 'Manual'
+          release_config.build_settings['CODE_SIGN_IDENTITY'] = 'Apple Distribution'
+          release_config.build_settings['DEVELOPMENT_TEAM'] = ENV.fetch('APPLE_TEAM_ID')
+          project.save
+          RUBY
+
       - name: Archive signed App Store build
         if: steps.signing.outputs.available == 'true'
         env:
           APPLE_TEAM_ID: ${{ secrets.ZOVRO_APPLE_TEAM_ID }}
-          PROFILE_UUID: ${{ steps.signing.outputs.profile_uuid }}
         run: |
           xcodebuild \
             -workspace ios/App/App.xcworkspace \
@@ -187,7 +207,6 @@ jobs:
             DEVELOPMENT_TEAM="$APPLE_TEAM_ID" \
             CODE_SIGN_STYLE=Manual \
             CODE_SIGN_IDENTITY="Apple Distribution" \
-            PROVISIONING_PROFILE_SPECIFIER="$PROFILE_UUID" \
             PRODUCT_BUNDLE_IDENTIFIER=com.zovro.app \
             MARKETING_VERSION=1.0.0 \
             CURRENT_PROJECT_VERSION="$GITHUB_RUN_NUMBER.$GITHUB_RUN_ATTEMPT" \
