@@ -1,0 +1,41 @@
+name: One-time ZOVRO Internal TestFlight Dispatch
+on:
+  push:
+    branches: [release/zovro-testflight-once-20261108]
+    paths:
+      - '.github/workflows/zovro-testflight-once.yml'
+
+permissions:
+  contents: read
+  actions: write
+
+concurrency:
+  group: zovro-internal-testflight-dispatch-20261108
+  cancel-in-progress: false
+
+jobs:
+  request-testflight:
+    if: github.repository == 'balsoofi57-alt/ZOVRO' && github.ref == 'refs/heads/release/zovro-testflight-once-20261108'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Verify exact Face ID release commit before any upload
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: balsoofi57-alt/ZOVRO
+        run: |
+          set -euo pipefail
+          ACTUAL_SHA=$(gh api repos/"$GH_REPO"/commits/zovro-final-deploy --jq .sha)
+          if [[ "$ACTUAL_SHA" != '9f256866e82cf72df594aba6c774732453caa725' ]]; then
+            echo "::error::Release ref changed; refusing to upload an unreviewed build."
+            exit 1
+          fi
+
+      - name: Dispatch the existing signed-IPA TestFlight workflow
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: balsoofi57-alt/ZOVRO
+        run: |
+          set -euo pipefail
+          gh workflow run ios-release.yml --repo "$GH_REPO" --ref zovro-final-deploy --field upload_testflight=true
+          echo 'Requested App Store Connect TestFlight upload for internal testing only.'
