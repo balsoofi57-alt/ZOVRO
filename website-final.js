@@ -96,10 +96,9 @@
       const eyebrow=hero.querySelector('.eyebrow');if(eyebrow)eyebrow.textContent='Anywhere, Any Time, Near You.';
       const h1=hero.querySelector('h1');if(h1)h1.innerHTML='Everyday problems.<br><span>Nearby solutions.</span>';
       const p=h1?.nextElementSibling;if(p&&p.tagName==='P')p.textContent='From roadside help to home repairs. Find a local professional and keep every update in one place.';
-      const bar=hero.querySelector('.bar');if(bar)bar.innerHTML='<button class="btn primary" id="zHeroHelp">Help Now</button><button class="btn ghost" id="zHeroProvider">Join as a Provider</button><button class="btn danger" id="sosButton" aria-label="SOS" aria-describedby="sosHelp sosStatus">SOS</button>';
+      const bar=hero.querySelector('.bar');if(bar)bar.innerHTML='<button class="btn primary" id="zHeroHelp">Help Now</button><button class="btn ghost" id="zHeroProvider">Join as a Provider</button>';
       document.getElementById('zHeroHelp')?.addEventListener('click',()=>openHelp(''));
       document.getElementById('zHeroProvider')?.addEventListener('click',()=>{document.getElementById('providerJoin')?.scrollIntoView({behavior:'smooth'});setTimeout(()=>call('openAuth'),350)});
-      document.getElementById('sosButton')?.addEventListener('click',()=>call('quickSOS'));
     }
 
     if(hero&&!document.getElementById('smartMatch')){
@@ -216,6 +215,7 @@
     const nearby=group('Find nearby providers','zNearbyMenu');
     const find=document.createElement('button');find.type='button';find.className='btn primary';find.textContent='Find nearby providers';find.onclick=()=>{tabs[2].click();tabs[2].classList.remove('active');tabs[3].classList.add('active')};nearby.appendChild(find);
     const support=group('Help, support & legal','zSupportMenu');
+    const moreOptions=document.getElementById('moreSettings');if(moreOptions)menu.insertBefore(moreOptions,support);
     const legal=profile.querySelector('.legal');if(legal){const heading=legal.previousElementSibling;if(heading?.classList.contains('sectionHead'))heading.hidden=true;support.appendChild(legal)}
     function collectSupport(){const node=document.getElementById('zovroSupportCenter');if(node&&node.parentElement!==support)support.appendChild(node)}
     collectSupport();new MutationObserver(collectSupport).observe(profile,{childList:true});
@@ -315,9 +315,7 @@
     const showTab=i=>{tabs[i]?.click();window.scrollTo({top:0,behavior:'smooth'})};
     const account=button('',()=>{showTab(3);document.getElementById('zAccountMenu').open=true},'z-account-shortcut');account.setAttribute('aria-label','My account');account.innerHTML=icon('account');document.querySelector('.top').appendChild(account);
     const location=button('⌖  Set your location  ›',()=>window.startRequestWithLocation({details:document.getElementById('zProblem').value.trim(),useLocation:true}));location.id='zLocationShortcut';smart.prepend(location);
-    const sos=document.getElementById('sosButton');if(sos)document.querySelector('.z-smart-actions').appendChild(sos);
     document.getElementById('zSmartGo').onclick=()=>window.startRequestWithLocation({details:document.getElementById('zProblem').value.trim()});
-    for(const id of ['sosHelp','sosStatus','sosView']){const el=document.getElementById(id);if(el)smart.appendChild(el)}
     const services=document.getElementById('services');const oldHeading=services.previousElementSibling;if(oldHeading?.classList.contains('sectionHead'))oldHeading.hidden=true;
     const categories=document.createElement('section');categories.id='zCategoryGrid';categories.innerHTML='<div class="z-service-heading"><h2>Services</h2></div><div class="z-category-grid"></div>';
     smart.insertAdjacentElement('afterend',categories);
