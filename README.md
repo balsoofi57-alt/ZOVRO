@@ -5,7 +5,7 @@ ZOVRO is an on-demand local-services marketplace for customers and service provi
 ## Production services
 
 - Web app: https://zovro-web.onrender.com
-- API: https://zovro-api.onrender.com
+- API: https://zovro-api-final.onrender.com
 - API health: `/api/health`
 - API readiness: `/api/ready`
 
