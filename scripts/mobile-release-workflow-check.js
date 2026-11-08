@@ -81,8 +81,9 @@ requireTokens('iOS workflow', ios, [
   "Xcodeproj::Project.open('ios/App/App.xcodeproj')",
   "release_config.build_settings['PROVISIONING_PROFILE_SPECIFIER'] = ENV.fetch('PROFILE_UUID')",
   'PROFILE_APP_ID" != "$EXPECTED_PROFILE_APP_ID',
-  'PRODUCT_BUNDLE_IDENTIFIER=com.zovro.app',
-  'CURRENT_PROJECT_VERSION="$GITHUB_RUN_NUMBER.$GITHUB_RUN_ATTEMPT"',
+  "release_config.build_settings['PRODUCT_BUNDLE_IDENTIFIER'] = 'com.zovro.app'",
+  "release_config.build_settings['MARKETING_VERSION'] = '1.0.0'",
+  "release_config.build_settings['CURRENT_PROJECT_VERSION'] = ENV.fetch('GITHUB_RUN_NUMBER') + '.' + ENV.fetch('GITHUB_RUN_ATTEMPT')",
   'codesign --verify --deep --strict',
   '--validate-app',
   '--upload-app',
@@ -109,6 +110,28 @@ forbidTokens('iOS workflow', ios, [
   'submitForReview',
   'automaticRelease'
 ]);
+
+// App-specific identifiers and signing settings may never be passed to the
+// workspace-wide xcodebuild archive command. Otherwise Xcode reuses
+// com.zovro.app for third-party frameworks and exportArchive misapplies
+// the app provisioning profile to those frameworks.
+const archiveStep = ios.match(/      - name: Archive signed App Store build\n([\s\S]*?)(?=\n      - )/);
+if (!archiveStep) fail('iOS archive step is missing');
+else {
+  const archiveRun = archiveStep[1].split('        run: |\n')[1] || '';
+  for (const globalOverride of [
+    'PROVISIONING_PROFILE_SPECIFIER=',
+    'PRODUCT_BUNDLE_IDENTIFIER=',
+    'MARKETING_VERSION=',
+    'CURRENT_PROJECT_VERSION=',
+    'DEVELOPMENT_TEAM=',
+    'CODE_SIGN_STYLE=',
+    'CODE_SIGN_IDENTITY=',
+    'OTHER_CODE_SIGN_FLAGS='
+  ]) {
+    if (archiveRun.includes(globalOverride)) fail('iOS archive applies global build setting: ' + globalOverride);
+  }
+}
 
 for (const [name, text] of [['Android workflow', android], ['Android verification workflow', androidVerification], ['iOS workflow', ios]]) {
   if (!/permissions:\s*\n\s*contents:\s*read/.test(text)) {
