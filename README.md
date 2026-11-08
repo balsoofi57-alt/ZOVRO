@@ -18,7 +18,7 @@ Run the complete repository QA chain from the repository root:
 npm run qa:all
 ```
 
-The full suite covers product behavior, production configuration, launch readiness, payment safety, saved cards, server/mobile/native push readiness, CORS/security, store readiness, PostgreSQL cutover guarding, release packaging, end-to-end request flow, SOS/location safety, biometrics, Smart Match, request privacy, log privacy, and legal consent.
+The full suite covers product behavior, production configuration, launch readiness, payment safety, saved cards, server/mobile/native push readiness, CORS/security, store readiness, PostgreSQL cutover guarding, release packaging, end-to-end request flow, urgent roadside/location safety, biometrics, Smart Match, request privacy, log privacy, and legal consent.
 
 ## PostgreSQL cutover safety
 
