@@ -413,3 +413,12 @@ body.z-silver-layout .z-category:focus-visible,body.z-silver-layout .z-quick:foc
 body.z-silver-layout .z-quick-label small{color:#3c5874!important}
 @media(max-width:700px){body.z-silver-layout #smartMatch h2{font-size:23px!important}body.z-silver-layout .z-category{min-height:88px;padding:11px;gap:9px}body.z-silver-layout .z-icon-badge{width:42px;height:42px;flex-basis:42px;border-radius:12px}body.z-silver-layout .z-icon-badge svg{width:24px;height:24px}body.z-silver-layout .z-category-label{font-size:13px}body.z-silver-layout .z-quick{min-height:78px}}
 @media(prefers-reduced-motion:reduce){body.z-silver-layout .z-category,body.z-silver-layout .z-quick{transition:none}body.z-silver-layout .z-category:hover,body.z-silver-layout .z-quick:hover{transform:none}}
+
+/* Secondary reviewed roadside help: not a prominent Home SOS control. */
+#profile #moreSettings{margin-top:14px;padding:0!important;border-radius:16px!important;overflow:hidden}
+#profile #moreSettings>summary{padding:16px 18px;min-height:48px;cursor:pointer;color:#4f5f73;font-size:15px;font-weight:700;list-style-position:inside}
+#profile #moreSettings>summary:focus-visible{outline:3px solid #4c83bf;outline-offset:-3px}
+#profile .z-secondary-assistance-content{border-top:1px solid #d2dae4;padding:14px 18px 18px}
+#profile .z-secondary-assistance-content h3{font-size:15px;color:#233954;margin:0 0 12px}
+#profile .z-secondary-assistance #sosButton{display:block!important;width:auto!important;min-height:44px!important;background:#edf2f7!important;color:#3d546c!important;border:1px solid #c2cfde!important;border-radius:12px!important;font-size:13px!important;font-weight:750!important;box-shadow:none!important;padding:11px 14px!important}
+#profile .z-secondary-assistance #sosHelp{color:#596b7c!important;font-size:12px!important;line-height:1.55!important;margin:12px 0 0!important}
