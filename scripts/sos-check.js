@@ -38,7 +38,7 @@ assert(!listing.apple.description.includes('SOS')&&!listing.googlePlay.fullDescr
   const refused=await call('POST','/api/requests',sos,token);
   assert.equal(refused.status,410,'New SOS attempts must be retired');
   assert.match(refused.data.error,/SOS dispatch is discontinued/);
-  const normal=await call('POST','/api/requests',{service:'Roadside Assistance',details:'Flat tire, need help',urgent:true,clientRequestId:crypto.randomUUID()},token);
+  const normal=await call('POST','/api/requests',{service:'Roadside Assistance',serviceSelectionManual:true,details:'Flat tire, need help',urgent:true,clientRequestId:crypto.randomUUID()},token);
   assert.equal(normal.status,201,'Urgent roadside assistance must remain available');
   assert.equal(normal.data.request.service,'Roadside Assistance');
   assert.equal(normal.data.request.urgent,true);
