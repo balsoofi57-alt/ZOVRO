@@ -25,4 +25,16 @@ assert.doesNotMatch(prep,/ZOVRO_SECURE_SESSION\.get\(\)\.then\(t=>\{token=t\|\|'
 assert.match(prep,/ZOVRO_SECURE_SESSION\.initialize\(\)\.then\(\(\)=>\{token=window\.ZOVRO_SESSION_TOKEN\|\|'';boot/,'Mobile boot must wait for biometric-gated initialization');
 assert.match(native,/NSFaceIDUsageDescription/,'iOS Face ID usage description missing');
 assert.match(native,/android\.permission\.USE_BIOMETRIC/,'Android biometric permission missing');
+
+// Native Face ID must be opt-in only after sign-in and durable secure-session
+// storage. Web/PWA password autofill is separate from native Face ID unlock.
+assert.match(bio,/nativePlatform\(\)/,'Biometric UI must check native platform');
+assert.match(bio,/nativePromise\('BiometricAuthNative','checkBiometry'/,'Native Capacitor biometric bridge registration missing');
+assert.match(bio,/nativePromise\('BiometricAuthNative','internalAuthenticate'/,'Native Capacitor biometric challenge missing');
+assert.match(bio,/currentUser\(\)\?\.id/,'Enable biometric must require an account');
+assert.match(bio,/ZOVRO_SECURE_SESSION\.set\(session\)/,'Enable biometric must save the existing session');
+assert.match(bio,/if\(saved!==session/,'Saved-session verification before opt-in missing');
+assert.match(bio,/if\(e\?\.status===401\)/,'Unauthorized login must discard expired biometric token');
+assert.match(bio,/Your saved Face ID sign-in is preserved/,'Transient login failures must preserve saved session');
+
 console.log('Biometric security: plugin pin, native permissions, privacy disclosure, secure saved-session Face ID sign-in, device-credential fallback and biometric-gated mobile boot passed.');
