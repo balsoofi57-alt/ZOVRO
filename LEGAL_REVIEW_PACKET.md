@@ -21,7 +21,7 @@ This packet is for final human legal review before public commercial launch. It 
 - ZOVRO is a marketplace connecting customers with independent local service providers.
 - Providers are responsible for services they offer and for licenses/permits legally required for the service and location.
 - ZOVRO does not impose a blanket license requirement where law does not require one.
-- Urgent roadside requests do not replace 911, police, fire, or medical emergency services.
+- SOS / urgent roadside requests do not replace 911, police, fire, or medical emergency services.
 - Location is used for location-dependent functionality such as nearby matching, service coordination, and live job/location features.
 - Before provider acceptance, discovery responses restrict customer identity, address, precise location, and private messages.
 - Account deletion is available in-app.

@@ -1,6 +1,6 @@
 # ZOVRO 1.0.0 Final Release
 
-The current ZOVRO 1.0.0 release candidate includes customer and provider accounts, nearby-provider matching, urgent roadside marketplace requests, job acceptance, lifecycle status updates, in-app messaging, cancellation flows, ratings/reputation, provider availability/location, account deletion, password recovery, support workflows, security checks, durable PostgreSQL, production readiness endpoints, mobile packaging preparation, and live Stripe integration.
+The current ZOVRO 1.0.0 release candidate includes customer and provider accounts, nearby-provider matching, SOS/urgent marketplace requests, job acceptance, lifecycle status updates, in-app messaging, cancellation flows, ratings/reputation, provider availability/location, account deletion, password recovery, support workflows, security checks, durable PostgreSQL, production readiness endpoints, mobile packaging preparation, and live Stripe integration.
 
 ## Verified production state — September 26, 2026
 

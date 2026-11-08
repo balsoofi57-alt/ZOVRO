@@ -27,6 +27,13 @@
   function requestConsentAccepted(){return !!$('legalRequestConsent')?.checked}
   function rememberLegal(){localStorage.setItem(LEGAL_KEY,'accepted')}
   function hasRememberedLegal(){return localStorage.getItem(LEGAL_KEY)==='accepted'}
+  function ensureSosLegal(){
+    if(hasRememberedLegal())return true;
+    const ok=window.confirm('Before sending SOS roadside assistance, please review and accept the current ZOVRO Terms and Privacy Policy. This is not 911 or emergency medical/police/fire dispatch. Continue and accept?');
+    if(ok)rememberLegal();
+    return ok;
+  }
+
   const originalFetch=window.fetch.bind(window);
   window.fetch=async(input,init={})=>{
     const url=typeof input==='string'?input:String(input?.url||'');
@@ -45,10 +52,15 @@
     }
 
     if(isRequest){
-      if(body?.source==='sos')throw new Error('SOS dispatch is discontinued. Select Roadside Assistance instead.');
-      ensureUi();
-      if(!requestConsentAccepted())throw new Error('Accept the service request terms before sending this request.');
-      headers.set('X-ZOVRO-Request-Consent',REQUEST_VERSION);
+      const sos=body?.source==='sos';
+      if(sos){
+        if(!ensureSosLegal())throw new Error('Terms and Privacy acceptance is required before sending an SOS roadside request.');
+        headers.set('X-ZOVRO-Request-Kind','sos');
+      }else{
+        ensureUi();
+        if(!requestConsentAccepted())throw new Error('Accept the service request terms before sending this request.');
+        headers.set('X-ZOVRO-Request-Consent',REQUEST_VERSION);
+      }
       headers.set('X-ZOVRO-Terms-Version',TERMS_VERSION);
       headers.set('X-ZOVRO-Privacy-Version',PRIVACY_VERSION);
     }
