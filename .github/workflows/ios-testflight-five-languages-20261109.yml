@@ -1,4 +1,4 @@
-name: ZOVRO Five-Language TestFlight One-Shot Upload
+name: ZOVRO Latest UI TestFlight Upload
 
 on:
   push:
@@ -104,6 +104,36 @@ jobs:
         run: |
           set -euo pipefail
           node scripts/prepare-mobile.js
+
+      - name: Verify newest route, GPS, and translation UI is embedded
+        run: |
+          set -euo pipefail
+          test -s www/index.html
+          test -s www/transport-client.js
+          test -s www/i18n.js
+          grep -Fq 'id="reqLocationRefresh"' www/index.html
+          grep -Fq 'id="transportDropoff"' www/index.html
+          grep -Fq 'Use My Location' www/index.html
+          grep -Fq "SUPPORTED=['en','ar','es','fr','zh']" www/i18n.js
+          npm run transport:check
+          npm run gps:check
+          npm run i18n:check
+
+      - name: Stamp current TestFlight build in embedded app metadata
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import os
+          from pathlib import Path
+          html = Path("www/index.html")
+          content = html.read_text(encoding="utf-8")
+          if content.count("</head>") != 1:
+              raise SystemExit("Expected one HTML head end tag")
+          build = os.environ["GITHUB_RUN_NUMBER"] + "." + os.environ["GITHUB_RUN_ATTEMPT"]
+          tag = '<meta name="zovro-testflight-build" content="' + build + '">'
+          html.write_text(content.replace("</head>", tag + "\n</head>", 1), encoding="utf-8")
+          print("Stamped bundled UI with ZOVRO TestFlight build " + build)
+          PY
 
       - name: Create and sync iOS
         run: |
