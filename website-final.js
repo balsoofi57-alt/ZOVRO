@@ -391,6 +391,79 @@
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',ready);else ready();
 })();
 
+// Organize More as one account card and consistent settings sections.
+(function(){
+  function init(){
+    const profile=document.getElementById('profile'),menu=document.getElementById('zMoreMenu'),account=document.getElementById('zAccountMenu');
+    if(!profile||!menu||!account||document.getElementById('zMoreBack'))return;
+    const svg=path=>'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="'+path+'"/></svg>';
+    const paths={
+      back:'m14 6-6 6 6 6M8 12h13',
+      account:'M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8M4 21v-2a8 8 0 0 1 16 0v2',
+      nearby:'M12 22S4 13 4 9a8 8 0 1 1 16 0c0 4-8 13-8 13zM9 9a3 3 0 1 0 6 0 3 3 0 1 0-6 0',
+      support:'M4 13v-1a8 8 0 0 1 16 0v1M4 12H2v6h4v-6zM20 12h2v6h-4v-6zM20 18v3h-7',
+      provider:'M3 7h18v14H3zM8 7V3h8v4M3 12h18M10 12v3h4v-3',
+      options:'M5 6h14M5 12h14M5 18h14M8 3v6M16 9v6M10 15v6',
+      security:'M12 2 3 6v6c0 5 9 10 9 10s9-5 9-10V6zM8 12l3 3 5-6'
+    };
+    const heading=profile.querySelector(':scope > .sectionHead');
+    if(heading){
+      heading.classList.add('z-more-page-header');
+      const back=document.createElement('button');back.id='zMoreBack';back.type='button';back.setAttribute('aria-label','Back to home');back.innerHTML=svg(paths.back);
+      back.onclick=()=>{document.querySelector('.bottom button')?.click();window.scrollTo({top:0,behavior:'smooth'})};
+      heading.prepend(back);
+      const description=heading.querySelector('p');if(description)description.textContent='Your account, preferences and support.';
+    }
+    function decorate(id,title,description,glyph){
+      const summary=document.querySelector('#'+id+'>summary');if(!summary)return;
+      summary.replaceChildren();
+      const badge=document.createElement('span');badge.className='z-more-icon';badge.setAttribute('aria-hidden','true');badge.innerHTML=svg(paths[glyph]);
+      const labels=document.createElement('span');labels.className='z-more-summary-label';
+      const strong=document.createElement('strong');strong.textContent=title;
+      const small=document.createElement('small');small.textContent=description;
+      labels.append(strong,small);summary.append(badge,labels);
+    }
+    decorate('zAccountMenu','My Account','Profile & security','account');
+    decorate('zNearbyMenu','Nearby providers','Find professionals in your area','nearby');
+    decorate('zSupportMenu','Help & support','Support, policies and legal information','support');
+    decorate('zProviderMenu','Work with ZOVRO','Information for service providers','provider');
+    decorate('moreSettings','More options','Urgent roadside assistance','options');
+    const controls=document.createElement('details');controls.id='zAccountControls';controls.className='z-menu-group';
+    controls.innerHTML='<summary></summary><p class="z-account-actions-note">Sign out on this device, or permanently delete your account.</p>';
+    const actions=document.getElementById('accountActions');if(actions)controls.appendChild(actions);
+    menu.appendChild(controls);decorate('zAccountControls','Account actions','Sign out or delete your account','security');
+    for(const id of ['zAccountMenu','zManageMenu','zNearbyMenu','zSupportMenu','zProviderMenu','moreSettings','zAccountControls']){
+      const node=document.getElementById(id);if(node)menu.appendChild(node);
+    }
+    const manage=document.querySelector('#zManageMenu>h3');if(manage)manage.textContent='Preferences & payments';
+    function refresh(){
+      const box=document.getElementById('profileBox'),status=document.getElementById('accountBox');
+      const name=box?.querySelector(':scope > b');
+      if(name){
+        const contact=name.nextElementSibling,role=contact?.nextElementSibling;
+        const identity=document.createElement('div');identity.className='z-profile-identity';
+        const avatar=document.createElement('span');avatar.className='z-profile-avatar';avatar.setAttribute('aria-hidden','true');
+        avatar.textContent=name.textContent.trim().split(/\s+/).slice(0,2).map(x=>x.charAt(0)).join('').toUpperCase();
+        const info=document.createElement('div');info.className='z-profile-name';
+        name.before(identity);info.appendChild(name);if(role?.tagName==='P'&&role.classList.contains('muted'))info.appendChild(role);
+        identity.append(avatar,info);
+        if(contact?.tagName==='P'){
+          const values=[];let value='';for(const node of contact.childNodes){if(node.nodeName==='BR'){values.push(value.trim());value=''}else value+=node.textContent}values.push(value.trim());
+          contact.className='z-profile-contact';contact.replaceChildren();
+          for(const [i,label] of ['Phone','Email'].entries()){if(!values[i])continue;const row=document.createElement('span'),caption=document.createElement('small'),text=document.createElement('span');caption.textContent=label;text.textContent=values[i];row.append(caption,text);contact.appendChild(row)}
+        }
+      }
+      const hasIdentity=!!box?.querySelector('.z-profile-identity');
+      profile.classList.toggle('z-has-profile',hasIdentity);
+      if(status&&box&&status.previousElementSibling!==box)box.after(status);
+      const verification=document.getElementById('phoneVerificationCard');if(verification&&verification.parentElement!==account)account.appendChild(verification);
+      controls.hidden=!actions||actions.classList.contains('hidden');
+    }
+    refresh();new MutationObserver(refresh).observe(profile,{childList:true,subtree:true});
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
+})();
+
 // 2026-11-09 UX polish: sheet close buttons, color-coded statuses,
 // friendly empty states. Additive only; existing handlers untouched.
 (function(){
