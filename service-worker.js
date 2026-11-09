@@ -1,5 +1,5 @@
-const CACHE='zovro-web-v14-silver-20260930';
-const CORE=['./','./index.html','./privacy.html','./terms.html','./support.html','./manifest.webmanifest','./assets/zovro-icon.svg','./assets/zovro-icon-1024.png','./assets/zovro-official-brand.webp','./assets/brand/zovro-trades-background.webp','./assets/brand/zovro-logo-transparent.webp','./website-final.css','./website-final.js'];
+const CACHE='zovro-web-v15-languages-20261109';
+const CORE=['./','./index.html','./privacy.html','./terms.html','./support.html','./manifest.webmanifest','./assets/zovro-icon.svg','./assets/zovro-icon-1024.png','./assets/zovro-official-brand.webp','./assets/brand/zovro-trades-background.webp','./assets/brand/zovro-logo-transparent.webp','./website-final.css','./website-final.js','./i18n-messages.js?v=languages-20261109','./i18n.js?v=languages-20261109'];
 
 self.addEventListener('install',event=>{
   event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(CORE)).then(()=>self.skipWaiting()));

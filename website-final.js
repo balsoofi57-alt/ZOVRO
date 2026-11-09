@@ -376,7 +376,7 @@
         document.getElementById('zCatalogSearch').value='';list.scrollTop=0;document.getElementById('zCatalogBack').focus({preventScroll:true});
       }),family.label,g.id);item.dataset.searchTerms=(family.label+' '+choices.map(x=>x.label.en).join(' ')).toLowerCase();list.appendChild(item);continue}seen.add(service.id);seen.add(service.label.en);addService(service)}}
       if(!categoryId){for(const group of window.ZOVRO_PROVIDER_SERVICES?.groups||[]){for(const service of group.services){if(seen.has(service.label))continue;seen.add(service.label);const item=styleServiceButton(button(service.label,()=>{window.closeModal(catalog.id);window.startService(service.label)}),service.label,group.id);list.appendChild(item)}}}
-      const search=document.getElementById('zCatalogSearch');search.value='';search.oninput=()=>{const q=search.value.trim().toLowerCase();for(const b of list.children)b.hidden=!(b.dataset.searchTerms||b.textContent.toLowerCase()).includes(q)};window.openModal(catalog.id);list.scrollTop=0;document.getElementById('zCatalogBack').focus({preventScroll:true});
+      const search=document.getElementById('zCatalogSearch');search.value='';search.oninput=()=>{const q=search.value.trim().toLowerCase();for(const b of list.children){const terms=[b.dataset.searchTerms,b.textContent].filter(Boolean).join(' ').toLowerCase();b.hidden=!terms.includes(q)}};window.openModal(catalog.id);list.scrollTop=0;document.getElementById('zCatalogBack').focus({preventScroll:true});
     }
     categories.querySelector('.z-service-heading').appendChild(button('See all  ›',()=>openCatalog()));
     for(const [label,id,glyph] of [['Roadside Assistance','auto-roadside','car'],['Home Repairs','home-services','home'],['Cleaning','cleaning','clean'],['Outdoor & Tree Care','outdoor-seasonal','tree'],['Moving & Hauling','moving-hauling','truck'],['More Services',null,'more']]){const b=button('',()=>openCatalog(id,label),'z-category');b.innerHTML='<span class="z-icon-badge" aria-hidden="true">'+icon(glyph)+'</span><span class="z-category-label">'+label+'</span>';categories.querySelector('.z-category-grid').appendChild(b)}
@@ -912,7 +912,7 @@
 (function(){
   const arrow='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m14 6-6 6 6 6M8 12h13"/></svg>';
   function isSection(d){return d&&d.tagName==='DETAILS'&&d.parentElement&&d.parentElement.id==='zMoreMenu'}
-  function title(d){const s=d.querySelector(':scope>summary');return (s?.querySelector('strong')?.textContent||s?.textContent||'ZOVRO').replace(/[›»]/g,'').trim()}
+  function title(d){const s=d.querySelector(':scope>summary'),label=s?.querySelector('strong')||s;return (window.ZOVRO_I18N?.sourceText(label)||label?.textContent||'ZOVRO').replace(/[›»]/g,'').trim()}
   function goHome(){document.querySelector('.bottom button')?.click();window.scrollTo({top:0})}
   function header(d){
     let h=d.querySelector(':scope>.z-more-subpage-header');
