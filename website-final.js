@@ -905,3 +905,54 @@
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
 })();
+
+// 2026-11-09 · More sections open as full pages with a back arrow to the More menu.
+// The original <details> elements stay in place so existing code that sets
+// `.open=true` (Notifications, provider links) keeps working unchanged.
+(function(){
+  const arrow='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m14 6-6 6 6 6M8 12h13"/></svg>';
+  function isSection(d){return d&&d.tagName==='DETAILS'&&d.parentElement&&d.parentElement.id==='zMoreMenu'}
+  function title(d){const s=d.querySelector(':scope>summary');return (s?.querySelector('strong')?.textContent||s?.textContent||'ZOVRO').replace(/[›»]/g,'').trim()}
+  function goHome(){document.querySelector('.bottom button')?.click();window.scrollTo({top:0})}
+  function header(d){
+    let h=d.querySelector(':scope>.z-more-subpage-header');
+    if(h){h.querySelector('h2').textContent=title(d);return h}
+    h=document.createElement('header');h.className='z-full-page-header z-more-subpage-header';
+    const back=document.createElement('button');back.type='button';back.className='z-page-back';
+    back.setAttribute('aria-label','Back to More');back.innerHTML=arrow;back.onclick=()=>{d.open=false};
+    const h2=document.createElement('h2');h2.textContent=title(d);h2.id=(d.id||'zMoreSection')+'PageTitle';
+    const close=document.createElement('button');close.type='button';close.className='z-page-close';
+    close.setAttribute('aria-label','Close and go to Home');close.textContent='×';close.onclick=()=>{d.open=false;goHome()};
+    h.append(back,h2,close);
+    d.querySelector(':scope>summary').after(h);
+    return h;
+  }
+  let returnFocus=null;
+  document.addEventListener('toggle',event=>{
+    const d=event.target;if(!isSection(d))return;
+    if(d.open){
+      if(d.id==='zNearbyMenu'){d.open=false;document.querySelector('#zNearbyMenu .btn')?.click();return}
+      for(const other of document.querySelectorAll('#zMoreMenu>details.z-more-subpage'))if(other!==d)other.open=false;
+      const h=header(d);
+      returnFocus=d.querySelector(':scope>summary');
+      d.classList.add('z-more-subpage');d.setAttribute('role','dialog');d.setAttribute('aria-modal','true');
+      d.setAttribute('aria-labelledby',h.querySelector('h2').id);
+      document.body.classList.add('z-more-subpage-open');d.scrollTop=0;
+      h.querySelector('.z-page-back').focus({preventScroll:true});
+    }else if(d.classList.contains('z-more-subpage')){
+      d.classList.remove('z-more-subpage');d.removeAttribute('role');d.removeAttribute('aria-modal');d.removeAttribute('aria-labelledby');
+      if(!document.querySelector('#zMoreMenu>details.z-more-subpage'))document.body.classList.remove('z-more-subpage-open');
+      if(returnFocus&&returnFocus.isConnected&&document.getElementById('profile')?.offsetParent!==null)returnFocus.focus({preventScroll:true});
+    }
+  },true);
+  document.addEventListener('keydown',e=>{
+    if(e.key!=='Escape'||e.defaultPrevented||document.querySelector('.z-page-modal.open'))return;
+    const open=document.querySelector('#zMoreMenu>details.z-more-subpage');
+    if(open){e.preventDefault();open.open=false}
+  });
+  // Leaving the More tab (bottom navigation) always closes an open section page.
+  document.addEventListener('click',e=>{
+    if(!e.target.closest('.bottom button'))return;
+    for(const d of document.querySelectorAll('#zMoreMenu>details.z-more-subpage'))d.open=false;
+  },true);
+})();
