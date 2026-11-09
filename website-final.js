@@ -888,20 +888,10 @@
       }finally{busy=false;city.disabled=false;logo.disabled=false;city.setAttribute('aria-busy','false')}
     }
     logo.onclick=city.onclick=()=>detect(true);
-    // The browser's own permission prompt controls initial access. Do not bypass denial.
-    async function automatic(){
-      try{
-        if(navigator.permissions?.query){
-          const permission=await navigator.permissions.query({name:'geolocation'});
-          if(permission.state==='denied'){setCity('Enable location','Allow location in browser or device settings to display your city.');return}
-        }
-      }catch(_){}
-      detect();
-    }
-    document.addEventListener('visibilitychange',()=>{
-      if(document.visibilityState==='visible'&&Date.now()-lastAttempt>300000)automatic();
-    });
-    automatic();
+    // Location is opt-in. Do not trigger an iOS permission prompt during app startup
+    // or when returning from the background. The logo button is the only entry point
+    // for header city lookup; manual service addresses remain available without GPS.
+    setCity('Use location','Tap the location pin in the ZOVRO logo to detect your city. GPS is optional.');
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
 })();
