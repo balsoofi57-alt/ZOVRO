@@ -167,8 +167,19 @@ async function createRequest(){
   smartMatchDetails();const selectedService=$('reqService').value,smart=smartMatchRules.find(rule=>rule.specific===selectedService),service=smart?.service||selectedService,subservice=smart?.specific||((serviceSubcategories[service]||[]).length?$('reqSubservice').value:null);
   const transport=window.ZOVRO_TRANSPORT?.collect?.(service);if(transport?.error)return requestMessage(transport.error);
   const details=subservice?`${smart?'':'Pest / rodent type: '}${subservice}\n${typedDetails}`:typedDetails;
+  // Preserve the route and inclusive crew requirement as human-readable
+  // request details while the production backend is being upgraded.
+  // The structured transport fields remain authoritative once deployed.
+  const transportLines=transport?.value?[
+    'Pickup: '+transport.value.pickupAddress,
+    'Drop-off: '+transport.value.dropoffAddress,
+    transport.value.includesLoadingUnloading
+      ?'Loading/unloading included: '+transport.value.workers+' workers for '+transport.value.hours+' hours.'
+      :'One all-inclusive transport quote, including road miles.'
+  ]:[];
+  const requestDetails=transportLines.length?transportLines.join('\n')+'\n'+details:details;
   const clientRequestId=window.crypto?.randomUUID?.()||`${Date.now()}-${Math.random().toString(36).slice(2)}-${Math.random().toString(36).slice(2)}`;
-  requestAttempt={owner,payload:{service,details,serviceSelectionManual:requestServiceManual,address,time:'As soon as possible',urgent:$('reqUrgent').checked,location:transport?null:loc,transport:transport?.value||undefined,transportEstimateToken:transport?.quoteToken||undefined,clientRequestId}};
+  requestAttempt={owner,payload:{service,details:requestDetails,serviceSelectionManual:requestServiceManual,address,time:'As soon as possible',urgent:$('reqUrgent').checked,location:transport?null:loc,transport:transport?.value||undefined,transportEstimateToken:transport?.quoteToken||undefined,clientRequestId}};
  }
  const attempt=requestAttempt;requestSending=true;lockRequestForm(true);button.disabled=true;button.textContent='Sending…';requestMessage('Sending your request…');
  try{
