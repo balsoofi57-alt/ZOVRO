@@ -2,7 +2,7 @@ name: ZOVRO Verify Uploaded IPA Content
 on:
   push:
     branches:
-      - testflight/five-languages-20261109-3ce7a4c
+      - testflight/fix-location-prompt-20261109
     paths:
       - .github/workflows/zovro-ipa-content-verification.yml
 permissions:
@@ -13,13 +13,13 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 7
     steps:
-      - name: Download exact signed IPA artifact from successful Build 2.1
+      - name: Download exact signed IPA artifact from successful Build 3.1
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
           mkdir -p downloaded
-          gh run download 42662856709 -R balsoofi57-alt/ZOVRO -n zovro-ios-app-store-signed -D downloaded
+          gh run download 42667984551 -R balsoofi57-alt/ZOVRO -n zovro-ios-app-store-signed -D downloaded
       - name: Inspect embedded iPhone app bytes read-only
         run: |
           set -euo pipefail
@@ -46,13 +46,24 @@ jobs:
               print(f"BUNDLE_ID={bundle}")
               print(f"VERSION={version}")
               print(f"BUILD_NUMBER={build}")
-              if bundle != "com.zovro.app" or version != "1.0.0" or build != "2.1":
+              if bundle != "com.zovro.app" or version != "1.0.0" or build != "3.1":
                   raise SystemExit("SIGNED_IPA_VERSION_MISMATCH")
               html = get(".app/public/index.html").decode("utf-8")
               i18n = get(".app/public/i18n.js").decode("utf-8")
               transport = get(".app/public/transport-client.js").decode("utf-8")
+              ui = get(".app/public/website-final.js").decode("utf-8")
+              start = ui.find("// Header-only city detection")
+              end = ui.find("// 2026-11-09 · More sections", start)
+              if start < 0 or end <= start:
+                  raise SystemExit("HEADER_LOCATION_SECTION_MISSING")
+              header = ui[start:end]
               tests = {
-                  "NEW_BUILD_META": 'name="zovro-testflight-build" content="2.1"' in html,
+                  "GPS_ONLY_ON_TAP": (
+                      "logo.onclick=city.onclick=()=>detect(true)" in header
+                      and "automatic();" not in header
+                      and "visibilitychange" not in header
+                  ),
+                  "NEW_BUILD_META": 'name="zovro-testflight-build" content="3.1"' in html,
                   "GPS_BUTTON": 'id="reqLocationRefresh"' in html and "Use My Location" in html,
                   "ROUTE_TO_FIELD": 'id="transportDropoff"' in html,
                   "FIVE_LANGUAGES": "SUPPORTED=['en','ar','es','fr','zh']" in i18n,
