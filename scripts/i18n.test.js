@@ -147,3 +147,24 @@ test('user-entered names, addresses, job descriptions and price notes are not lo
     assert.ok(index.includes(prefix+value),field);
   }
 });
+
+test('critical account, location and payment labels are translated into all four additional languages',()=>{
+  const match=i18n.match(/const RELEASE_UI_LABELS=(\{[^\n]+\});/);
+  assert.ok(match,'Missing critical UI translations');
+  const labels=JSON.parse(match[1]);
+  const essential=[
+    'GPS is optional. Choose Use My Location only when you are at pickup; otherwise type any address, including for someone else.',
+    'Share live location','Stop live location','Destination street address, city, state',
+    'Payment summary','Approval required before payment.','Release payment',
+    'Payout setup required','Payout verification in progress',
+    'Sign in or create an account','No requests yet',
+    'This conversation has already been submitted for review.'
+  ];
+  for(const locale of ['ar','es','fr','zh']){
+    assert.ok(Object.keys(labels[locale]).length>=50,locale+' critical UI coverage');
+    for(const key of essential){
+      assert.ok(labels[locale][key],locale+': '+key);
+      assert.notEqual(labels[locale][key],key,locale+': must be translated: '+key);
+    }
+  }
+});
