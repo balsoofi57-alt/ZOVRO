@@ -11,7 +11,7 @@ function harness(){
  geo:()=>new Promise(r=>resolveGeo=r),gpsErrorReason:e=>e.reason,
  api:(_,opt)=>{posts.push(JSON.parse(opt.body));return new Promise((resolve,reject)=>resolvePost={resolve,reject})}
  });
- vm.runInContext('let requestLocation=null,requestLocationBusy=false,requestLocationGeneration=0,requestLocationPromise=null,requestLocationMode='manual';let requestIntent=null,requestAttempt=null,requestSending=false;'+html.slice(html.indexOf('function invalidateRequestLocation()'),html.indexOf('async function loadJobs()')),c);
+ vm.runInContext('let requestLocation=null,requestLocationBusy=false,requestLocationGeneration=0,requestLocationPromise=null,requestLocationMode="manual";let requestIntent=null,requestAttempt=null,requestSending=false;'+html.slice(html.indexOf('function invalidateRequestLocation()'),html.indexOf('async function loadJobs()')),c);
  $('reqService').value='Plumbing';$('reqDetails').value='Leaking sink';$('reqAddress').value='123 Main St, Detroit';
  return {c,$,posts,messages,run:code=>vm.runInContext(code,c),geo:loc=>resolveGeo(loc),post:()=>resolvePost};
 }
