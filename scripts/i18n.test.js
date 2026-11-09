@@ -212,3 +212,32 @@ test('readonly GPS status remains localized without triggering a new location lo
   assert.ok(index.includes("status.dir=window.ZOVRO_I18N?.getLanguage?.()==='ar'?'rtl':'ltr'"));
   assert.ok(!index.includes('status.value='+String.fromCharCode(96)+'✓ GPS pickup selected'));
 });
+
+test('request, payment, private-profile and support feedback literals have translations',()=>{
+  const names=['LABELS','EXTRA','SERVICE_LABELS','CUSTOMER_FLOW_LABELS','RELEASE_UI_LABELS','ADDITIONAL_UI_LABELS','GPS_STATUS_LABELS','DYNAMIC_UI_LABELS'];
+  const dictionaries=names.map(name=>{
+    const row=i18n.split('\n').find(line=>line.startsWith('const '+name+'='));
+    assert.ok(row,'Missing i18n dictionary '+name);
+    return JSON.parse(row.slice(('const '+name+'=').length).replace(/;$/,''));
+  });
+  const files=['index.html','website-final.js','payment-ui.js','profile-security-client.js','support-center.js','support-chat.js'];
+  const messages=new Set();
+  for(const file of files){
+    const source=fs.readFileSync(file,'utf8');
+    const patterns=[
+      /(?:toast|requestMessage)\(\s*(['"])([^'"\n]{4,260})\1/g,
+      /(?:textContent|status\.value|placeholder)\s*=\s*(['"])([^'"\n]{4,260})\1/g,
+      /(?:textContent|status\.value)\s*=\s*\x60([^\x60]{4,260})\x60/g
+    ];
+    for(const pattern of patterns)for(const match of source.matchAll(pattern)){
+      const key=(match[2]||match[1]).trim();
+      if(!/[A-Za-z]{4}/.test(key)||/[{}<>=]/.test(key)||key.length>250||/^https:\/\//.test(key)||key==='ZOVRO')continue;
+      messages.add(key);
+    }
+  }
+  assert.ok(messages.size>=110,'Unexpectedly low feedback message sample');
+  for(const locale of ['ar','es','fr','zh']){
+    const known=new Set(dictionaries.flatMap(dict=>Object.keys(dict[locale]||{})));
+    for(const message of messages)assert.ok(known.has(message),locale+': missing feedback translation: '+message);
+  }
+});
