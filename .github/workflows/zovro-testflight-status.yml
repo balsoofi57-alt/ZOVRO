@@ -91,6 +91,14 @@ jobs:
               else:
                   print("STATUS=APPLE_PROCESSING_NOT_FINISHED")
 
+          for item in builds:
+              try:
+                  detail = get(f"/v1/builds/{item['id']}/buildBetaDetail").get("data", {}).get("attributes", {})
+                  print("INTERNAL_BETA_STATE=" + str(detail.get("internalBuildState", "UNKNOWN")))
+                  print("EXTERNAL_BETA_STATE=" + str(detail.get("externalBuildState", "UNKNOWN")))
+              except urllib.error.HTTPError as err:
+                  print("BETA_DETAIL_STATUS=NOT_ACCESSIBLE_HTTP_" + str(err.code))
+
           try:
               groups = get("/v1/betaGroups", {"filter[app]": app_id, "limit": "100"}).get("data", [])
               internal = [g for g in groups if g.get("attributes", {}).get("isInternalGroup") is True]
@@ -98,6 +106,13 @@ jobs:
               for item in internal:
                   attrs = item.get("attributes", {})
                   print("INTERNAL_GROUP_ALL_BUILDS=" + str(attrs.get("hasAccessToAllBuilds", False)))
+                  testers = get(f"/v1/betaGroups/{item['id']}/betaTesters", {"limit": "200"}).get("data", [])
+                  print("INTERNAL_GROUP_TESTER_COUNT=" + str(len(testers)))
+                  states = {}
+                  for tester in testers:
+                      state = str(tester.get("attributes", {}).get("state", "UNKNOWN"))
+                      states[state] = states.get(state, 0) + 1
+                  print("TESTER_STATES=" + json.dumps(states, sort_keys=True))
                   if builds:
                       linked = get(f"/v1/betaGroups/{item['id']}/builds", {"limit": "200"}).get("data", [])
                       print("BUILD_LINKED_TO_GROUP=" + str(any(
