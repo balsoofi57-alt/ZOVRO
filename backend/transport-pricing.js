@@ -3,7 +3,7 @@ const crypto=require('node:crypto');
 
 const GROUPS=Object.freeze({
   'Moving':'moving','Furniture Moving':'moving','Furniture Delivery':'moving','Appliance Delivery':'moving',
-  'Pickup-Truck Help':'moving','Towing':'towing','Emergency Towing':'towing',
+  'Pickup-Truck Help':'moving','Towing':'towing','Emergency Towing':'towing','Vehicle Transport':'towing',
   'Hauling':'hauling','Junk Removal':'hauling','Local Courier':'courier'
 });
 const LABOR_GROUPS=new Set(['moving','hauling']);
