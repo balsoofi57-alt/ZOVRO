@@ -241,3 +241,16 @@ test('request, payment, private-profile and support feedback literals have trans
     for(const message of messages)assert.ok(known.has(message),locale+': missing feedback translation: '+message);
   }
 });
+
+test('support ticket receipt localizes each phrase but never rewrites the ID',()=>{
+  const support=fs.readFileSync('support-chat.js','utf8');
+  const row=i18n.split('\n').find(line=>line.startsWith('const SUPPORT_RECEIPT_LABELS='));
+  assert.ok(row);
+  const catalog=JSON.parse(row.slice('const SUPPORT_RECEIPT_LABELS='.length).replace(/;$/,''));
+  const suffix='. Saved for customer support review. No live agent is connected and a response time is not confirmed. View support requests for updates.';
+  for(const locale of ['ar','es','fr','zh'])assert.ok(catalog[locale][suffix],locale+': missing receipt translation');
+  assert.match(support,/ticketId\.setAttribute\('translate','no'\)/);
+  assert.match(support,/ticketId\.textContent=String\(out\.record\.id\)/);
+  assert.match(support,/status\.replaceChildren\(document\.createTextNode\('Support ticket received: '\),ticketId,document\.createTextNode\('\. Saved for customer support review/);
+  assert.doesNotMatch(support,/status\.textContent = 'Support ticket received: ' \+ out\.record\.id/);
+});
