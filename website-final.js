@@ -315,7 +315,7 @@
     const showTab=i=>{tabs[i]?.click();window.scrollTo({top:0,behavior:'smooth'})};
     const account=button('',()=>{showTab(3);document.getElementById('zAccountMenu').open=true},'z-account-shortcut');account.setAttribute('aria-label','My account');account.innerHTML=icon('account');document.querySelector('.top').appendChild(account);
     const location=button('⌖  Set your location  ›',()=>window.startRequestWithLocation({details:document.getElementById('zProblem').value.trim(),useLocation:true}));location.id='zLocationShortcut';smart.prepend(location);
-    document.getElementById('zSmartGo').onclick=()=>window.startRequestWithLocation({details:document.getElementById('zProblem').value.trim()});
+    document.getElementById('zSmartGo').onclick=()=>window.startRequestWithLocation({details:document.getElementById('zProblem').value.trim(),useLocation:false});
     const services=document.getElementById('services');const oldHeading=services.previousElementSibling;if(oldHeading?.classList.contains('sectionHead'))oldHeading.hidden=true;
     const categories=document.createElement('section');categories.id='zCategoryGrid';categories.innerHTML='<div class="z-service-heading"><h2>Services</h2></div><div class="z-category-grid"></div>';
     smart.insertAdjacentElement('afterend',categories);
@@ -414,4 +414,98 @@
     new MutationObserver(enhance).observe(list,{childList:true,subtree:true});
   }
   ready(init);
+})();
+
+// 2026-11-09 · Simple 2-step request wizard (owner-requested):
+// Step 1 "What" (description + auto service), Step 2 "Where" (address first,
+// GPS optional). All original IDs, handlers and validation logic untouched.
+(function(){
+  function ready(fn){document.readyState==='loading'?document.addEventListener('DOMContentLoaded',fn):fn()}
+  function init(){
+    const modal=document.getElementById('requestModal');if(!modal)return;
+    const step1=document.getElementById('zReqStep1'),step2=document.getElementById('zReqStep2');
+    const next=document.getElementById('zReqNext'),back=document.getElementById('zReqBack'),send=document.getElementById('zReqSend');
+    const label=document.getElementById('zReqProgressLabel'),fill=document.getElementById('zReqProgressFill');
+    if(!step1||!step2||!next||!back||!send||!label||!fill)return;
+    function show(n){
+      step1.classList.toggle('hidden',n!==1);step2.classList.toggle('hidden',n!==2);
+      next.hidden=n!==1;back.hidden=n!==2;send.hidden=n!==2;
+      label.textContent=n===1?'Step 1 of 2':'Step 2 of 2';
+      fill.style.width=n===1?'50%':'100%';
+      if(n===2)setTimeout(()=>{document.getElementById('reqAddress')?.focus()},60);
+    }
+    next.addEventListener('click',()=>{
+      const details=document.getElementById('reqDetails');
+      if(!details||!details.value.trim()){details?.focus();window.toast('Please describe what you need help with');return}
+      show(2);
+    });
+    back.addEventListener('click',()=>show(1));
+    new MutationObserver(()=>{if(modal.classList.contains('open'))show(1)}).observe(modal,{attributes:true,attributeFilter:['class']});
+  }
+  ready(init);
+})();
+
+// 2026-11-09 · Friendlier feedback and small ergonomics wins:
+// toast icons, Enter-to-send in chat, Escape closes the topmost modal.
+(function(){
+  function ready(fn){document.readyState==='loading'?document.addEventListener('DOMContentLoaded',fn):fn()}
+  function init(){
+    // Toast icons: success vs attention, derived from the message content.
+    const original=window.toast;
+    if(typeof original==='function'&&!original.__zovroToastIcons){
+      const wrapped=function(message){
+        try{
+          const el=document.getElementById('toast');
+          if(el){
+            const text=String(message||'');
+            const bad=/fail|error|unavailable|not |cannot|could not|invalid|missing|expired|denied|offline|too long|required|please|not found|not confirmed/i;
+            const good=/✓|sent|success|welcome|saved|updated|approved|enabled|disabled|ready|received|thank you|deleted|signed out|cancelled|location ready|have been saved/i;
+            el.classList.remove('z-toast-ok','z-toast-warn');
+            if(bad.test(text))el.classList.add('z-toast-warn');
+            else if(good.test(text))el.classList.add('z-toast-ok');
+          }
+        }catch(_){}
+        return original(message);
+      };
+      wrapped.__zovroToastIcons=true;window.toast=wrapped;
+    }
+    // Enter sends a chat message.
+    const chatInput=document.getElementById('chatText');
+    if(chatInput&&!chatInput.dataset.zEnterSend){
+      chatInput.dataset.zEnterSend='1';
+      chatInput.addEventListener('keydown',e=>{
+        if(e.key==='Enter'&&!e.shiftKey&&typeof window.sendMessage==='function'){e.preventDefault();window.sendMessage()}
+      });
+    }
+    // Escape closes the topmost open modal (same as its Close button).
+    if(!window.__zovroEscapeClose){
+      window.__zovroEscapeClose=true;
+      document.addEventListener('keydown',e=>{
+        if(e.key!=='Escape')return;
+        const open=[...document.querySelectorAll('.modal.open')].pop();
+        if(open&&open.id&&typeof window.closeModal==='function')window.closeModal(open.id);
+      });
+    }
+  }
+  ready(init);
+})();
+
+// 2026-11-09 · Keep the Sign-in / Create-account segmented control in sync.
+(function(){
+  function ready(fn){document.readyState==='loading'?document.addEventListener('DOMContentLoaded',fn):fn()}
+  ready(()=>{
+    const original=window.renderAuth;
+    if(typeof original!=='function'||original.__zovroTabs)return;
+    const wrapped=function(){
+      const out=original.apply(this,arguments);
+      try{
+        const tabs=document.querySelectorAll('#authModal .tabs .btn');
+        const login=window.authMode!=='register';
+        tabs.forEach((t,i)=>t.classList.toggle('z-tab-active',login?i===0:i===1));
+      }catch(_){}
+      return out;
+    };
+    wrapped.__zovroTabs=true;window.renderAuth=wrapped;
+    try{window.renderAuth()}catch(_){}
+  });
 })();
