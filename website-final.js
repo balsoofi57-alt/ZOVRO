@@ -464,6 +464,85 @@
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
 })();
 
+// Consistent secondary pages. Filters affect visibility only, not request data.
+(function(){
+  function init(){
+    const jobsPage=document.getElementById('jobs'),nearby=document.getElementById('nearby'),list=document.getElementById('jobList');
+    if(!jobsPage||!nearby||!list||document.getElementById('zRequestFilters'))return;
+    const backIcon='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m14 6-6 6 6 6M8 12h13"/></svg>';
+    for(const section of [jobsPage,nearby]){
+      const heading=section.querySelector(':scope > .sectionHead');if(!heading)continue;
+      heading.classList.add('z-secondary-page-header');
+      const back=document.createElement('button');back.type='button';back.className='z-page-back';back.setAttribute('aria-label','Back to home');back.innerHTML=backIcon;
+      back.onclick=()=>{document.querySelector('.bottom button')?.click();window.scrollTo({top:0,behavior:'instant'})};heading.prepend(back);
+    }
+    const toolbar=jobsPage.querySelector(':scope > .bar');toolbar?.classList.add('z-request-toolbar');
+    const refreshButton=toolbar?.querySelector('button[onclick="loadJobs()"]');
+    const status=document.createElement('p');status.id='zJobsStatus';status.className='z-page-status';status.setAttribute('role','status');toolbar?.after(status);
+    const filters=document.createElement('div');filters.id='zRequestFilters';filters.setAttribute('role','group');filters.setAttribute('aria-label','Filter requests');
+    let selected='all';
+    for(const [value,label] of [['all','All'],['active','Active'],['history','History']]){
+      const button=document.createElement('button');button.type='button';button.dataset.zRequestFilter=value;button.setAttribute('aria-pressed',String(value==='all'));
+      const text=document.createElement('span');text.textContent=label;const count=document.createElement('span');count.className='z-filter-count';
+      button.append(text,count);button.onclick=()=>{selected=value;updateFilters()};filters.appendChild(button);
+    }
+    list.before(filters);
+    const empty=document.createElement('div');empty.id='zFilterEmpty';empty.className='card z-filter-empty';empty.hidden=true;
+    empty.innerHTML='<b>No requests in this view</b><p>Choose All to see your other requests.</p><button type="button" class="btn ghost">Show all requests</button>';
+    empty.querySelector('button').onclick=()=>{selected='all';updateFilters()};list.after(empty);
+    function updateFilters(){
+      for(const icon of list.querySelectorAll('.z-empty-icon')){
+        if(!icon.querySelector('svg'))icon.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 4H5v17h14V4h-4M9 3h6v4H9zM8 11h8M8 15h6"/></svg>';
+      }
+      const cards=[...list.querySelectorAll(':scope > .card.job')],counts={all:cards.length,active:0,history:0};let shown=0;
+      for(const card of cards){
+        const isHistory=/^(completed|cancelled)$/i.test((card.querySelector('.tag')?.textContent||'').trim());
+        counts[isHistory?'history':'active']++;
+        const visible=selected==='all'||(selected==='history'?isHistory:!isHistory);
+        card.classList.toggle('z-request-filtered',!visible);if(visible)shown++;
+      }
+      filters.hidden=!cards.length;
+      if(!cards.length)selected='all';
+      for(const button of filters.children){
+        const value=button.dataset.zRequestFilter;
+        button.setAttribute('aria-pressed',String(selected===value));button.querySelector('.z-filter-count').textContent=String(counts[value]);
+      }
+      empty.hidden=!cards.length||shown>0;
+    }
+    updateFilters();new MutationObserver(updateFilters).observe(list,{childList:true,subtree:true});
+    const discovery=nearby.querySelector(':scope > .card');discovery?.classList.add('z-discovery-form');
+    const select=document.getElementById('nearbyService');select?.setAttribute('aria-label','Choose a service');
+    const locationButton=discovery?.querySelector('button[onclick="findNearby()"]');
+    if(locationButton)locationButton.textContent='Find nearby providers';
+    const nearbyStatus=document.createElement('p');nearbyStatus.id='zNearbyStatus';nearbyStatus.className='z-page-status';nearbyStatus.setAttribute('role','status');discovery?.after(nearbyStatus);
+    const intro=document.createElement('div');intro.id='zNearbyIntro';intro.className='card z-discovery-intro';
+    intro.innerHTML='<span class="z-discovery-symbol" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 22S4 13 4 9a8 8 0 1 1 16 0c0 4-8 13-8 13zM9 9a3 3 0 1 0 6 0 3 3 0 1 0-6 0"/></svg></span><b>Find the right professional</b><p>Choose a service above, then use your current location to search nearby.</p><small>Exact provider locations stay private until a request is accepted.</small>';
+    document.getElementById('nearbyList')?.before(intro);
+    const oldNav=window.nav;
+    if(typeof oldNav==='function')window.nav=function(id){
+      const result=oldNav.apply(this,arguments);
+      if(id==='jobs'||id==='nearby')window.scrollTo({top:0,behavior:'instant'});
+      return result;
+    };
+    let jobsPending=0,nearbyPending=0;
+    const oldLoad=window.loadJobs;
+    if(typeof oldLoad==='function')window.loadJobs=async function(){
+      jobsPending++;list.setAttribute('aria-busy','true');if(refreshButton){refreshButton.disabled=true;refreshButton.textContent='Updating…'}status.textContent='Updating requests…';
+      try{return await oldLoad.apply(this,arguments)}finally{
+        jobsPending--;if(!jobsPending){list.setAttribute('aria-busy','false');if(refreshButton){refreshButton.disabled=false;refreshButton.textContent='Refresh'}status.textContent=''}updateFilters();
+      }
+    };
+    const oldFind=window.findNearby;
+    if(typeof oldFind==='function')window.findNearby=async function(){
+      nearbyPending++;nearby.setAttribute('aria-busy','true');if(locationButton){locationButton.disabled=true;locationButton.textContent='Searching…'}nearbyStatus.textContent='Finding providers near your current location…';
+      try{return await oldFind.apply(this,arguments)}finally{
+        nearbyPending--;if(!nearbyPending){nearby.setAttribute('aria-busy','false');if(locationButton){locationButton.disabled=false;locationButton.textContent='Find nearby providers'}nearbyStatus.textContent=''}
+      }
+    };
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
+})();
+
 // 2026-11-09 UX polish: sheet close buttons, color-coded statuses,
 // friendly empty states. Additive only; existing handlers untouched.
 (function(){

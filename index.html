@@ -18,7 +18,7 @@
 <meta name="apple-mobile-web-app-title" content="ZOVRO">
 <link rel="icon" href="assets/zovro-icon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="assets/leaflet/leaflet.css">
-<link rel="stylesheet" href="website-final.css?v=organized-more-20261109">
+<link rel="stylesheet" href="website-final.css?v=secondary-pages-20261109">
 </head>
 <body>
 <div class="shell">
@@ -199,7 +199,7 @@ async function shareProviderLocation(){if(providerLocationWatch!==null){stopProv
 function handleStripeConnectReturn(){const q=new URLSearchParams(location.search),state=q.get('stripe_connect');if(!state)return;if(state==='return'){toast('Payout setup returned to ZOVRO. Checking status…');setTimeout(()=>{if(me?.role==='provider')loadPayoutStatus()},600)}else if(state==='refresh'){toast('Payout setup link expired. Open Profile and continue payout setup.')}q.delete('stripe_connect');const next=location.pathname+(q.toString()?'?'+q.toString():'')+location.hash;history.replaceState({},'',next)}
 async function logout(){invalidateRequestLocation();requestIntent=null;requestAttempt=null;closeModal('requestModal');stopProviderLiveLocation(true);try{if(token)await api('/auth/logout',{method:'POST',body:'{}'})}catch{}token='';me=null;localStorage.removeItem('zovroToken');renderAccount();toast('Signed out')}async function deleteAccount(){if(!confirm('Permanently delete your ZOVRO account?'))return;try{await api('/me',{method:'DELETE',body:JSON.stringify({confirm:'DELETE'})});token='';me=null;localStorage.removeItem('zovroToken');renderAccount();toast('Account deleted')}catch(e){toast(e.message)}}boot().catch(e=>{console.error('ZOVRO boot rejected',e);const state=$('state');if(state){state.textContent='ZOVRO loaded · some features unavailable';state.style.color='#b45309'}try{renderAccount()}catch(_){}});if(new URLSearchParams(location.search).get('sms-opt-in')==='1')setTimeout(openSmsOptIn,900);setTimeout(handleStripeConnectReturn,900);setInterval(()=>{if(me)loadJobs()},10000);
 </script>
-<script src="website-final.js?v=organized-more-20261109"></script>
+<script src="website-final.js?v=secondary-pages-20261109"></script>
 <script src="profile-security-client.js?v=7"></script>
 <script src="support-policy.js?v=1"></script>
 <script src="support-assistant.js?v=1"></script>
@@ -221,7 +221,7 @@ if ('serviceWorker' in navigator) {
 </script>
 <script src="phone-verification-client.js?v=1"></script>
 <script src="assets/leaflet/leaflet.js"></script>
-<script src="live-map.js?v=1"></script>
+<script src="live-map.js?v=secondary-pages-20261109"></script>
 <section class="shell"><div class="feature"><h2>Also from ZOVRO LLC: Slotly</h2><p>Slotly is our appointment booking and local pickup ordering platform. Visit <a href="https://slotly.help">slotly.help</a> to browse businesses, book appointments and place pickup orders. After explicit SMS consent, Slotly sends login verification codes, booking confirmations, reminders and order status updates. Message frequency varies. Message and data rates may apply. Reply STOP to opt out or HELP for help.</p><p><a href="https://slotly.help/privacy">Slotly Privacy Policy</a> | <a href="https://slotly.help/terms#sms">Slotly SMS Terms</a></p></div></section>
 </body>
 </html>
