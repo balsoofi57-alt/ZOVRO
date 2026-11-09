@@ -44,6 +44,8 @@ async function main(){
  const html=read('index.html'),client=read('transport-client.js'),mobile=read('scripts/prepare-mobile.js'),api=read('backend/server-core.js');
  assert(html.includes('transport-client.js?v=all-in-route-20261108'));
  assert(html.includes('ZOVRO_TRANSPORT?.collect?.(service)'));
+ assert(html.includes('details:requestDetails'));
+ assert(html.includes("transportLines.join('\\n')"));
  assert(html.includes('transportEstimateToken:transport?.quoteToken'));
  assert(html.includes("location:transport?null:loc"));
  assert(client.includes('Estimated all-in total:'));
