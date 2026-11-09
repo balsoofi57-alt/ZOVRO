@@ -10,11 +10,20 @@ async function main(){
  assert.equal(p.requiresLabor('Furniture Moving'),true);
  assert.equal(p.requiresLabor('Towing'),false);
  const req=p.validateTransport('Furniture Moving',{pickupAddress:'10 Main Street, Dearborn, MI',dropoffAddress:'40 Second St, Detroit, MI',workers:2,hours:2});
- assert.deepEqual(req,{pickupAddress:'10 Main Street, Dearborn, MI',dropoffAddress:'40 Second St, Detroit, MI',workers:2,hours:2,includesLoadingUnloading:true});
+ assert.deepEqual(req,{pickupAddress:'10 Main Street, Dearborn, MI',dropoffAddress:'40 Second St, Detroit, MI',workers:2,hours:2,includesLoadingUnloading:true,pickupLocation:null});
  assert.throws(()=>p.validateTransport('Moving',{...req,dropoffAddress:req.pickupAddress}),/different/);
  assert.throws(()=>p.validateTransport('Moving',{...req,workers:20}),/1 to 8/);
  assert.throws(()=>p.validateTransport('Moving',{...req,hours:2.3}),/half-hour/);
  assert.throws(()=>p.validateTransport('Moving',null),/required/);
+ const deviceGps={lat:42.321222,lng:-83.176666,accuracy:14,capturedAt:new Date().toISOString()};
+ const otherPerson=p.validateTransport('Towing',{pickupAddress:'1000 East Michigan Ave, Detroit, MI',dropoffAddress:'500 North Main St, Royal Oak, MI',pickupLocation:null});
+ assert.equal(otherPerson.pickupLocation,null,'manual third-party request must not inherit device coordinates');
+ const roadside=p.validateTransport('Emergency Towing',{pickupAddress:'',pickupLocation:deviceGps,dropoffAddress:'500 North Main St, Royal Oak, MI'});
+ assert.equal(roadside.pickupAddress,'GPS location: 42.321222, -83.176666');
+ assert.deepEqual(roadside.pickupLocation,deviceGps);
+ assert.throws(()=>p.validateTransport('Towing',{pickupAddress:'',dropoffAddress:'500 North Main St, Royal Oak, MI'}),/pickup and drop-off/);
+ assert.throws(()=>p.validateTransport('Towing',{pickupLocation:{...deviceGps,capturedAt:new Date(Date.now()-200000).toISOString()},dropoffAddress:'500 North Main St, Royal Oak, MI'}),/expired or is invalid/);
+
  const quote=p.buildEstimate('Furniture Moving',req,16093.44,{}); // 10.0 miles
  assert.equal(quote.distanceMiles,10);
  assert.equal(quote.baseCents,6500);
@@ -40,12 +49,26 @@ async function main(){
   return {ok:true,json:async()=>({routes:[{distanceMeters:16093.44}]})};
  }});
  assert.equal(response,16093.44);
+ const gpsResult=await p.drivingDistanceMeters(roadside.pickupAddress,roadside.dropoffAddress,{pickupLocation:roadside.pickupLocation,apiKey:'test-key',fetchImpl:async (url,options)=>{
+  const body=JSON.parse(options.body);
+  assert.deepEqual(body.origin,{location:{latLng:{latitude:deviceGps.lat,longitude:deviceGps.lng}}});
+  return {ok:true,json:async()=>({routes:[{distanceMeters:1609.344}]})};
+ }});
+ assert.equal(gpsResult,1609.344);
  await assert.rejects(()=>p.drivingDistanceMeters(req.pickupAddress,req.dropoffAddress,{apiKey:''}),/not configured/);
  const html=read('index.html'),client=read('transport-client.js'),mobile=read('scripts/prepare-mobile.js'),api=read('backend/server-core.js');
- assert(html.includes('transport-client.js?v=from-to-route-20261108'));
+ assert(html.includes('transport-client.js?v=manual-gps-pickup-20261108'));
  assert(html.includes('website-final.css?v=from-to-route-20261108'));
  assert(html.includes('id="routeFromLabelText"'));
  assert(html.includes('id="routeToLabelText"'));
+ assert(html.includes('id="reqLocationRefresh"'));
+ assert.equal((html.match(/id="reqLocationRefresh"/g)||[]).length,1,'Only one opt-in GPS button on request step 2');
+ assert(html.includes('oninput="requestAddressTypedManually()"'));
+ assert(html.includes("requestLocationMode==='gps'?requestLocation:null"));
+ assert(html.includes('location:loc,transport:transport?.value'));
+ assert(client.includes('window.ZOVRO_ACTIVE_PICKUP_LOCATION?.()'));
+ assert(client.includes('pickupLocation'));
+ assert(client.includes('Open GPS pickup in Maps'));
  assert.equal((html.match(/id="reqAddress"/g)||[]).length,1,'Pickup field must exist only once');
  assert.equal((html.match(/id="transportDropoff"/g)||[]).length,1,'Destination field must exist only once');
  assert(html.indexOf('id="reqAddress"')<html.indexOf('id="transportDropoff"'),'From must precede To');
@@ -59,12 +82,15 @@ async function main(){
  assert(client.includes("route.insertAdjacentElement('afterend',wrap)"));
  assert(!client.includes('<input id="transportDropoff"'),'Client must not inject a duplicate destination input');
  assert(html.includes('transportEstimateToken:transport?.quoteToken'));
- assert(html.includes("location:transport?null:loc"));
+ assert(html.includes('location:loc,transport:transport?.value'),'Location is never automatically shared with manual pickup');
  assert(client.includes('Estimated all-in total:'));
  assert(client.includes('No separate labor checkout.'));
  assert(mobile.includes("'transport-client.js'"));
  assert(api.includes("url.pathname==='/api/transport/estimate'"));
  assert(api.includes('transportPricing.verifyEstimateToken'));
+ assert(api.includes('const loc=transport?transport.pickupLocation:b.location;'));
+ assert(api.includes('pickupLocation:transport.pickupLocation'));
+
  assert(api.includes('transport?transport.pickupAddress'));
  console.log('Transportation route, mileage, bundled labor, tamper resistance and mobile integration checks: PASS');
 }

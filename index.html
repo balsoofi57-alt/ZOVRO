@@ -18,7 +18,7 @@
 <meta name="apple-mobile-web-app-title" content="ZOVRO">
 <link rel="icon" href="assets/zovro-icon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="assets/leaflet/leaflet.css">
-<link rel="stylesheet" href="website-final.css?v=from-to-route-20261108">
+<link rel="stylesheet" href="website-final.css?v=from-to-route-20261108-gps-manual">
 </head>
 <body>
 <div class="shell">
@@ -32,9 +32,12 @@
 <div id="authModal" class="modal"><div class="sheet"><h2 id="authTitle">Sign in</h2><div class="tabs"><button class="btn dark" onclick="authMode='login';renderAuth()">Sign in</button><button class="btn ghost" onclick="authMode='register';renderAuth()">Create account</button></div><form id="signInForm" method="post" action="/" autocomplete="on" onsubmit="event.preventDefault();submitAuth()"><div id="registerFields"></div><div class="field"><label for="phone">Phone</label><input id="phone" name="username" type="tel" inputmode="tel" autocomplete="username" autocapitalize="none" spellcheck="false" required placeholder="+13135551234"></div><div class="field"><label for="password">Password</label><div class="password-control"><input id="password" name="password" type="password" required maxlength="128" autocomplete="current-password" placeholder="8+ characters, letters and numbers"><button id="passwordToggle" type="button" aria-label="Show password" aria-controls="password" aria-pressed="false" title="Show password" onclick="togglePasswordVisibility()"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/><path id="passwordEyeSlash" d="m3 3 18 18" style="display:none"/></svg></button></div></div><div class="bar"><button id="authSubmit" class="btn primary" type="submit">Continue</button><button class="btn ghost" type="button" onclick="closeModal('authModal')">Cancel</button></div></form><details id="savedPasswordHelp" class="muted" style="margin-top:16px;line-height:1.6"><summary style="cursor:pointer">Save password &amp; use Face ID on iPhone</summary><p>After signing in successfully, choose Save Password if your browser offers it. Next time, tap Phone or Password and select your saved ZOVRO login from Passwords. Your iPhone handles Face ID or device-passcode verification.</p><p>If no saved login appears, add zovro.work, your registered phone number and password in the iPhone Passwords app, and enable password AutoFill in Settings. You must know or reset your password first. Saving is controlled by your password manager; ZOVRO does not save a readable password on this device.</p></details></div></div>
 <div id="requestModal" class="modal"><div class="sheet"><h2>Get help fast</h2><div class="z-req-progress" aria-hidden="true"><span class="z-req-progress-label" id="zReqProgressLabel">Step 1 of 2</span><span class="z-req-progress-track"><span class="z-req-progress-fill" id="zReqProgressFill"></span></span></div><div id="zReqStep1"><div class="z-req-step-title"><span class="z-req-step-num" aria-hidden="true">1</span><div><b>What do you need help with?</b><small class="muted">Describe it in your own words — we pick the service for you.</small></div></div><div class="field"><label for="reqDetails">Describe the problem</label><textarea id="reqDetails" oninput="smartMatchDetails()" placeholder="Example: water is leaking under my kitchen sink"></textarea><small id="smartMatchHint" class="muted" aria-live="polite"></small></div><div class="field"><label for="reqService">Service <span class="muted">(auto-filled — change it if needed)</span></label><select id="reqService" onchange="requestServiceManual=true;syncSubservices();$('smartMatchHint').textContent='Service selected.'"></select></div><div id="reqSubserviceWrap" class="field hidden"><label>Pest / rodent type</label><select id="reqSubservice"></select><small class="muted">Choose the closest match. You can add more detail above.</small></div></div><div id="zReqStep2" class="hidden"><div class="z-req-step-title"><span class="z-req-step-num" aria-hidden="true">2</span><div><b id="routeStepHeading">Where are you going?</b><small class="muted" id="routeStepSubheading">Enter a starting address (A). Add a destination (B) when this service involves transportation.</small></div></div><div class="z-route-addresses" id="routeAddresses" role="group" aria-label="Trip origin and destination">
   <div class="field z-route-point">
-    <label for="reqAddress"><span class="z-route-marker" aria-hidden="true">A</span><span id="routeFromLabelText">From — starting / service address</span></label>
-    <input id="reqAddress" autocomplete="street-address" maxlength="200" placeholder="Starting street address, city, state">
-    <small class="muted z-req-addr-note" id="routeFromHint">Where the service or pickup begins. A typed address is enough.</small>
+    <div class="z-route-from-header"><label for="reqAddress"><span class="z-route-marker" aria-hidden="true">A</span><span id="routeFromLabelText">From — starting / service address</span></label>
+      <button id="reqLocationRefresh" type="button" class="btn ghost z-pickup-gps-btn" onclick="detectRequestLocation(true)" aria-describedby="reqLocationHelp">Use My Location</button></div>
+    <input id="reqAddress" autocomplete="street-address" maxlength="200" placeholder="Type a street address, city, state" oninput="requestAddressTypedManually()">
+    <small class="muted z-req-addr-note" id="routeFromHint">Type any pickup address, including for someone at another location.</small>
+    <input id="reqLocationStatus" class="z-gps-location-status" readonly hidden aria-label="Current location status" aria-live="polite">
+    <small id="reqLocationHelp" class="muted">GPS is optional. Choose "Use My Location" only when you are at the pickup point. Typing an address never shares your phone's location.</small>
   </div>
   <div class="z-route-connector" aria-hidden="true">↓</div>
   <div class="field z-route-point">
@@ -42,7 +45,7 @@
     <input id="transportDropoff" autocomplete="off" maxlength="200" placeholder="Destination street address, city, state">
     <small class="muted" id="routeDestinationHint">Optional for a non-transport service. Required for moving, towing, and deliveries.</small>
   </div>
-</div><div class="field"><label>Current location <span class="muted">(optional)</span></label><div class="row"><input id="reqLocationStatus" value="Optional — tap the button to use GPS" readonly aria-live="polite"><button id="reqLocationRefresh" type="button" class="btn ghost" onclick="detectRequestLocation(true)">Use My Current Location</button></div><small id="reqLocationHelp" class="muted">GPS is optional. It helps match nearby providers and verify distance. Without it, include your complete address and city.</small></div><label class="row z-urgent-toggle" style="margin:10px 0"><input id="reqUrgent" type="checkbox"> <b>Urgent request</b></label></div><p id="requestStatus" role="status" aria-live="polite"></p><button type="button" class="btn ghost" onclick="closeModal('requestModal');nav('jobs',document.querySelectorAll('.bottom button')[1])">View my requests</button><div class="bar z-req-nav"><button type="button" class="btn ghost" id="zReqBack" hidden>Back</button><button type="button" class="btn z-next" id="zReqNext">Next: Where are you?</button><button class="btn primary" id="zReqSend" onclick="createRequest()" hidden>Send request</button><button class="btn ghost" onclick="closeModal('requestModal')">Cancel</button></div></div></div>
+</div><label class="row z-urgent-toggle" style="margin:10px 0"><input id="reqUrgent" type="checkbox"> <b>Urgent request</b></label></div><p id="requestStatus" role="status" aria-live="polite"></p><button type="button" class="btn ghost" onclick="closeModal('requestModal');nav('jobs',document.querySelectorAll('.bottom button')[1])">View my requests</button><div class="bar z-req-nav"><button type="button" class="btn ghost" id="zReqBack" hidden>Back</button><button type="button" class="btn z-next" id="zReqNext">Next: Where are you?</button><button class="btn primary" id="zReqSend" onclick="createRequest()" hidden>Send request</button><button class="btn ghost" onclick="closeModal('requestModal')">Cancel</button></div></div></div>
 <div id="chatModal" class="modal"><div class="sheet"><div id="chatIdentity" class="card" style="margin-bottom:12px"></div><h2>Job chat</h2><div id="chatList"></div><div class="row"><input id="chatText" style="flex:1;border:1px solid var(--line);border-radius:13px;padding:12px" placeholder="Message"><button id="chatSendBtn" class="btn primary" onclick="sendMessage()">Send</button></div><button class="btn ghost" style="margin-top:10px" onclick="closeModal('chatModal')">Close</button></div></div>
 <div id="trackingModal" class="modal"><div class="sheet"><h2>Live job tracking</h2><div id="trackingStatus" class="card">Loading location…</div><div id="trackingMap" style="margin-top:12px;min-height:260px;border-radius:18px;background:#d7dde4;display:grid;place-items:center;color:#10243a;padding:18px;text-align:center"></div><div class="bar" style="margin-top:12px"><button class="btn ghost" onclick="refreshTracking()">Refresh</button><button class="btn ghost" onclick="closeTracking()">Close</button></div></div></div>
 <div id="toast" class="toast"></div><div id="requestSuccessModal" class="modal"><div class="sheet" style="text-align:center;max-width:520px"><div style="font-size:58px;line-height:1;margin-bottom:12px">✓</div><h2 style="margin-bottom:8px">Request sent successfully</h2><p id="requestSuccessText" class="muted" style="font-size:16px;line-height:1.55;margin:0 0 18px">Your request has been received.</p><button class="btn primary" style="width:100%" onclick="closeModal('requestSuccessModal');nav('jobs',document.querySelectorAll('.bottom button')[1])">View my request</button><button class="btn ghost" style="width:100%;margin-top:10px" onclick="closeModal('requestSuccessModal')">Done</button></div></div>
@@ -94,7 +97,8 @@ function openAuth(){renderAuth();openModal('authModal')}function renderAuth(){se
 let authBusy=false;async function submitAuth(){if(authBusy)return;authBusy=true;const button=$('authSubmit'),label=button?.textContent;if(button){button.disabled=true;button.textContent='Please wait…'}try{let d;if(authMode==='login')d=await api('/auth/login',{method:'POST',body:JSON.stringify({phone:$('phone').value,password:$('password').value})});else d=await api('/auth/register',{method:'POST',body:JSON.stringify({name:$('name').value.trim(),email:$('email').value.trim().toLowerCase(),phone:$('phone').value.trim(),password:$('password').value,role:$('role').value,smsConsent:$('role').value==='provider'&&Boolean($('smsConsent')?.checked),smsConsentDisclosureVersion:'2026-09-19',...($('role').value==='provider'?{services:ZOVRO_SERVICE_PICKER.read('registrationServices')}:{})})});if(!d.token||!d.user?.id)throw Error('Sign-in was not confirmed. Please try again.');token=d.token;me=d.user;try{localStorage.zovroToken=token}catch(_){}closeModal('authModal');renderAccount();loadJobs();toast('Welcome to ZOVRO');resumeRequestIntent()}catch(e){toast(e.message)}finally{authBusy=false;if(button){button.disabled=false;button.textContent=label}}}
 function nav(id,b){for(const x of ['home','jobs','nearby','profile'])$(x)?.classList.toggle('hidden',x!==id);document.querySelectorAll('.bottom button').forEach(x=>x.classList.remove('active'));if(b)b.classList.add('active');if(id==='jobs')loadJobs()}function startService(s){return startRequestWithLocation({service:s,useLocation:false})}
 function startUrgentRoadside(){return startRequestWithLocation({service:'Roadside Assistance',useLocation:false,urgent:true})}
-let requestLocation=null,requestLocationBusy=false,requestLocationGeneration=0,requestLocationPromise=null;
+let requestLocation=null,requestLocationBusy=false,requestLocationGeneration=0,requestLocationPromise=null,requestLocationMode='manual';
+window.ZOVRO_ACTIVE_PICKUP_LOCATION=()=>requestLocationMode==='gps'?requestLocation:null;
 let requestIntent=null,requestAttempt=null,requestSending=false;
 function gpsErrorReason(error){const code=Number(error?.code||0);if(code===1)return 'permission-denied';if(code===2)return error?.reason||'position-unavailable';if(code===3)return 'timeout';return error?.reason||'unknown'}
 function gpsRead(options){return new Promise((resolve,reject)=>{
@@ -122,7 +126,18 @@ async function geo({maxAccuracy=Infinity}={}){
  }catch(error){lastError=error;const reason=gpsErrorReason(error);window.__zovroGeoDiagnostic={...window.__zovroGeoDiagnostic,result:'failed',attempt:i+1,errorCode:Number(error?.code||0)||null,reason};if(reason==='permission-denied'||reason==='insecure-context'||reason==='unsupported')break}}
  if(lastError&&!lastError.reason)lastError.reason=gpsErrorReason(lastError);throw lastError||Object.assign(new Error('GPS unavailable.'),{code:2,reason:'unknown'});
 }
-function invalidateRequestLocation(){requestLocationGeneration++;requestLocationBusy=false;requestLocationPromise=null;requestLocation=null}
+function invalidateRequestLocation(){requestLocationGeneration++;requestLocationBusy=false;requestLocationPromise=null;requestLocation=null;requestLocationMode='manual'}
+function requestAddressTypedManually(){
+ if(requestAttempt||requestSending)return;
+ // An address for a different person must NEVER inherit this device's coordinates.
+ invalidateRequestLocation();
+ const status=$('reqLocationStatus'),button=$('reqLocationRefresh'),help=$('reqLocationHelp');
+ if(status){status.hidden=true;status.value=''}
+ if(button){button.disabled=false;button.textContent='Use My Location'}
+ if(help)help.textContent='Manual address selected. Your phone location will not be sent. Tap Use My Location only if you are at pickup.';
+ requestMessage('');
+ window.ZOVRO_TRANSPORT?.sync?.();
+}
 function requestMessage(message){$('requestStatus').textContent=message}
 function lockRequestForm(locked){document.querySelectorAll('#requestModal input,#requestModal select,#requestModal textarea,#reqLocationRefresh').forEach(el=>el.disabled=locked)}
 async function detectRequestLocation(showToast=false){
@@ -130,23 +145,29 @@ async function detectRequestLocation(showToast=false){
  if(requestLocationBusy)return requestLocationPromise;
  const generation=++requestLocationGeneration,owner=me?.id;
  const current=()=>generation===requestLocationGeneration&&owner===me?.id&&$('requestModal').classList.contains('open');
- requestLocationBusy=true;requestLocation=null;
+ requestLocationBusy=true;requestLocation=null;requestLocationMode='locating';
  const status=$('reqLocationStatus'),button=$('reqLocationRefresh'),help=$('reqLocationHelp');
- status.value='Finding your current location…';help.textContent='Allow location access when prompted. Keep this screen open.';
+ status.hidden=false;status.value='Finding your current location…';help.textContent='Allow location access when prompted. Keep this screen open.';
  button.disabled=true;button.textContent='Locating…';
  requestLocationPromise=(async()=>{try{
   const loc=await geo({maxAccuracy:1000});if(!current())return null;
-  requestLocation=loc;status.value=`✓ Location ready · about ${Math.round(loc.accuracy)} m accuracy`;
-  help.textContent=`Coordinates: ${loc.lat.toFixed(6)}, ${loc.lng.toFixed(6)} · Accuracy: about ${Math.round(loc.accuracy)} m. Confirm your address or landmark below.`;requestMessage('Location ready. Review your details, then send the request.');
+  requestLocation=loc;requestLocationMode='gps';
+  // Clearing the previous address is intentional: GPS is now the selected origin.
+  // Entering any address again switches safely back to manual mode.
+  $('reqAddress').value='';
+  status.value=`✓ GPS pickup selected · about ${Math.round(loc.accuracy)} m accuracy`;
+  help.textContent=`Pickup GPS: ${loc.lat.toFixed(6)}, ${loc.lng.toFixed(6)}. To request help for another person elsewhere, type their address instead.`;
+  window.ZOVRO_TRANSPORT?.sync?.();
+  requestMessage('Your current GPS pickup is selected. You can type a different address at any time.');
   if(showToast)toast('✓ Location ready');return loc;
  }catch(error){if(!current())return null;
-  const reason=gpsErrorReason(error);status.value='Location unavailable';
+  const reason=gpsErrorReason(error);requestLocationMode='manual';status.value='Location unavailable — type an address instead';
   help.textContent=reason==='permission-denied'?'Allow location for this site in your browser settings and enable device Location Services. If you opened ZOVRO inside another app, open zovro.work directly in Safari or Chrome, then try again.':reason==='insecure-context'?'Open https://zovro.work to share your location.':reason==='imprecise-position'?'Location is too approximate. Enable Precise Location, move to a clearer signal, then try again.':reason==='timeout'?'Finding your location timed out. Try again with a clearer signal, or enter your complete address below.':'Location could not be determined. Check device Location Services, or enter your complete address below.';
   if(showToast)toast('Location unavailable — see the instructions below');return null;
- }finally{if(current()){requestLocationBusy=false;requestLocationPromise=null;button.disabled=false;button.textContent=requestLocation?'Refresh Location':'Try Location Again'}}})();
+ }finally{if(current()){requestLocationBusy=false;requestLocationPromise=null;button.disabled=false;button.textContent=requestLocationMode==='gps'?'Refresh GPS':'Use My Location'}}})();
  return requestLocationPromise;
 }
-function prepareRequestLocation(){invalidateRequestLocation();$('reqLocationStatus').value='Optional — tap the button to use GPS';$('reqLocationRefresh').disabled=false;$('reqLocationRefresh').textContent='Use My Current Location';$('reqLocationHelp').textContent='GPS is optional. It helps match nearby providers and verify distance. Without it, include your complete address and city.'}
+function prepareRequestLocation(){invalidateRequestLocation();$('reqLocationStatus').value='';$('reqLocationStatus').hidden=true;$('reqLocationRefresh').disabled=false;$('reqLocationRefresh').textContent='Use My Location';$('reqLocationHelp').textContent='GPS is optional. Choose Use My Location only when you are at pickup; otherwise type any address, including for someone else.'}
 function newRequest(){
  if(!me){requestIntent=requestIntent||{useLocation:false};openAuth();return false}
  if(me.role!=='customer'){toast('Only customers create requests');return false}
@@ -171,7 +192,7 @@ async function createRequest(){
  if(requestAttempt&&requestAttempt.owner!==owner)requestAttempt=null;
  if(!requestAttempt){
   if(requestLocationBusy)return requestMessage('Please wait for location detection to finish, or close and reopen this form to use an address.');
-  const loc=requestLocation,address=$('reqAddress').value.trim(),typedDetails=$('reqDetails').value.trim();
+  const loc=requestLocationMode==='gps'?requestLocation:null,address=$('reqAddress').value.trim(),typedDetails=$('reqDetails').value.trim();
   if(!typedDetails)return requestMessage('Describe the help you need before sending your request.');
   if(!requestServiceManual&&ZOVRO_PROVIDER_SERVICES.hasMultipleServices(typedDetails))return requestMessage('Your description mentions multiple services. Please select the service for this request.');
   if(loc&&(!Number.isFinite(Date.parse(loc.capturedAt))||Date.now()-Date.parse(loc.capturedAt)>120000)){prepareRequestLocation();return requestMessage('Your location has expired. Tap Detect My Location again, or send using your address.')}
@@ -199,7 +220,7 @@ async function createRequest(){
   const routeLines=transportLines.length?transportLines:extraDirections;
   const requestDetails=routeLines.length?routeLines.join('\n')+'\n'+details:details;
   const clientRequestId=window.crypto?.randomUUID?.()||`${Date.now()}-${Math.random().toString(36).slice(2)}-${Math.random().toString(36).slice(2)}`;
-  requestAttempt={owner,payload:{service,details:requestDetails,serviceSelectionManual:requestServiceManual,address,time:'As soon as possible',urgent:$('reqUrgent').checked,location:transport?null:loc,transport:transport?.value||undefined,transportEstimateToken:transport?.quoteToken||undefined,clientRequestId}};
+  requestAttempt={owner,payload:{service,details:requestDetails,serviceSelectionManual:requestServiceManual,address,time:'As soon as possible',urgent:$('reqUrgent').checked,location:loc,transport:transport?.value||undefined,transportEstimateToken:transport?.quoteToken||undefined,clientRequestId}};
  }
  const attempt=requestAttempt;requestSending=true;lockRequestForm(true);button.disabled=true;button.textContent='Sending…';requestMessage('Sending your request…');
  try{
@@ -233,7 +254,7 @@ async function logout(){invalidateRequestLocation();requestIntent=null;requestAt
 </script>
 <script src="service-art.js?v=colored-art-20261109"></script>
 <script src="website-final.js?v=more-pages-20261109"></script>
-<script src="transport-client.js?v=from-to-route-20261108"></script>
+<script src="transport-client.js?v=manual-gps-pickup-20261108"></script>
 <script src="profile-security-client.js?v=7"></script>
 <script src="support-policy.js?v=1"></script>
 <script src="support-assistant.js?v=1"></script>

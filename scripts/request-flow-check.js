@@ -11,7 +11,7 @@ function harness(){
  geo:()=>new Promise(r=>resolveGeo=r),gpsErrorReason:e=>e.reason,
  api:(_,opt)=>{posts.push(JSON.parse(opt.body));return new Promise((resolve,reject)=>resolvePost={resolve,reject})}
  });
- vm.runInContext('let requestLocation=null,requestLocationBusy=false,requestLocationGeneration=0,requestLocationPromise=null;let requestIntent=null,requestAttempt=null,requestSending=false;'+html.slice(html.indexOf('function invalidateRequestLocation()'),html.indexOf('async function loadJobs()')),c);
+ vm.runInContext('let requestLocation=null,requestLocationBusy=false,requestLocationGeneration=0,requestLocationPromise=null,requestLocationMode="manual";let requestIntent=null,requestAttempt=null,requestSending=false;'+html.slice(html.indexOf('function invalidateRequestLocation()'),html.indexOf('async function loadJobs()')),c);
  $('reqService').value='Plumbing';$('reqDetails').value='Leaking sink';$('reqAddress').value='123 Main St, Detroit';
  return {c,$,posts,messages,run:code=>vm.runInContext(code,c),geo:loc=>resolveGeo(loc),post:()=>resolvePost};
 }
@@ -27,5 +27,22 @@ const position=()=>({lat:42,lng:-83,accuracy:12,capturedAt:new Date().toISOStrin
  h=harness();h.c.newRequest();p=h.c.createRequest();h.post().reject(Object.assign(Error('Details invalid'),{status:400}));await p;assert.equal(h.$('reqDetails').disabled,false);assert.equal(h.run('requestAttempt'),null);
  h=harness();h.c.newRequest();h.$('reqDetails').value='plumbing and electrical';await h.c.createRequest();assert.equal(h.posts.length,0,'multiple trades require a manual service choice');assert.match(h.$('requestStatus').textContent,/select the service/);h.run('requestServiceManual=true');p=h.c.createRequest();assert.equal(h.posts[0].serviceSelectionManual,true);h.post().resolve({request:{id:'selected'}});await p;
  h=harness();h.c.newRequest();p=h.c.createRequest();h.c.me={id:'other',role:'customer'};h.post().resolve({request:{id:'old-account'}});await p;assert(!h.$('requestSuccessModal').classList.open,'no cross-account success');
+ h=harness();h.c.newRequest();p=h.c.detectRequestLocation();h.geo(position());await p;
+ assert.equal(h.run('requestLocationMode'),'gps','GPS is used only after explicit opt-in');
+ assert.equal(h.$('reqAddress').value,'','GPS selection clears a possibly unrelated address');
+ h.$('reqAddress').value='555 Michigan Avenue, Dearborn, MI';h.c.requestAddressTypedManually();
+ assert.equal(h.run('requestLocation'),null,'manual typing removes the previous GPS fix');
+ assert.equal(h.run('requestLocationMode'),'manual');
+ let promise=h.c.createRequest();assert.equal(h.posts[0].address,'555 Michigan Avenue, Dearborn, MI');
+ assert.equal(h.posts[0].location,null,'third-party manual address must never reveal requester GPS');
+ h.post().resolve({request:{id:'manual-third-party'}});await promise;
+ h=harness();h.c.newRequest();p=h.c.detectRequestLocation();h.geo(position());await p;
+ promise=h.c.createRequest();
+ assert.equal(h.posts[0].address,'','GPS-only roadside pickup does not require a street address');
+ assert.equal(h.posts[0].location.lat,42);
+ h.post().resolve({request:{id:'gps-roadside'}});await promise;
+ h=harness();h.c.newRequest();p=h.c.detectRequestLocation();
+ h.$('reqAddress').value='987 Remote Road, Detroit, MI';h.c.requestAddressTypedManually();
+ h.geo(position());await p;assert.equal(h.run('requestLocation'),null,'late GPS cannot override manual address for another person');
  console.log('Request flow: sign-in continuation, stale GPS, account isolation, pending location, expired location, duplicate prevention, identical retries, confirmed success, and validation recovery passed.');
 })().catch(e=>{console.error(e);process.exitCode=1});
