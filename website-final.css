@@ -1059,3 +1059,9 @@ body:has(#authModal.open){overflow:hidden}
   #authModal #zAuthBody .bar{gap:10px}
   #authModal #zAuthBody #signInForm>.bar>.btn{flex:1}
 }
+
+/* Owner-requested removal of the pictured home composer; service flows stay intact. */
+body.z-silver-layout #smartMatch>h2,
+body.z-silver-layout #smartMatch>.z-smart-box,
+body.z-silver-layout #smartMatch>.z-smart-status{display:none!important}
+body.z-silver-layout #smartMatch{margin:12px 0 16px!important}
