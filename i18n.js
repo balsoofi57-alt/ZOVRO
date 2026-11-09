@@ -114,7 +114,7 @@ function init(){
   apply();
   new MutationObserver(schedule).observe(document.body,{childList:true,subtree:true,characterData:true,attributes:true,attributeFilter:['placeholder','aria-label','title']});
 }
-window.ZOVRO_I18N={getLanguage,setLanguage,apply,supportedLanguages:SUPPORTED.slice()};
+window.ZOVRO_I18N={getLanguage,setLanguage,apply,translate:translated,supportedLanguages:SUPPORTED.slice()};
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});
 else init();
 })();
