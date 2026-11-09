@@ -200,3 +200,15 @@ test('static customer-facing interface literals stay covered in all five languag
     for(const phrase of visible)assert.ok(localeKeys[locale].has(phrase),locale+': untranslated UI phrase: '+phrase);
   }
 });
+
+test('readonly GPS status remains localized without triggering a new location lookup',()=>{
+  const statuses=JSON.parse(i18n.match(/const GPS_STATUS_LABELS=(\{[^\n]+\});/)[1]);
+  const phrases=['Finding your current location…','Location unavailable — type an address instead','✓ GPS pickup selected · about {accuracy} m accuracy'];
+  for(const locale of ['ar','es','fr','zh'])for(const phrase of phrases)assert.ok(statuses[locale][phrase],locale+': '+phrase);
+  assert.match(i18n,/function format\(en,params=\{\},language=getLanguage\(\)\)/);
+  assert.match(index,/function setRequestGpsStatus\(english,params=\{\}\)/);
+  assert.match(index,/document\.addEventListener\('zovro:language-changed'/);
+  assert.ok(index.includes("setRequestGpsStatus('✓ GPS pickup selected · about {accuracy} m accuracy',{accuracy:Math.round(loc.accuracy)})"));
+  assert.ok(index.includes("status.dir=window.ZOVRO_I18N?.getLanguage?.()==='ar'?'rtl':'ltr'"));
+  assert.ok(!index.includes('status.value='+String.fromCharCode(96)+'✓ GPS pickup selected'));
+});
