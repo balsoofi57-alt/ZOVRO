@@ -32,12 +32,31 @@ test('full page CSS uses viewport sizing, independent scrolling and shared nativ
   assert.match(rules,/safe-area-inset-bottom/);
   assert.match(rules,/#chatModal\.z-page-modal #chatText\{min-width:0\}/);
   assert.match(rules,/overflow-wrap:anywhere/);
-  assert.match(html,/website-final\.css\?v=full-pages-/);
-  assert.match(html,/website-final\.js\?v=full-pages-/);
+  assert.match(html,/website-final\.css\?v=(full|more)-pages-/);
+  assert.match(html,/website-final\.js\?v=(full|more)-pages-/);
   assert.match(fs.readFileSync('scripts/prepare-mobile.js','utf8'),/'website-final\.css','website-final\.js'/);
 });
 test('native language chooser does not break the shared header initialization',()=>{
   assert.match(js,/const anchor=\[\.\.\.top\.children\]\.find\(child=>child\.contains\(status\)\)/);
   assert.match(js,/top\.insertBefore\(nav,anchor\|\|null\)/);
   assert.doesNotMatch(js,/top\.insertBefore\(nav,document\.getElementById\('state'\)\)/);
+});
+test('More sections open as full pages with a back arrow to the More menu',()=>{
+  const start=js.indexOf('// 2026-11-09 · More sections open as full pages');
+  assert.ok(start>=0);
+  const more=js.slice(start);
+  assert.match(more,/addEventListener\('toggle'/);
+  assert.match(more,/aria-label','Back to More'/);
+  assert.match(more,/back\.onclick=\(\)=>\{d\.open=false\}/);
+  assert.match(more,/z-more-subpage-open/);
+  const rules=css.slice(css.indexOf('/* More sections are full pages'));
+  assert.match(rules,/details\.z-more-subpage\{[\s\S]*?position:fixed!important;inset:0!important/);
+  assert.match(rules,/height:100dvh/);
+});
+test('document pages expose a top back arrow to the app home',()=>{
+  for(const [file,home] of [['support.html','./'],['privacy.html','./'],['terms.html','./'],['sms-terms.html','./'],['delete-account.html','./'],['privacy/index.html','../'],['terms/index.html','../']]){
+    const page=fs.readFileSync(file,'utf8');
+    assert.ok(page.includes('<header class="z-doc-header"><a class="z-doc-back" href="'+home+'" aria-label="Back to ZOVRO home">'),file);
+    assert.match(page,/\.z-doc-header\{position:sticky;top:0/,file);
+  }
 });
