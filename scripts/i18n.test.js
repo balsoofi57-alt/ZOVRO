@@ -131,3 +131,15 @@ test('translated status labels cannot change request history filters or registra
   assert.doesNotMatch(app,/authTitle'\)\?\.textContent!=='Create account'/);
   assert.match(app,/\.bottom button\[onclick\*="nearby"\]/);
 });
+
+
+test('user-entered names, addresses, job descriptions and price notes are not localized',()=>{
+  const mark='$'+'{esc(';
+  for(const field of ['j.details','j.address','j.changeOrder.reason','j.lastHandoffReason','me.name','other']){
+    const value=mark+field+')}';
+    const before=index.lastIndexOf(value);
+    assert.ok(before>=0,field);
+    const line=index.slice(Math.max(0,before-180),before);
+    assert.match(line,/translate="no"/,field);
+  }
+});
