@@ -104,7 +104,8 @@
         if (signedIn() !== actor || owner !== actor) return;
         if (!out.record?.id) throw new Error('No ticket confirmation was returned.');
         submitted = snapshot;
-        status.textContent = 'Support ticket received: ' + out.record.id + '. Saved for customer support review. No live agent is connected and a response time is not confirmed. View support requests for updates.';
+        const ticketId=document.createElement('strong');ticketId.setAttribute('translate','no');ticketId.textContent=String(out.record.id);
+        status.replaceChildren(document.createTextNode('Support ticket received: '),ticketId,document.createTextNode('. Saved for customer support review. No live agent is connected and a response time is not confirmed. View support requests for updates.'));
       } catch (error) {
         if (signedIn() === actor && owner === actor) status.textContent = error.name === 'TimeoutError' ? 'Confirmation took too long. Retry to check the same support request.' : error.message || 'Could not submit. Try again.';
       } finally { pending = false; button.disabled = false; }
