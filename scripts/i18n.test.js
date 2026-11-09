@@ -115,3 +115,8 @@ test('unsupported automated support languages route to human review without clai
   assert.ok(support.includes("item.setAttribute('translate','no')"));
   assert.ok(support.includes("JSON.stringify({text,history,locale,allowAI:true})"));
 });
+
+test('multilingual label replacement never changes chat messages',()=>{
+  assert.match(index,/<div id="chatList" translate="no"><\/div>/);
+  assert.match(i18n,/p\.closest\('script,style,textarea,pre,code,svg,\[translate="no"\]'\)/);
+});
