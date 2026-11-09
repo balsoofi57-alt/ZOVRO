@@ -700,3 +700,88 @@ body.z-silver-layout .z-site-footer a{color:#becbdc!important}
   body.z-silver-layout .z-quick small{font-size:11px}
   .modal .sheet{padding:26px 20px calc(28px + env(safe-area-inset-bottom))!important}
 }
+
+/* Service directory is a complete page, not a partial-height bottom sheet. */
+body:has(#zSilverCatalog.open){overflow:hidden}
+#zSilverCatalog{
+  padding:24px!important;align-items:center!important;justify-content:center!important;
+}
+#zSilverCatalog .sheet{
+  width:min(1040px,100%)!important;max-width:1040px!important;
+  height:calc(100dvh - 48px)!important;max-height:none!important;
+  padding:0!important;border:1px solid #bccbd9!important;
+  border-radius:22px!important;overflow:hidden!important;
+  display:flex;flex-direction:column;
+  background:#eef2f6!important;animation:none!important;
+}
+#zSilverCatalog .sheet::before,#zSilverCatalog .z-modal-close{display:none!important}
+#zSilverCatalog .z-service-heading{
+  flex:0 0 auto;display:grid;grid-template-columns:46px minmax(0,1fr) auto;
+  gap:14px;align-items:center;margin:0!important;padding:20px 24px 16px;
+  background:#f7f9fc;border-bottom:1px solid #d0dbe6;
+}
+#zSilverCatalog #zCatalogTitle{
+  color:#102039!important;font-size:23px!important;
+  line-height:1.25!important;letter-spacing:-.025em;margin:0!important;
+}
+body.z-silver-layout #zSilverCatalog #zCatalogBack{
+  display:grid;place-items:center;width:44px;height:44px;min-height:44px;
+  padding:10px!important;border:1px solid #c0cedc!important;border-radius:12px;
+  background:#e8eff6!important;color:#173f65!important;cursor:pointer;
+}
+#zCatalogBack svg{
+  width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:2;
+  stroke-linecap:round;stroke-linejoin:round;
+}
+body.z-silver-layout #zSilverCatalog #zCatalogClose{
+  color:#204d73!important;font-size:14px;font-weight:650;padding:8px!important;
+}
+#zSilverCatalog .field{
+  flex:0 0 auto;margin:0!important;padding:18px 24px 20px;
+  background:#eef2f6;
+}
+#zSilverCatalog .field label{display:block;margin:0 0 9px!important;font-size:13px!important;color:#52677c!important}
+#zSilverCatalog #zCatalogSearch{
+  width:100%;height:52px;border-radius:12px!important;
+  background:#fff!important;font-size:16px!important;box-shadow:0 1px 3px #132c4610;
+}
+#zSilverCatalog .z-catalog-list{
+  flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain;
+  align-content:start;gap:12px;padding:0 24px 24px;
+  scrollbar-gutter:stable;
+}
+#zSilverCatalog button.z-service-option{
+  min-height:78px;padding:14px 16px!important;gap:14px;border-radius:14px!important;
+  background:linear-gradient(140deg,#fff,#e3eaf2)!important;
+  border:1px solid #bdccda!important;box-shadow:0 2px 3px #17365009!important;
+  color:#142d47!important;font-weight:650!important;font-size:15px!important;
+}
+#zSilverCatalog button.z-service-option:hover{border-color:#5483ac!important}
+#zSilverCatalog .z-service-vector::before{display:none!important}
+#zSilverCatalog .z-catalog-icon{
+  display:grid;place-items:center;width:42px;height:42px;flex:0 0 42px;
+  border-radius:11px;background:#edf4fb;border:1px solid #cbdbea;color:#205a87;
+}
+#zSilverCatalog .z-catalog-icon svg{
+  width:24px;height:26px;fill:none;stroke:currentColor;stroke-width:1.7;
+  stroke-linecap:round;stroke-linejoin:round;
+}
+#zSilverCatalog .z-catalog-label{min-width:0;line-height:1.4}
+#zSilverCatalog .z-service-option::after{color:#4b6d8d;font-size:23px}
+@media(max-width:700px){
+  #zSilverCatalog{padding:0!important}
+  #zSilverCatalog .sheet{
+    width:100%!important;height:100dvh!important;max-height:100dvh!important;
+    border:0!important;border-radius:0!important;
+  }
+  #zSilverCatalog .z-service-heading{
+    padding:calc(16px + env(safe-area-inset-top)) 16px 16px;
+    gap:12px;
+  }
+  #zSilverCatalog #zCatalogTitle{font-size:21px!important}
+  #zSilverCatalog .field{padding:16px}
+  #zSilverCatalog .z-catalog-list{
+    grid-template-columns:1fr;gap:10px;padding:0 16px calc(24px + env(safe-area-inset-bottom));scrollbar-gutter:auto;
+  }
+  #zSilverCatalog button.z-service-option{min-height:76px;padding:13px 14px!important}
+}

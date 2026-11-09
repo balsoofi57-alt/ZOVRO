@@ -311,7 +311,22 @@
       const categoryTone={ 'auto-roadside':['auto','🚗'], 'home-services':['home','🏠'], 'emergency-sos':['emergency','🚨'], 'construction-property':['construction','🏗️'], 'outdoor-seasonal':['outdoor','🌳'], cleaning:['clean','🧹'], 'moving-hauling':['moving','🚚'], 'business-services':['business','🏢'], 'other-help':['other','✨'] };
       return categoryTone[categoryId]||['other','✨'];
     };
-    const styleServiceButton=(b,label,categoryId)=>{const [tone,icon]=serviceVisual(label,categoryId);b.classList.add('z-service-option','z-tone-'+tone);b.dataset.zServiceIcon=icon;return b};
+    const servicePaths={
+      plumbing:'M12 3v8M8 7h8M5 11h14v5H5zM9 16v4M15 16v4',
+      electrical:'m13 2-8 12h6l-1 10 9-14h-6z',
+      hvac:'M12 3v20M3 13h18M5 6l14 14M5 20 19 6M9 5l3 3 3-3M9 21l3-3 3 3',
+      tool:'M15 4a6 6 0 0 0-7 7L3 20l3 3 9-10a6 6 0 0 0 6-8l-5 4-3-3z'
+    };
+    const styleServiceButton=(b,label,categoryId)=>{
+      const [tone,legacyIcon]=serviceVisual(label,categoryId);
+      b.classList.add('z-service-option','z-tone-'+tone,'z-service-vector');b.dataset.zServiceIcon=legacyIcon;
+      const glyph=/plumb|drain|water/i.test(label)?'plumbing':/electric|light|power/i.test(label)?'electrical':/heat|hvac|air condition/i.test(label)?'hvac':/handyman|appliance|repair|mechanic/i.test(label)?'tool':null;
+      const categoryGlyph={'auto-roadside':'car','home-services':'home','cleaning':'clean','outdoor-seasonal':'tree','moving-hauling':'truck'};
+      const symbol=glyph?'<svg viewBox="0 0 24 26" aria-hidden="true"><path d="'+servicePaths[glyph]+'"/></svg>':icon(categoryGlyph[categoryId]||'home');
+      const badge=document.createElement('span');badge.className='z-catalog-icon';badge.setAttribute('aria-hidden','true');badge.innerHTML=symbol;
+      const text=document.createElement('span');text.className='z-catalog-label';text.textContent=label;
+      b.replaceChildren(badge,text);return b;
+    };
     const showTab=i=>{tabs[i]?.click();window.scrollTo({top:0,behavior:'smooth'})};
     const account=button('',()=>{showTab(3);document.getElementById('zAccountMenu').open=true},'z-account-shortcut');account.setAttribute('aria-label','My account');account.innerHTML=icon('account');document.querySelector('.top').appendChild(account);
     const location=button('⌖  Set your location  ›',()=>window.startRequestWithLocation({details:document.getElementById('zProblem').value.trim(),useLocation:true}));location.id='zLocationShortcut';smart.prepend(location);
@@ -319,9 +334,21 @@
     const services=document.getElementById('services');const oldHeading=services.previousElementSibling;if(oldHeading?.classList.contains('sectionHead'))oldHeading.hidden=true;
     const categories=document.createElement('section');categories.id='zCategoryGrid';categories.innerHTML='<div class="z-service-heading"><h2>Services</h2></div><div class="z-category-grid"></div>';
     smart.insertAdjacentElement('afterend',categories);
-    let catalog;
+    let catalog,catalogBackAction=null,catalogTrigger=null;
     function openCatalog(categoryId,title){
-      if(!catalog){catalog=document.createElement('div');catalog.id='zSilverCatalog';catalog.className='modal';catalog.innerHTML='<div class="sheet" role="dialog" aria-modal="true" aria-labelledby="zCatalogTitle"><div class="z-service-heading"><h2 id="zCatalogTitle"></h2><button type="button" id="zCatalogClose" aria-label="Close services">Close</button></div><div class="field"><label for="zCatalogSearch">Find a service</label><input id="zCatalogSearch" type="search" placeholder="Search services"></div><div class="z-catalog-list"></div></div>';document.body.appendChild(catalog);document.getElementById('zCatalogClose').onclick=()=>window.closeModal(catalog.id);catalog.addEventListener('click',e=>{if(e.target===catalog)window.closeModal(catalog.id)});catalog.addEventListener('keydown',e=>{if(e.key==='Escape')window.closeModal(catalog.id)})}
+      if(!catalog){catalog=document.createElement('div');catalog.id='zSilverCatalog';catalog.className='modal';catalog.innerHTML='<div class="sheet" role="dialog" aria-modal="true" aria-labelledby="zCatalogTitle"><div class="z-service-heading"><button type="button" id="zCatalogBack" aria-label="Back to home"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m14 6-6 6 6 6M8 12h13"/></svg></button><h2 id="zCatalogTitle"></h2><button type="button" id="zCatalogClose" aria-label="Close services">Close</button></div><div class="field"><label for="zCatalogSearch">Find a service</label><input id="zCatalogSearch" type="search" placeholder="Search services"></div><div class="z-catalog-list"></div></div>';document.body.appendChild(catalog);
+        const leaveCatalog=()=>{window.closeModal(catalog.id);catalogTrigger?.focus({preventScroll:true})};
+        document.getElementById('zCatalogClose').onclick=leaveCatalog;
+        document.getElementById('zCatalogBack').onclick=()=>{if(catalogBackAction)catalogBackAction();else leaveCatalog()};
+        catalog.addEventListener('click',e=>{if(e.target===catalog)leaveCatalog()});
+        catalog.addEventListener('keydown',e=>{
+          if(e.key==='Escape'){e.stopPropagation();leaveCatalog()}
+          if(e.key==='Tab'){const controls=[...catalog.querySelectorAll('button,input')].filter(x=>!x.hidden&&x.getClientRects().length);const first=controls[0],last=controls[controls.length-1];if(e.shiftKey&&document.activeElement===first){e.preventDefault();last?.focus()}else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first?.focus()}}
+        });
+      }
+      if(!catalog.classList.contains('open'))catalogTrigger=document.activeElement;
+      catalogBackAction=null;catalog.dataset.category=categoryId||'';catalog.dataset.title=title||'';
+      document.getElementById('zCatalogBack').setAttribute('aria-label','Back to home');
       document.getElementById('zCatalogTitle').textContent=title||'All services';const list=catalog.querySelector('.z-catalog-list');list.replaceChildren();
       const groups=window.ZOVRO_CATALOG?.SERVICE_CATALOG||[];const seen=new Set();
       const related=[
@@ -338,9 +365,14 @@
       ];
       const all=groups.flatMap(g=>g.services);const displayedGroups=new Set();
       const addService=(service)=>{const item=styleServiceButton(button(service.label.en,()=>{window.closeModal(catalog.id);window.startService(service.label.en)}),service.label.en,service.categoryId);item.dataset.searchTerms=service.label.en.toLowerCase();list.appendChild(item)};
-      for(const g of groups){if(categoryId&&g.id!==categoryId)continue;for(const service of g.services){if(seen.has(service.id)||seen.has(service.label.en))continue;const family=related.find(x=>x.ids.includes(service.id));if(family){if(displayedGroups.has(family.label))continue;displayedGroups.add(family.label);const choices=all.filter(x=>family.ids.includes(x.id));for(const choice of choices){seen.add(choice.id);seen.add(choice.label.en)}const item=styleServiceButton(button(family.label,()=>{list.replaceChildren();document.getElementById('zCatalogTitle').textContent=family.label;const back=button('‹ Back to services',()=>openCatalog(categoryId,title));list.appendChild(back);choices.forEach(addService)}),family.label,g.id);item.dataset.searchTerms=(family.label+' '+choices.map(x=>x.label.en).join(' ')).toLowerCase();list.appendChild(item);continue}seen.add(service.id);seen.add(service.label.en);addService(service)}}
+      for(const g of groups){if(categoryId&&g.id!==categoryId)continue;for(const service of g.services){if(seen.has(service.id)||seen.has(service.label.en))continue;const family=related.find(x=>x.ids.includes(service.id));if(family){if(displayedGroups.has(family.label))continue;displayedGroups.add(family.label);const choices=all.filter(x=>family.ids.includes(x.id));for(const choice of choices){seen.add(choice.id);seen.add(choice.label.en)}const item=styleServiceButton(button(family.label,()=>{
+        list.replaceChildren();document.getElementById('zCatalogTitle').textContent=family.label;
+        catalogBackAction=()=>openCatalog(categoryId,title);document.getElementById('zCatalogBack').setAttribute('aria-label','Back to services');
+        const back=button('‹ Back to services',catalogBackAction);list.appendChild(back);choices.forEach(addService);
+        document.getElementById('zCatalogSearch').value='';list.scrollTop=0;document.getElementById('zCatalogBack').focus({preventScroll:true});
+      }),family.label,g.id);item.dataset.searchTerms=(family.label+' '+choices.map(x=>x.label.en).join(' ')).toLowerCase();list.appendChild(item);continue}seen.add(service.id);seen.add(service.label.en);addService(service)}}
       if(!categoryId){for(const group of window.ZOVRO_PROVIDER_SERVICES?.groups||[]){for(const service of group.services){if(seen.has(service.label))continue;seen.add(service.label);const item=styleServiceButton(button(service.label,()=>{window.closeModal(catalog.id);window.startService(service.label)}),service.label,group.id);list.appendChild(item)}}}
-      const search=document.getElementById('zCatalogSearch');search.value='';search.oninput=()=>{const q=search.value.trim().toLowerCase();for(const b of list.children)b.hidden=!(b.dataset.searchTerms||b.textContent.toLowerCase()).includes(q)};window.openModal(catalog.id);search.focus();
+      const search=document.getElementById('zCatalogSearch');search.value='';search.oninput=()=>{const q=search.value.trim().toLowerCase();for(const b of list.children)b.hidden=!(b.dataset.searchTerms||b.textContent.toLowerCase()).includes(q)};window.openModal(catalog.id);list.scrollTop=0;document.getElementById('zCatalogBack').focus({preventScroll:true});
     }
     categories.querySelector('.z-service-heading').appendChild(button('See all  ›',()=>openCatalog()));
     for(const [label,id,glyph] of [['Roadside Assistance','auto-roadside','car'],['Home Repairs','home-services','home'],['Cleaning','cleaning','clean'],['Outdoor & Tree Care','outdoor-seasonal','tree'],['Moving & Hauling','moving-hauling','truck'],['More Services',null,'more']]){const b=button('',()=>openCatalog(id,label),'z-category');b.innerHTML='<span class="z-icon-badge" aria-hidden="true">'+icon(glyph)+'</span><span class="z-category-label">'+label+'</span>';categories.querySelector('.z-category-grid').appendChild(b)}
