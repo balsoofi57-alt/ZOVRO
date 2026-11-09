@@ -21,14 +21,22 @@ const requiresLabor=service=>LABOR_GROUPS.has(GROUPS[String(service||'')]);
 function validateTransport(service,raw){
   if(!isTransportService(service))return null;
   if(!raw||typeof raw!=='object'||Array.isArray(raw))throw Error('Pickup and drop-off details are required for transportation requests.');
-  const pickupAddress=normalizeAddress(raw.pickupAddress);
+  // A customer may explicitly share their current roadside GPS position, or
+  // type an entirely different pickup address for someone else. Never mix them.
+  let pickupLocation=null;
+  if(raw.pickupLocation!=null){
+    const loc=raw.pickupLocation;
+    if(!loc||typeof loc!=='object'||Array.isArray(loc)||!Number.isFinite(loc.lat)||!Number.isFinite(loc.lng)||Math.abs(loc.lat)>90||Math.abs(loc.lng)>180||!Number.isFinite(loc.accuracy)||loc.accuracy<0||loc.accuracy>1000||typeof loc.capturedAt!=='string'||!Number.isFinite(Date.parse(loc.capturedAt))||Math.abs(Date.now()-Date.parse(loc.capturedAt))>120000)throw Error('Current GPS pickup has expired or is invalid. Refresh your location or enter a pickup address manually.');
+    pickupLocation={lat:loc.lat,lng:loc.lng,accuracy:loc.accuracy,capturedAt:loc.capturedAt};
+  }
+  const pickupAddress=pickupLocation?'GPS location: '+pickupLocation.lat.toFixed(6)+', '+pickupLocation.lng.toFixed(6):normalizeAddress(raw.pickupAddress);
   const dropoffAddress=normalizeAddress(raw.dropoffAddress);
-  if(pickupAddress.length<8||dropoffAddress.length<8)throw Error('Enter full pickup and drop-off street addresses including city.');
-  if(pickupAddress.toLowerCase()===dropoffAddress.toLowerCase())throw Error('Pickup and drop-off must be different addresses.');
+  if((!pickupLocation&&pickupAddress.length<8)||dropoffAddress.length<8)throw Error('Enter complete pickup and drop-off street addresses, or use your current GPS pickup with a written destination.');
+  if(!pickupLocation&&pickupAddress.toLowerCase()===dropoffAddress.toLowerCase())throw Error('Pickup and drop-off must be different addresses.');
   const labor=requiresLabor(service),workers=labor?Number(raw.workers):0,hours=labor?Number(raw.hours):0;
   if(labor&&(!Number.isInteger(workers)||workers<1||workers>8))throw Error('Choose 1 to 8 loading and unloading workers.');
   if(labor&&(!Number.isFinite(hours)||hours<1||hours>16||Math.round(hours*2)!==hours*2))throw Error('Choose 1 to 16 labor hours in half-hour steps.');
-  return {pickupAddress,dropoffAddress,workers,hours,includesLoadingUnloading:labor};
+  return {pickupAddress,dropoffAddress,workers,hours,includesLoadingUnloading:labor,pickupLocation};
 }
 function ratesFor(service,env=process.env){
   const group=GROUPS[service];if(!group)throw Error('Transportation service is not supported.');
@@ -53,14 +61,14 @@ function buildEstimate(service,transport,distanceMeters,env=process.env){
   const estimatedTotalCents=rates.baseCents+distanceCents+laborCents;
   return {distanceMiles:miles,workers:transport.workers,hours:transport.hours,baseCents:rates.baseCents,distanceCents,laborCents,estimatedTotalCents,currency:'USD',kind:'planning-estimate',paymentCount:1,includesLabor:transport.includesLoadingUnloading};
 }
-async function drivingDistanceMeters(pickupAddress,dropoffAddress,{apiKey=process.env.ZOVRO_GOOGLE_ROUTES_API_KEY,fetchImpl=globalThis.fetch}={}){
+async function drivingDistanceMeters(pickupAddress,dropoffAddress,{apiKey=process.env.ZOVRO_GOOGLE_ROUTES_API_KEY,fetchImpl=globalThis.fetch,pickupLocation=null}={}){
   if(!apiKey)throw Object.assign(Error('Automatic road-mile estimates are not configured yet. A provider can still give you a single all-inclusive price.'),{code:'ROUTING_NOT_CONFIGURED'});
   const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),7500);
   try{
     const response=await fetchImpl('https://routes.googleapis.com/directions/v2:computeRoutes',{
       method:'POST',signal:controller.signal,
       headers:{'Content-Type':'application/json','X-Goog-Api-Key':apiKey,'X-Goog-FieldMask':'routes.distanceMeters'},
-      body:JSON.stringify({origin:{address:pickupAddress},destination:{address:dropoffAddress},travelMode:'DRIVE',routingPreference:'TRAFFIC_UNAWARE',computeAlternativeRoutes:false})
+      body:JSON.stringify({origin:pickupLocation?{location:{latLng:{latitude:pickupLocation.lat,longitude:pickupLocation.lng}}}:{address:pickupAddress},destination:{address:dropoffAddress},travelMode:'DRIVE',routingPreference:'TRAFFIC_UNAWARE',computeAlternativeRoutes:false})
     });
     if(!response.ok)throw Error('Road-distance service could not calculate this route.');
     const result=await response.json();
