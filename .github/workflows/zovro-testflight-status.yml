@@ -155,4 +155,25 @@ jobs:
                           )))
           except urllib.error.HTTPError as err:
               print("TESTER_DIAGNOSTIC_STATUS=HTTP_" + str(err.code))
+
+          # Final, read-only access verification. Do not print tester email or identity.
+          if len(holders) == 1 and len(internal) == 1 and len(builds) == 1:
+              owner_mail = str(holders[0].get("attributes", {}).get("username", "")).lower()
+              member_records = get(
+                  f"/v1/betaGroups/{internal[0]['id']}/betaTesters",
+                  {"limit": "200"},
+              ).get("data", [])
+              membership = any(
+                  x.get("attributes", {}).get("email", "").lower() == owner_mail
+                  for x in member_records
+              )
+              ready_detail = get(
+                  f"/v1/builds/{builds[0]['id']}/buildBetaDetail"
+              ).get("data", {}).get("attributes", {})
+              valid = builds[0].get("attributes", {}).get("processingState") == "VALID"
+              ready = ready_detail.get("internalBuildState") == "READY_FOR_BETA_TESTING"
+              auto = internal[0].get("attributes", {}).get("hasAccessToAllBuilds") is True
+              print("OWNER_IN_ZOVRO_INTERNAL_GROUP=" + str(membership))
+              print("BUILD_AVAILABLE_TO_INTERNAL_GROUP=" + str(valid and ready and auto))
+              print("INTERNAL_TESTFLIGHT_ACCESS_READY=" + str(membership and valid and ready and auto))
           PY
