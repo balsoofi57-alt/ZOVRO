@@ -1,0 +1,94 @@
+name: ZOVRO One-time Internal TestFlight Invitation Check
+on:
+  push:
+    branches: [testflight/five-languages-20261109-3ce7a4c]
+    paths: [.github/workflows/zovro-invitation-check.yml]
+permissions:
+  contents: read
+jobs:
+  check-and-invite:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - name: Install API signing dependency
+        run: python -m pip install -q "PyJWT[crypto]==2.10.1"
+      - name: Check App Store Connect owner access and try one official invitation
+        env:
+          APPLE_KEY_ID: ${{ secrets.ZOVRO_APP_STORE_CONNECT_API_KEY_ID }}
+          APPLE_ISSUER_ID: ${{ secrets.ZOVRO_APP_STORE_CONNECT_ISSUER_ID }}
+          APPLE_PRIVATE_KEY_BASE64: ${{ secrets.ZOVRO_APP_STORE_CONNECT_API_PRIVATE_KEY_BASE64 }}
+        run: |
+          python - <<'PY'
+          import base64, datetime, json, os, urllib.request, urllib.parse, urllib.error
+          import jwt
+          key = base64.b64decode(os.environ["APPLE_PRIVATE_KEY_BASE64"], validate=True)
+          now=int(datetime.datetime.now(datetime.timezone.utc).timestamp())
+          token=jwt.encode(
+              {"iss":os.environ["APPLE_ISSUER_ID"],"iat":now-10,
+               "exp":now+600,"aud":"appstoreconnect-v1"},
+              key,algorithm="ES256",headers={"kid":os.environ["APPLE_KEY_ID"],"typ":"JWT"}
+          )
+          def api(method,path,params=None,data=None):
+              url="https://api.appstoreconnect.apple.com"+path
+              if params: url+="?"+urllib.parse.urlencode(params)
+              payload=None if data is None else json.dumps(data).encode()
+              r=urllib.request.Request(url,data=payload,method=method,headers={
+                  "Authorization":"Bearer "+token,
+                  "Accept":"application/json","Content-Type":"application/json"})
+              try:
+                  with urllib.request.urlopen(r,timeout=25) as res:
+                      content=res.read()
+                      return json.loads(content) if content else {}
+              except urllib.error.HTTPError as e:
+                  try: detail=json.load(e).get("errors",[])
+                  except Exception: detail=[]
+                  print("APPLE_API_ERROR_STATUS="+str(e.code))
+                  print("APPLE_API_ERROR_CODE="+str([v.get("code") for v in detail]))
+                  print("APPLE_API_ERROR_DETAIL="+str([str(v.get("detail",""))[:120] for v in detail]))
+                  return {"_error":e.code}
+          apps=api("GET","/v1/apps",{"filter[bundleId]":"com.zovro.app","limit":"5"}).get("data",[])
+          apps=[x for x in apps if x.get("attributes",{}).get("bundleId")=="com.zovro.app"]
+          if len(apps)!=1: raise SystemExit("ZOVRO_APP_NOT_UNIQUE")
+          app=apps[0]["id"]
+          builds=api("GET","/v1/builds",{"filter[app]":app,"filter[version]":"1.1","limit":"20"}).get("data",[])
+          builds=[b for b in builds if b.get("attributes",{}).get("processingState")=="VALID"]
+          if len(builds)!=1: raise SystemExit("ZOVRO_VALID_BUILD_NOT_UNIQUE")
+          build=builds[0]["id"]
+          detail=api("GET","/v1/builds/"+build+"/buildBetaDetail")
+          state=detail.get("data",{}).get("attributes",{}).get("internalBuildState")
+          print("INTERNAL_BUILD_STATE="+str(state))
+          if state!="READY_FOR_BETA_TESTING":
+              raise SystemExit("BUILD_NOT_READY")
+          groups=api("GET","/v1/betaGroups",{"filter[app]":app,"limit":"100"}).get("data",[])
+          internal=[x for x in groups if x.get("attributes",{}).get("isInternalGroup")]
+          if len(internal)!=1: raise SystemExit("INTERNAL_GROUP_NOT_UNIQUE")
+          group=internal[0]["id"]
+          users=api("GET","/v1/users",{"limit":"200"}).get("data",[])
+          holders=[x for x in users if "ACCOUNT_HOLDER" in x.get("attributes",{}).get("roles",[])]
+          if len(holders)!=1: raise SystemExit("OWNER_NOT_UNIQUE")
+          email=holders[0].get("attributes",{}).get("username")
+          if not email or "@" not in email: raise SystemExit("OWNER_EMAIL_UNAVAILABLE")
+          testers=api("GET","/v1/betaTesters",{"filter[email]":email,"limit":"20"}).get("data",[])
+          testers=[t for t in testers if t.get("attributes",{}).get("email","").lower()==email.lower()]
+          if len(testers)!=1: raise SystemExit("EXISTING_OWNER_BETA_TESTER_NOT_UNIQUE")
+          tester=testers[0]["id"]
+          existing_group=api("GET","/v1/betaGroups/"+group+"/betaTesters",{"limit":"200"}).get("data",[])
+          group_member=any(x.get("id")==tester for x in existing_group)
+          existing_apps=api("GET","/v1/betaTesters/"+tester+"/apps",{"limit":"200"}).get("data",[])
+          app_member=any(x.get("id")==app for x in existing_apps)
+          print("ALREADY_IN_INTERNAL_GROUP="+str(group_member))
+          print("ALREADY_HAS_ZOVRO_APP="+str(app_member))
+          if group_member or app_member:
+              print("INVITATION_ACTION=SKIPPED_ALREADY_HAS_ACCESS")
+          else:
+              body={"data":{"type":"betaTesterInvitations","relationships":{
+                "app":{"data":{"type":"apps","id":app}},
+                "betaTester":{"data":{"type":"betaTesters","id":tester}}
+              }}}
+              result=api("POST","/v1/betaTesterInvitations",data=body)
+              print("INVITATION_ACTION="+("SUBMITTED" if result.get("data",{}).get("type")=="betaTesterInvitations" else "NOT_ACCEPTED"))
+          existing_group=api("GET","/v1/betaGroups/"+group+"/betaTesters",{"limit":"200"}).get("data",[])
+          existing_apps=api("GET","/v1/betaTesters/"+tester+"/apps",{"limit":"200"}).get("data",[])
+          print("INTERNAL_GROUP_MEMBER_AFTER="+str(any(x.get("id")==tester for x in existing_group)))
+          print("ZOVRO_APP_ACCESS_AFTER="+str(any(x.get("id")==app for x in existing_apps)))
+          PY
