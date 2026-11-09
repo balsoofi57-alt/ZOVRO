@@ -20,6 +20,7 @@ const PUBLIC_FILES = new Set([
   "provider-service-picker.js",
   "push-client.js",
   "secure-session.js",
+  "service-art.js",
   "service-worker.js",
   "sms-terms.html",
   "support-assistant.js",

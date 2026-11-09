@@ -244,7 +244,7 @@
     const webNav=document.querySelector('.z-web-nav');if(webNav){webNav.innerHTML='<a href="#home">Home</a><a href="#zCategoryGrid">Services</a><a href="#profile">More</a><a href="support.html">Support</a>';for(const a of webNav.querySelectorAll('a[href^="#"]'))a.onclick=()=>{document.querySelectorAll('.bottom button')[a.hash==='#profile'?3:0]?.click()}}
     const tabs=[...document.querySelectorAll('.bottom button')];
     const iconPaths={car:'M3 15V9l3-5h12l3 5v6M3 10h18M5 15v4M19 15v4M6 13h2M16 13h2M3 15h18',home:'M3 11 12 3l9 8M5 10v11h5v-7h4v7h5V10',clean:'m14 3-6 11M6 12l8 5-4 5-7-4zM18 4v5M16 6h4',tree:'M12 3c-4 0-5 3-4 5-5 1-5 7-1 8h10c4-1 4-7-1-8 1-2 0-5-4-5zM12 16v6',truck:'M2 5h12v12H2zM14 10h4l4 4v3h-8M5 17a2 2 0 1 0 4 0M16 17a2 2 0 1 0 4 0',more:'M4 12h1M11 12h1M18 12h1',pin:'M12 22S4 13 4 9a8 8 0 1 1 16 0c0 4-8 13-8 13zM9 9a3 3 0 1 0 6 0 3 3 0 1 0-6 0',account:'M8 7a4 4 0 1 0 8 0 4 4 0 1 0-8 0M4 22v-3a8 8 0 0 1 16 0v3z',requests:'M6 3h12v19H6zM9 8h6M9 12h6M9 16h4'};
-    const icon=name=>'<svg viewBox="0 0 24 26" aria-hidden="true"><path d="'+iconPaths[name]+'"/></svg>';
+    const icon=name=>window.ZOVRO_ART?.icon(name)||'<svg viewBox="0 0 24 26" aria-hidden="true"><path d="'+iconPaths[name]+'"/></svg>';
     const button=(text,action,cls='btn ghost')=>{const b=document.createElement('button');b.type='button';b.className=cls;b.textContent=text;b.onclick=action;return b};
     const serviceVisual=(label,categoryId='')=>{
       const text=String(label||'').toLowerCase();
@@ -322,7 +322,7 @@
       b.classList.add('z-service-option','z-tone-'+tone,'z-service-vector');b.dataset.zServiceIcon=legacyIcon;
       const glyph=/plumb|drain|water/i.test(label)?'plumbing':/electric|light|power/i.test(label)?'electrical':/heat|hvac|air condition/i.test(label)?'hvac':/handyman|appliance|repair|mechanic/i.test(label)?'tool':null;
       const categoryGlyph={'auto-roadside':'car','home-services':'home','cleaning':'clean','outdoor-seasonal':'tree','moving-hauling':'truck'};
-      const symbol=glyph?'<svg viewBox="0 0 24 26" aria-hidden="true"><path d="'+servicePaths[glyph]+'"/></svg>':icon(categoryGlyph[categoryId]||'home');
+      const symbol=window.ZOVRO_ART?.service(label,categoryId)||(glyph?'<svg viewBox="0 0 24 26" aria-hidden="true"><path d="'+servicePaths[glyph]+'"/></svg>':icon(categoryGlyph[categoryId]||'home'));
       const badge=document.createElement('span');badge.className='z-catalog-icon';badge.setAttribute('aria-hidden','true');badge.innerHTML=symbol;
       const text=document.createElement('span');text.className='z-catalog-label';text.textContent=label;
       b.replaceChildren(badge,text);return b;
@@ -417,7 +417,7 @@
     function decorate(id,title,description,glyph){
       const summary=document.querySelector('#'+id+'>summary');if(!summary)return;
       summary.replaceChildren();
-      const badge=document.createElement('span');badge.className='z-more-icon';badge.setAttribute('aria-hidden','true');badge.innerHTML=svg(paths[glyph]);
+      const badge=document.createElement('span');badge.className='z-more-icon';badge.setAttribute('aria-hidden','true');badge.innerHTML=window.ZOVRO_ART?.icon(glyph)||svg(paths[glyph]);
       const labels=document.createElement('span');labels.className='z-more-summary-label';
       const strong=document.createElement('strong');strong.textContent=title;
       const small=document.createElement('small');small.textContent=description;
@@ -492,7 +492,7 @@
     empty.querySelector('button').onclick=()=>{selected='all';updateFilters()};list.after(empty);
     function updateFilters(){
       for(const icon of list.querySelectorAll('.z-empty-icon')){
-        if(!icon.querySelector('svg'))icon.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 4H5v17h14V4h-4M9 3h6v4H9zM8 11h8M8 15h6"/></svg>';
+        if(!icon.querySelector('svg'))icon.innerHTML=window.ZOVRO_ART?.icon('requests')||'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 4H5v17h14V4h-4M9 3h6v4H9zM8 11h8M8 15h6"/></svg>';
       }
       const cards=[...list.querySelectorAll(':scope > .card.job')],counts={all:cards.length,active:0,history:0};let shown=0;
       for(const card of cards){
@@ -517,6 +517,7 @@
     const nearbyStatus=document.createElement('p');nearbyStatus.id='zNearbyStatus';nearbyStatus.className='z-page-status';nearbyStatus.setAttribute('role','status');discovery?.after(nearbyStatus);
     const intro=document.createElement('div');intro.id='zNearbyIntro';intro.className='card z-discovery-intro';
     intro.innerHTML='<span class="z-discovery-symbol" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 22S4 13 4 9a8 8 0 1 1 16 0c0 4-8 13-8 13zM9 9a3 3 0 1 0 6 0 3 3 0 1 0-6 0"/></svg></span><b>Find the right professional</b><p>Choose a service above, then use your current location to search nearby.</p><small>Exact provider locations stay private until a request is accepted.</small>';
+    if(window.ZOVRO_ART)intro.querySelector('.z-discovery-symbol').innerHTML=window.ZOVRO_ART.icon('pin');
     document.getElementById('nearbyList')?.before(intro);
     const oldNav=window.nav;
     if(typeof oldNav==='function')window.nav=function(id){

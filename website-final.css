@@ -1128,3 +1128,28 @@ body.z-silver-layout .shell{max-width:1240px!important}
   body.z-silver-layout .z-quick-label{font-size:13px;line-height:1.4}
   body.z-silver-layout .z-quick small{font-size:12px}
 }
+
+/* Multicolor function-specific illustrations, on the existing silver cards. */
+body.z-silver-layout .z-icon-badge:has(.z-color-art),
+#zSilverCatalog .z-catalog-icon:has(.z-color-art),
+.z-more-icon:has(.z-color-art){
+  background:#f4f8fd;border-color:#b9ccdf;
+}
+body.z-silver-layout .z-icon-badge:has([data-tone="green"]),
+.z-more-icon:has([data-tone="green"]){background:#edf8f1;border-color:#b5d9c3}
+body.z-silver-layout .z-icon-badge:has([data-tone="teal"]),
+.z-more-icon:has([data-tone="teal"]){background:#ebf8f6;border-color:#add7d1}
+body.z-silver-layout .z-icon-badge:has([data-tone="orange"]){background:#fff4e9;border-color:#e6c6a6}
+body.z-silver-layout .z-icon-badge:has([data-tone="purple"]),
+.z-more-icon:has([data-tone="purple"]){background:#f4eefb;border-color:#d2bee6}
+body.z-silver-layout .z-icon-badge svg.z-color-art,
+#zSilverCatalog .z-catalog-icon svg.z-color-art,
+.z-more-icon svg.z-color-art{width:32px;height:34px;flex-shrink:0}
+#zSilverCatalog .z-catalog-icon:has(.z-color-art){width:48px;height:48px;flex-basis:48px}
+body.z-silver-layout .z-icon-badge:has(.z-color-art){width:46px;height:48px;flex-basis:46px}
+body.z-silver-layout .z-account-shortcut svg.z-color-art{width:30px;height:32px}
+.z-discovery-symbol svg.z-color-art,.z-empty-icon svg.z-color-art{width:38px;height:40px}
+@media(max-width:700px){
+  body.z-silver-layout .z-icon-badge:has(.z-color-art){width:42px;height:46px;flex-basis:42px}
+  body.z-silver-layout .z-icon-badge svg.z-color-art{width:30px;height:32px}
+}
