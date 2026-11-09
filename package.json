@@ -35,7 +35,7 @@
     "privacy:check": "node --test backend/request-privacy.test.js",
     "sos-placement:check": "node scripts/sos-placement-check.js",
     "transport:check": "node scripts/transport-check.js",
-    "i18n:check": "node --test scripts/i18n.test.js"
+    "i18n:check": "node --test scripts/i18n.test.js scripts/i18n-runtime.test.js"
   },
   "dependencies": {
     "@capacitor/core": "^7.0.0",
