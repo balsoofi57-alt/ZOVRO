@@ -1,6 +1,6 @@
 # ZOVRO transport route and one-price booking
 
-Transportation services include Moving, Furniture Moving, Furniture Delivery, Appliance Delivery, Pickup-Truck Help, Hauling, Junk Removal, Local Courier, Towing and Emergency Towing. All other service forms are unchanged.
+Transportation services include Moving, Furniture Moving, Furniture Delivery, Appliance Delivery, Pickup-Truck Help, Hauling, Junk Removal, Local Courier, Towing, Emergency Towing and Vehicle Transport. All other service forms are unchanged.
 
 ## Customer experience
 1. Choose a transportation service.
