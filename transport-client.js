@@ -19,13 +19,23 @@
   }
   function sync(){
     const service=$('reqService')?.value||'',active=SERVICES.has(service);
-    const wrap=$('transportFields');if(!wrap)return;
-    wrap.hidden=!active;wrap.classList.toggle('hidden',!active);
+    const wrap=$('transportFields'),destination=$('transportDropoff');
+    if(wrap){wrap.hidden=!active;wrap.classList.toggle('hidden',!active)}
     const labor=$('transportLabor');if(labor)labor.hidden=!LABOR.has(service);
-    const label=document.querySelector('label[for="reqAddress"]');
-    if(label)label.textContent=active?'Pickup / starting address':'Your address';
+    if(destination){
+      destination.required=active;
+      destination.setAttribute('aria-required',active?'true':'false');
+      destination.placeholder=active?'Drop-off street address, city, state':'Destination (optional), street and city';
+    }
+    const startLabel=$('routeFromLabelText'),endLabel=$('routeToLabelText');
+    if(startLabel)startLabel.textContent=active?'From — pickup / starting address':'From — starting / service address';
+    if(endLabel)endLabel.textContent=active?'To — drop-off / destination (required)':'To — destination (optional)';
+    const heading=$('routeStepHeading'),subheading=$('routeStepSubheading'),hint=$('routeDestinationHint');
+    if(heading)heading.textContent=active?'From pickup to destination':'Where are you going?';
+    if(subheading)subheading.textContent=active?'Enter both addresses (A → B). Road miles and a single all-inclusive estimate can be calculated below.':'Enter a starting address (A). Add a destination (B) when this service involves transportation.';
+    if(hint)hint.textContent=active?'Required: complete destination street and city. Pickup must be a different place.':'Optional for other services. Choose Moving, Vehicle Transport, or Towing to request mileage-based transport.';
     const note=$('transportPricingNote');
-    if(note)note.textContent=LABOR.has(service)?'One combined price includes the vehicle, driving miles, and the selected loading/unloading workers. One payment after you approve the provider quote.':'One combined estimated transport price, based on driving miles. One payment after you approve the provider quote.';
+    if(note)note.textContent=LABOR.has(service)?'One combined price includes the vehicle, road miles, and loading/unloading workers. One payment after approval.':'One combined price for the transport and its driving miles. One payment after approval.';
     if(latest&&latest.fingerprint!==fingerprint(values()))invalidate();
   }
   function reset(){
@@ -71,24 +81,34 @@
       (Number.isInteger(estimate?.estimatedTotalCents)?'<div>Planning estimate (all-in): '+usd(estimate.estimatedTotalCents)+'</div>':'<div>Provider will confirm one all-inclusive price.</div>')+
       '<small>Only the approved provider quote is payable, in a single payment.</small></div>';
   }
+  function restore(job){
+    const t=job?.transport;
+    if(!t||!$('transportDropoff'))return;
+    if($('reqAddress'))$('reqAddress').value=t.pickupAddress||job.address||'';
+    $('transportDropoff').value=t.dropoffAddress||'';
+    if(t.includesLoadingUnloading){
+      if($('transportWorkers'))$('transportWorkers').value=String(t.workers||2);
+      if($('transportHours'))$('transportHours').value=String(t.hours||2);
+    }
+    invalidate();sync();
+  }
   function init(){
-    const where=$('zReqStep2'),address=$('reqAddress'),service=$('reqService');
-    if(!where||!address||!service||$('transportFields'))return;
+    const route=$('routeAddresses'),address=$('reqAddress'),destination=$('transportDropoff'),service=$('reqService');
+    if(!route||!address||!destination||!service||$('transportFields'))return;
     const wrap=document.createElement('div');wrap.id='transportFields';wrap.hidden=true;
-    wrap.className='card';wrap.style.cssText='margin:12px 0;padding:14px;border-radius:16px';
-    wrap.innerHTML='<div style="font-weight:700;margin-bottom:8px">Transport route & all-in price</div>'+
-      '<div class="field"><label for="transportDropoff">Drop-off / destination address</label><input id="transportDropoff" autocomplete="street-address" maxlength="200" placeholder="Destination street, city, state"><small class="muted">Pickup is the starting address above.</small></div>'+
+    wrap.className='card hidden';wrap.style.cssText='margin:10px 0 14px;padding:14px;border-radius:16px';
+    wrap.innerHTML='<div style="font-weight:700;margin-bottom:8px">Distance & one all-inclusive price</div>'+
       '<div id="transportLabor"><div class="field"><label for="transportWorkers">Workers for loading and unloading</label><select id="transportWorkers">'+[1,2,3,4,5,6,7,8].map(n=>'<option value="'+n+'"'+(n===2?' selected':'')+'>'+n+' worker'+(n===1?'':'s')+'</option>').join('')+'</select></div>'+
       '<div class="field"><label for="transportHours">Estimated working hours (per worker)</label><select id="transportHours">'+Array.from({length:31},(_,i)=>i*.5+1).map(n=>'<option value="'+n+'"'+(n===2?' selected':'')+'>'+n+' hours</option>').join('')+'</select></div></div>'+
       '<p id="transportPricingNote" class="muted" style="margin:8px 0"></p>'+
       '<button type="button" class="btn ghost" id="transportCalculate">Calculate miles & total</button>'+
       '<div id="transportQuote" role="status" aria-live="polite" style="margin-top:9px;line-height:1.6"></div>';
-    address.closest('.field')?.insertAdjacentElement('afterend',wrap);
+    route.insertAdjacentElement('afterend',wrap);
     for(const id of ['reqAddress','transportDropoff','transportWorkers','transportHours'])$(id)?.addEventListener('input',invalidate);
     service.addEventListener('change',()=>{invalidate();sync()});
     $('transportCalculate').addEventListener('click',calculate);
     invalidate();sync();
   }
-  window.ZOVRO_TRANSPORT={sync,reset,collect,jobSummary,calculate};
+  window.ZOVRO_TRANSPORT={sync,reset,collect,jobSummary,calculate,restore};
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
 })();

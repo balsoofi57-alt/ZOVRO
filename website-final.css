@@ -1236,3 +1236,20 @@ body.z-more-subpage-open{overflow:hidden}
   margin:18px max(16px,calc((100% - 800px)/2))!important;max-width:none!important;
 }
 #profile #zMoreMenu>details.z-more-subpage .legal a{color:#24527a!important;text-decoration:underline}
+
+/* A → B addresses are always visible in Request step 2. */
+#requestModal .z-route-addresses{display:grid;gap:0;margin:12px 0 14px}
+#requestModal .z-route-point{margin:0;min-width:0}
+#requestModal .z-route-point label{display:flex;align-items:center;gap:10px;font-weight:800;line-height:1.35;margin-bottom:9px}
+#requestModal .z-route-marker{display:inline-flex;flex:0 0 29px;width:29px;height:29px;align-items:center;justify-content:center;border:1px solid #9bb4ce;border-radius:50%;background:#e2eef9;color:#1f4e75;font-size:14px;font-weight:850}
+#requestModal .z-route-marker-to{background:#f9e9c4;border-color:#d9b86e;color:#654d1b}
+#requestModal .z-route-connector{height:28px;margin-left:13px;display:flex;align-items:center;color:#a88646;font-size:21px;line-height:1}
+#requestModal .z-route-point input{box-sizing:border-box;width:100%;min-height:51px}
+#requestModal .z-route-point small{display:block;margin-top:5px;line-height:1.45}
+#requestModal #transportFields.card{padding:14px!important;margin-top:8px!important}
+#requestModal #transportFields[hidden]{display:none!important}
+@media (max-width:580px){
+ #requestModal .z-route-point label{font-size:15px}
+ #requestModal .z-route-point input{font-size:16px}
+ #requestModal .z-route-addresses{margin-top:10px}
+}

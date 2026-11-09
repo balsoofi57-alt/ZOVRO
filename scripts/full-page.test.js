@@ -32,7 +32,7 @@ test('full page CSS uses viewport sizing, independent scrolling and shared nativ
   assert.match(rules,/safe-area-inset-bottom/);
   assert.match(rules,/#chatModal\.z-page-modal #chatText\{min-width:0\}/);
   assert.match(rules,/overflow-wrap:anywhere/);
-  assert.match(html,/website-final\.css\?v=(full|more)-pages-/);
+  assert.match(html,/website-final\.css\?v=(?:full-pages-|more-pages-|from-to-route-)/);
   assert.match(html,/website-final\.js\?v=(full|more)-pages-/);
   assert.match(fs.readFileSync('scripts/prepare-mobile.js','utf8'),/'website-final\.css','website-final\.js'/);
 });
