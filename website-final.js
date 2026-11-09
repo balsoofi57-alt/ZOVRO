@@ -87,7 +87,11 @@
       const nav=document.createElement('nav');
       nav.className='z-web-nav';
       nav.innerHTML='<a href="#smartMatch">Get Help</a><a href="#services">Services</a><a href="#howItWorks">How It Works</a><a href="#providerJoin">For Providers</a><a href="support.html">Support</a>';
-      top.insertBefore(nav,document.getElementById('state'));
+      // Mobile wraps the status in its language chooser; insert before that
+      // direct child rather than throwing on a nested status node.
+      const status=document.getElementById('state');
+      const anchor=[...top.children].find(child=>child.contains(status));
+      top.insertBefore(nav,anchor||null);
     }
 
     const hero=document.querySelector('.hero');
@@ -666,13 +670,108 @@
     if(!window.__zovroEscapeClose){
       window.__zovroEscapeClose=true;
       document.addEventListener('keydown',e=>{
-        if(e.key!=='Escape')return;
+        if(e.key!=='Escape'||e.defaultPrevented)return;
         const open=[...document.querySelectorAll('.modal.open')].pop();
         if(open&&open.id&&typeof window.closeModal==='function')window.closeModal(open.id);
       });
     }
   }
   ready(init);
+})();
+
+// Full-page presentation for all current and lazily-created application sheets.
+// Reuse original dismissal controls so cancellation, retry and cleanup still run.
+(function(){
+  function init(){
+    const selector='.modal,.z-private-modal',prepared=new WeakSet();
+    const arrow='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m14 6-6 6 6 6M8 12h13"/></svg>';
+    function visible(el){return !!el&&el.isConnected&&!el.disabled&&!!el.getClientRects().length&&getComputedStyle(el).visibility!=='hidden'}
+    function prepare(modal){
+      if(prepared.has(modal))return;
+      const sheet=modal.querySelector(':scope > .sheet,:scope > .z-private-sheet');
+      if(!sheet)return;
+      prepared.add(modal);modal.classList.add('z-page-modal');sheet.classList.add('z-page-sheet');
+      const dedicated=modal.id==='authModal'||modal.id==='zSilverCatalog';
+      const originalCloseIds={
+        passwordRecoveryModal:'recoveryBack',phoneVerificationModal:'phoneVerificationClose',
+        supportChatModal:'supportChatClose',zPrivateProfileModal:'zPrivClose',zovroCategoryModal:'zovroCategoryClose'
+      };
+      function dismiss(back=false){
+        const previous=document.getElementById('zReqBack');
+        if(back&&modal.id==='requestModal'&&visible(previous)){previous.click();return}
+        const special=document.getElementById(originalCloseIds[modal.id]||'');
+        if(special){special.click();return}
+        if(modal.id==='trackingModal'&&typeof window.closeTracking==='function'){window.closeTracking();return}
+        if(modal.id==='zSilverCatalog'){document.getElementById(back?'zCatalogBack':'zCatalogClose')?.click();return}
+        const original=sheet.querySelector('.z-sheet-close');
+        if(original){original.click();return}
+        if(typeof window.closeModal==='function'&&modal.id){window.closeModal(modal.id);return}
+        modal.classList.remove('open');
+      }
+      let header,body,back;
+      if(dedicated){
+        header=sheet.querySelector('#zAuthHeader,.z-service-heading');
+        body=sheet.querySelector('#zAuthBody,.z-catalog-list');
+        back=header?.querySelector('button');
+      }else{
+        header=document.createElement('header');header.className='z-full-page-header';
+        back=document.createElement('button');back.type='button';back.className='z-page-back';
+        back.setAttribute('aria-label','Back to previous page');back.innerHTML=arrow;
+        back.onclick=()=>dismiss(true);
+        const title=sheet.querySelector('h2')||document.createElement('h2');
+        if(!title.textContent.trim())title.textContent='ZOVRO';
+        if(!title.id)title.id=(modal.id||'zPage')+'Title';
+        const close=document.createElement('button');close.type='button';close.className='z-page-close';
+        close.setAttribute('aria-label','Close');close.textContent='×';close.onclick=()=>dismiss();
+        header.append(back,title,close);
+        body=document.createElement('div');body.className='z-full-page-body';
+        for(const node of [...sheet.childNodes])body.appendChild(node);
+        sheet.append(header,body);
+        // Late-injected helpers belong in the page body, never below the page.
+        new MutationObserver(()=>{
+          for(const node of [...sheet.childNodes])if(node!==header&&node!==body)body.appendChild(node);
+        }).observe(sheet,{childList:true});
+        modal.setAttribute('aria-labelledby',title.id);
+      }
+      modal.setAttribute('role','dialog');modal.setAttribute('aria-modal','true');
+      let wasOpen=false,returnFocus=null;
+      function state(){
+        const open=modal.classList.contains('open');
+        if(open&&!wasOpen){
+          returnFocus=document.activeElement;
+          if(body)body.scrollTop=0;
+          if(!modal.contains(document.activeElement))back?.focus({preventScroll:true});
+          requestAnimationFrame(()=>window.dispatchEvent(new Event('resize')));
+        }
+        if(!open&&wasOpen&&!document.querySelector('.z-page-modal.open')&&
+          (!visible(document.activeElement)||modal.contains(document.activeElement))&&visible(returnFocus)){
+          returnFocus.focus({preventScroll:true});
+        }
+        wasOpen=open;
+      }
+      new MutationObserver(state).observe(modal,{attributes:true,attributeFilter:['class']});
+      modal.addEventListener('keydown',event=>{
+        if(!modal.classList.contains('open')||event.defaultPrevented)return;
+        if(event.key==='Escape'){event.preventDefault();dismiss();return}
+        // Dedicated auth already has its own focus containment.
+        if(event.key!=='Tab'||modal.id==='authModal')return;
+        const controls=[...sheet.querySelectorAll('button,a[href],input,select,textarea,summary,[tabindex="0"]')].filter(visible);
+        const first=controls[0],last=controls[controls.length-1];
+        if(event.shiftKey&&document.activeElement===first){event.preventDefault();last?.focus()}
+        else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first?.focus()}
+      });
+      state();
+    }
+    document.querySelectorAll(selector).forEach(prepare);
+    new MutationObserver(records=>{
+      for(const record of records)for(const node of record.addedNodes){
+        if(node.nodeType!==1)continue;
+        if(node.matches(selector))prepare(node);
+        node.querySelectorAll(selector).forEach(prepare);
+      }
+    }).observe(document.body,{childList:true,subtree:true});
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
 })();
 
 // 2026-11-09 · Keep the Sign-in / Create-account segmented control in sync.

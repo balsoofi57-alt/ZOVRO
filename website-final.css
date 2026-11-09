@@ -1153,3 +1153,68 @@ body.z-silver-layout .z-account-shortcut svg.z-color-art{width:30px;height:32px}
   body.z-silver-layout .z-icon-badge:has(.z-color-art){width:42px;height:46px;flex-basis:42px}
   body.z-silver-layout .z-icon-badge svg.z-color-art{width:30px;height:32px}
 }
+
+/* All app-owned sheets are full pages on web and in the shared native bundle. */
+body:has(.z-page-modal.open){overflow:hidden}
+.modal.z-page-modal,.z-private-modal.z-page-modal,
+:is(#authModal,#zSilverCatalog).z-page-modal{
+  position:fixed!important;inset:0!important;padding:0!important;margin:0!important;
+  align-items:stretch!important;justify-content:stretch!important;
+  background:#eef2f6!important;backdrop-filter:none!important;
+}
+.modal.z-page-modal>.z-page-sheet,.z-private-modal.z-page-modal>.z-page-sheet,
+:is(#authModal,#zSilverCatalog).z-page-modal>.z-page-sheet{
+  display:flex!important;flex-direction:column!important;position:relative!important;
+  width:100%!important;max-width:none!important;height:100vh!important;height:100dvh!important;
+  max-height:none!important;min-height:0!important;padding:0!important;margin:0!important;
+  border:0!important;border-radius:0!important;overflow:hidden!important;
+  background:#eef2f6!important;color:#102039!important;box-shadow:none!important;
+  animation:none!important;transform:none!important;
+}
+.z-page-sheet::before{display:none!important}
+.z-full-page-header{
+  display:grid;grid-template-columns:44px minmax(0,1fr) 44px;align-items:center;gap:12px;
+  flex:0 0 auto;min-height:80px;
+  padding:calc(16px + env(safe-area-inset-top)) max(16px,calc((100% - 1040px)/2)) 16px;
+  background:linear-gradient(130deg,#f3f6f9,#dce5ee);border-bottom:1px solid #bdcddd;
+}
+.z-page-sheet .z-full-page-header>h2{
+  margin:0!important;padding:0!important;min-width:0;font-size:23px!important;
+  line-height:1.3!important;letter-spacing:-.4px;color:#142e48!important;text-align:left;
+}
+.z-full-page-header .z-page-back,.z-full-page-header .z-page-close{
+  position:static;display:grid;place-items:center;width:44px;height:44px;min-width:44px;
+  border:1px solid #b5c8da;border-radius:12px;padding:9px;margin:0;
+  background:#e7eff7;color:#214769;cursor:pointer;font:inherit;font-size:25px;
+}
+.z-full-page-header .z-page-back svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.z-full-page-header button:focus-visible{outline:3px solid #2e6caa;outline-offset:2px}
+.z-full-page-body{
+  flex:1 1 auto;min-height:0;width:100%;overflow-y:auto;overscroll-behavior:contain;
+  -webkit-overflow-scrolling:touch;scroll-padding:24px;overflow-wrap:anywhere;
+  padding:24px max(20px,calc((100% - 960px)/2)) calc(28px + env(safe-area-inset-bottom));
+}
+.z-full-page-body>.z-sheet-close{display:none!important}
+.z-full-page-body>h2{margin-top:0!important}
+.z-full-page-body a,#authModal #zAuthBody a{color:#24527a;text-decoration:underline}
+#requestModal .z-full-page-body{display:flex;flex-direction:column;padding-inline:max(20px,calc((100% - 800px)/2))}
+#requestModal .z-full-page-body>*{flex-shrink:0}
+#requestModal .z-full-page-body>.z-req-nav{margin-top:auto!important;padding-top:20px}
+.z-page-modal .z-full-page-body form,.z-page-modal .z-full-page-body .field{min-width:0;max-width:100%}
+.z-page-modal .z-full-page-body input,.z-page-modal .z-full-page-body select,
+.z-page-modal .z-full-page-body textarea{max-width:100%}
+#chatModal.z-page-modal #chatText{min-width:0}
+.z-private-modal.z-page-modal .z-private-note{color:#52667b!important;line-height:1.7;font-size:13px}
+.z-private-modal.z-page-modal .z-private-field label{color:#24415c!important;font-size:13px}
+.z-private-modal.z-page-modal .z-private-field input,
+.z-private-modal.z-page-modal .z-private-field textarea{
+  background:#f8fafc!important;color:#102039!important;border:1px solid #a9bbcc!important;
+  min-height:48px;font-size:16px!important;
+}
+.z-private-modal.z-page-modal .z-private-lock{color:#246d50!important}
+#authModal.z-page-modal #zAuthBody{padding-inline:max(20px,calc((100% - 720px)/2))}
+#zSilverCatalog.z-page-modal .z-catalog-list{padding-inline:max(16px,calc((100% - 1040px)/2))}
+@media(max-width:700px){
+  .z-page-sheet .z-full-page-header>h2{font-size:21px!important}
+  .z-full-page-body{padding-top:22px}
+}
