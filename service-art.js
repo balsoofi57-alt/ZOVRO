@@ -55,6 +55,7 @@
     fuel:p('M9 3h10l4 5v21H6V8z','#dc9c72')+r(10,11,9,9,'#f6e6cd')+p('M12 4v4h7M11 24h8','none','#96562d'),
     vehiclelock:car+c(25,11,5,'#d6b4df')+p('M25 9v4','none',purple),
     tow:truck+p('M5 8V3h11l4 7M20 10v6q0 4 4 4','none',orange),
+    vehicletransport:truck+p('M4 5h13l3 5H3z','#b8dff2')+p('M6 8h7M20 3h8','none',teal),
     windshield:p('m3 25 5-20h16l5 20z','#b8dfee')+p('m6 20 8-8m12 8-8-8M17 5l-4 7 5 3-4 7','none',blue),
     detailing:car+sparkle,
     motorcycle:c(7,24,5,'#48617a')+c(26,24,5,'#48617a')+p('m7 24 7-12 5 12H7l11-7h7M21 6h4l3 18M13 10h7','none',orange)+p('M9 16h10l-4 5z',blue),
@@ -124,7 +125,7 @@
   const labels={
     'Roadside Assistance':'roadside','Mobile Mechanic':'mechanic','Auto Diagnostics':'diagnostics','Auto Electrician':'autoelectric',
     'Tire Services':'tire','Tire Change':'tirechange','Mobile Tire Service':'mobiletire','Flat Tire Repair':'flat','Jump Start':'jump','Battery Replacement':'battery',
-    'Fuel Delivery':'fuel','Vehicle Lockout':'vehiclelock','Towing':'tow','Windshield Repair / Replacement':'windshield','Mobile Auto Detailing':'detailing','Motorcycle Assistance':'motorcycle',
+    'Fuel Delivery':'fuel','Vehicle Lockout':'vehiclelock','Towing':'tow','Vehicle Transport':'vehicletransport','Windshield Repair / Replacement':'windshield','Mobile Auto Detailing':'detailing','Motorcycle Assistance':'motorcycle',
     'Handyman':'handyman','Plumbing':'plumbing','Electrical':'electrical','HVAC':'hvac','Heating & Air Conditioning':'hvac',
     'Appliance Repair':'appliance','Carpenter':'carpenter','Locksmith':'locksmith','Garage Door Repair & Installation':'garage','Painting':'paint',
     'Flooring Installation & Repair':'floor','Drywall Repair':'drywall','Furniture Assembly':'assembly','TV Mounting':'tv','Smart Home Installation':'smart','Door & Window Repair':'doorwindow','Doors & Windows':'doorwindow',

@@ -13,7 +13,7 @@
     {label:'Locksmith (including emergency)',members:['Locksmith','Emergency Locksmith']},
     {label:'Roadside Assistance (including emergency)',members:['Roadside Assistance','Emergency Roadside Assistance']},
     {label:'Mobile Mechanic & Battery (including emergency mechanic)',members:['Mobile Mechanic','Emergency Mobile Mechanic','Jump Start','Battery Replacement']},
-    {label:'Towing (including emergency)',members:['Towing','Emergency Towing']},
+    {label:'Towing & Vehicle Transport',members:['Towing','Emergency Towing','Vehicle Transport']},
     {label:'Home Cleaning',members:['House Cleaning','Deep Cleaning','Move-In Cleaning','Move-Out Cleaning']},
     {label:'Moving & Loading',members:['Moving','Furniture Moving','Loading & Unloading']}
   ];

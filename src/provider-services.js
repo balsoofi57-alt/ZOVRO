@@ -38,6 +38,7 @@
     'Jump Start':['dead battery','jumpstart'],
     'Vehicle Lockout':['locked out of car','car lockout'],
     'Towing':['need a tow','tow truck'],
+    'Vehicle Transport':['transport my car','transport my vehicle','vehicle transport','car transport','ship my car'],
     'Plumbing':['leaking pipe','pipe leak','clogged drain','clogged toilet','plumber'],
     'Electrical':['electrician','breaker keeps tripping'],
     'HVAC':['air conditioner','furnace repair'],
