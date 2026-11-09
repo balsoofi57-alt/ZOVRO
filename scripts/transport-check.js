@@ -5,7 +5,7 @@ const p=require('../backend/transport-pricing');
 const root=path.resolve(__dirname,'..'),read=f=>fs.readFileSync(path.join(root,f),'utf8');
 async function main(){
  assert.equal(p.isTransportService('Moving'),true);
- for(const s of ['Furniture Moving','Furniture Delivery','Towing','Emergency Towing','Hauling','Pickup-Truck Help','Local Courier'])assert.equal(p.isTransportService(s),true);
+ for(const s of ['Furniture Moving','Furniture Delivery','Towing','Emergency Towing','Vehicle Transport','Hauling','Pickup-Truck Help','Local Courier'])assert.equal(p.isTransportService(s),true);
  assert.equal(p.isTransportService('Plumbing'),false);
  assert.equal(p.requiresLabor('Furniture Moving'),true);
  assert.equal(p.requiresLabor('Towing'),false);
