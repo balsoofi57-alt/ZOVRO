@@ -139,6 +139,16 @@ function requestAddressTypedManually(){
  window.ZOVRO_TRANSPORT?.sync?.();
 }
 function requestMessage(message){$('requestStatus').textContent=message}
+function setRequestGpsStatus(english,params={}){
+ const status=$('reqLocationStatus');if(!status)return;
+ status.dataset.i18nKey=english;status.dataset.i18nParams=JSON.stringify(params);
+ status.value=window.ZOVRO_I18N?.format?.(english,params)||english.replace(/\{([A-Za-z][A-Za-z0-9_]*)\}/g,(_,key)=>Object.prototype.hasOwnProperty.call(params,key)?String(params[key]):'{'+key+'}');
+ status.dir=window.ZOVRO_I18N?.getLanguage?.()==='ar'?'rtl':'ltr';
+}
+document.addEventListener('zovro:language-changed',()=>{
+ const status=$('reqLocationStatus');if(!status||status.hidden||!status.dataset.i18nKey)return;
+ try{setRequestGpsStatus(status.dataset.i18nKey,JSON.parse(status.dataset.i18nParams||'{}'))}catch(_){}
+});
 function lockRequestForm(locked){document.querySelectorAll('#requestModal input,#requestModal select,#requestModal textarea,#reqLocationRefresh').forEach(el=>el.disabled=locked)}
 async function detectRequestLocation(showToast=false){
  if(requestAttempt||requestSending)return null;
@@ -147,7 +157,7 @@ async function detectRequestLocation(showToast=false){
  const current=()=>generation===requestLocationGeneration&&owner===me?.id&&$('requestModal').classList.contains('open');
  requestLocationBusy=true;requestLocation=null;requestLocationMode='locating';
  const status=$('reqLocationStatus'),button=$('reqLocationRefresh'),help=$('reqLocationHelp');
- status.hidden=false;status.value='Finding your current location…';help.textContent='Allow location access when prompted. Keep this screen open.';
+ status.hidden=false;setRequestGpsStatus('Finding your current location…');help.textContent='Allow location access when prompted. Keep this screen open.';
  button.disabled=true;button.textContent='Locating…';
  requestLocationPromise=(async()=>{try{
   const loc=await geo({maxAccuracy:1000});if(!current())return null;
@@ -155,13 +165,13 @@ async function detectRequestLocation(showToast=false){
   // Clearing the previous address is intentional: GPS is now the selected origin.
   // Entering any address again switches safely back to manual mode.
   $('reqAddress').value='';
-  status.value=`✓ GPS pickup selected · about ${Math.round(loc.accuracy)} m accuracy`;
+  setRequestGpsStatus('✓ GPS pickup selected · about {accuracy} m accuracy',{accuracy:Math.round(loc.accuracy)});
   help.textContent=`Pickup GPS: ${loc.lat.toFixed(6)}, ${loc.lng.toFixed(6)}. To request help for another person elsewhere, type their address instead.`;
   window.ZOVRO_TRANSPORT?.sync?.();
   requestMessage('Your current GPS pickup is selected. You can type a different address at any time.');
   if(showToast)toast('✓ Location ready');return loc;
  }catch(error){if(!current())return null;
-  const reason=gpsErrorReason(error);requestLocationMode='manual';status.value='Location unavailable — type an address instead';
+  const reason=gpsErrorReason(error);requestLocationMode='manual';setRequestGpsStatus('Location unavailable — type an address instead');
   help.textContent=reason==='permission-denied'?'Allow location for this site in your browser settings and enable device Location Services. If you opened ZOVRO inside another app, open zovro.work directly in Safari or Chrome, then try again.':reason==='insecure-context'?'Open https://zovro.work to share your location.':reason==='imprecise-position'?'Location is too approximate. Enable Precise Location, move to a clearer signal, then try again.':reason==='timeout'?'Finding your location timed out. Try again with a clearer signal, or enter your complete address below.':'Location could not be determined. Check device Location Services, or enter your complete address below.';
   if(showToast)toast('Location unavailable — see the instructions below');return null;
  }finally{if(current()){requestLocationBusy=false;requestLocationPromise=null;button.disabled=false;button.textContent=requestLocationMode==='gps'?'Refresh GPS':'Use My Location'}}})();
