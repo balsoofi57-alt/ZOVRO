@@ -152,3 +152,22 @@ test('new UI text localizes after asynchronous page updates while user content s
   assert.equal(textLabel.textContent,'إرسال رمز التحقق');
   assert.equal(userLog.textContent,'Sign in');
 });
+
+test('GPS status templates localize changing accuracy without changing the number',()=>{
+  const h=harness('en');
+  const key='✓ GPS pickup selected · about {accuracy} m accuracy';
+  const expected={
+    en:'✓ GPS pickup selected · about 37 m accuracy',
+    ar:'✓ تم تحديد نقطة الانطلاق عبر GPS · دقة تقارب 37 متر',
+    es:'✓ Recogida por GPS seleccionada · precisión aprox. 37 m',
+    fr:"✓ Point de départ GPS sélectionné · précision d'environ 37 m",
+    zh:'✓ 已选择 GPS 出发地点 · 精度约 37 米'
+  };
+  for(const locale of ['en','ar','es','fr','zh']){
+    h.window.ZOVRO_I18N.setLanguage(locale);
+    assert.equal(h.window.ZOVRO_I18N.format(key,{accuracy:37}),expected[locale]);
+  }
+  assert.equal(h.window.ZOVRO_I18N.format('Finding your current location…'), '正在获取您的当前位置…');
+  assert.equal(h.window.ZOVRO_I18N.format('Location unavailable — type an address instead'),'位置不可用 — 请改为输入地址');
+  assert.equal(h.window.ZOVRO_I18N.format('Unknown template {value}',{value:'private user text'}),'Unknown template private user text');
+});
