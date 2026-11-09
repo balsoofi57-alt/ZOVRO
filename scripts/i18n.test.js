@@ -168,3 +168,35 @@ test('critical account, location and payment labels are translated into all four
     }
   }
 });
+
+test('static customer-facing interface literals stay covered in all five languages',()=>{
+  const dictionaryNames=['LABELS','EXTRA','SERVICE_LABELS','CUSTOMER_FLOW_LABELS','RELEASE_UI_LABELS','ADDITIONAL_UI_LABELS'];
+  const catalogs=dictionaryNames.map(name=>{
+    const line=i18n.split('\n').find(row=>row.startsWith('const '+name+'='));
+    assert.ok(line,'Missing dictionary '+name);
+    return JSON.parse(line.slice(('const '+name+'=').length).replace(/;$/,''));
+  });
+  const localeKeys=Object.fromEntries(['ar','es','fr','zh'].map(locale=>[
+    locale,new Set(catalogs.flatMap(dict=>Object.keys(dict[locale]||{})))
+  ]));
+  const ignore=new Set(['true','false','about','none','block','User','ZOVRO','small','map','center','last','main','password','email','number','button','pending']);
+  const visible=new Set();
+  for(const path of ['index.html','website-final.js','support-chat.js']){
+    const source=fs.readFileSync(path,'utf8');
+    const patterns=[
+      /(?:textContent|innerText|placeholder|ariaLabel|title)\s*=\s*(['"])([^'"\n]{3,180})\1/g,
+      />\s*([A-Za-z][A-Za-z?! :/’—\-0-9().,]{3,100})\s*</g
+    ];
+    for(const pattern of patterns){
+      for(const match of source.matchAll(pattern)){
+        const phrase=(match[2]||match[1]).trim();
+        if(!/[A-Za-z]/.test(phrase)||ignore.has(phrase)||/[{}<>=]/.test(phrase)||phrase.length<5)continue;
+        visible.add(phrase);
+      }
+    }
+  }
+  assert.ok(visible.size>=200,'Unexpectedly low UI coverage sample');
+  for(const locale of ['ar','es','fr','zh']){
+    for(const phrase of visible)assert.ok(localeKeys[locale].has(phrase),locale+': untranslated UI phrase: '+phrase);
+  }
+});
