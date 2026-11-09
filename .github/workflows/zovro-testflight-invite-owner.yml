@@ -143,9 +143,22 @@ jobs:
           if exact and exact[0]["id"] in current_ids:
               print("ACCOUNT_HOLDER_INVITE=ALREADY_IN_INTERNAL_GROUP")
           elif exact:
-              call("POST", "/v1/betaGroups/" + group_id + "/relationships/betaTesters",
-                   body={"data": [{"type": "betaTesters", "id": exact[0]["id"]}]})
-              print("ACCOUNT_HOLDER_INVITE=EXISTING_TESTER_ADDED")
+              try:
+                  call("POST", "/v1/betaGroups/" + group_id + "/relationships/betaTesters",
+                       body={"data": [{"type": "betaTesters", "id": exact[0]["id"]}]})
+                  print("ACCOUNT_HOLDER_INVITE=EXISTING_TESTER_ADDED")
+              except urllib.error.HTTPError as err:
+                  if err.code != 409:
+                      raise
+                  print("INTERNAL_GROUP_ASSIGNMENT=REJECTED_409")
+                  assigned = call("GET", "/v1/builds/" + build_id + "/individualTesters",
+                                  {"limit": "200"}).get("data", [])
+                  if exact[0]["id"] not in {t["id"] for t in assigned}:
+                      call("POST", "/v1/builds/" + build_id + "/relationships/individualTesters",
+                           body={"data": [{"type": "betaTesters", "id": exact[0]["id"]}]})
+                      print("ACCOUNT_HOLDER_INVITE=INDIVIDUAL_BUILD_ASSIGNMENT_SUBMITTED")
+                  else:
+                      print("ACCOUNT_HOLDER_INVITE=ALREADY_IN_INDIVIDUAL_BUILD_LIST")
           else:
               attrs = {"email": email}
               for k in ("firstName", "lastName"):
@@ -174,5 +187,13 @@ jobs:
               print("OWNER_TESTER_STATE=" +
                     str(matches[0].get("attributes", {}).get("state", "UNKNOWN")))
           else:
-              sys.exit("OWNER_GROUP_MEMBERSHIP_NOT_YET_VISIBLE")
+              direct_testers = call("GET", "/v1/builds/" + build_id + "/individualTesters",
+                                    {"limit": "200"}).get("data", [])
+              print("INDIVIDUAL_BUILD_ASSIGNMENT_VERIFIED=" + str(
+                  any(t.get("attributes", {}).get("email", "").lower() == email.lower()
+                      for t in direct_testers)
+              ))
+              if not any(t.get("attributes", {}).get("email", "").lower() == email.lower()
+                         for t in direct_testers):
+                  sys.exit("OWNER_INTERNAL_BUILD_ASSIGNMENT_NOT_VISIBLE")
           PY
