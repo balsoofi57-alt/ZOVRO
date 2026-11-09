@@ -1004,3 +1004,58 @@ body.z-silver-layout #zSilverCatalog #zCatalogClose{
   #nearby .z-discovery-intro{padding:32px 20px!important}
   #nearby .zmap,#jobs .zmap{height:270px}
 }
+
+/* Authentication is a complete phone page, with independently scrollable fields. */
+body:has(#authModal.open){overflow:hidden}
+#authModal{align-items:center!important;justify-content:center!important;padding:24px!important}
+#authModal .sheet{
+  display:flex;flex-direction:column;width:min(640px,100%)!important;max-width:640px!important;
+  height:min(780px,calc(100dvh - 48px))!important;max-height:none!important;
+  padding:0!important;overflow:hidden!important;border-radius:22px!important;
+  background:#eef2f6!important;animation:none!important;
+}
+#authModal .sheet::before{display:none!important}
+#zAuthHeader{
+  display:grid;grid-template-columns:44px minmax(0,1fr) 44px;gap:16px 12px;align-items:center;
+  flex:0 0 auto;padding:20px 24px 16px;background:linear-gradient(130deg,#f3f6f9,#dce5ee);
+  border-bottom:1px solid #bdcddd;
+}
+#zAuthHeader #authTitle{margin:0!important;padding:0!important;font-size:24px!important;line-height:1.25;letter-spacing:-.5px;color:#142e48}
+#zAuthHeader .z-page-back{width:44px;height:44px;min-width:44px}
+#zAuthHeader .z-sheet-close{
+  position:static;width:44px;height:44px;min-width:44px;margin:0;font-size:23px;
+}
+#authModal #zAuthHeader .tabs{grid-column:1/-1;margin:0!important}
+#authModal #zAuthHeader .tabs .btn{min-height:46px;font-size:14px!important;padding:11px 8px!important}
+#zAuthBody{
+  flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain;
+  -webkit-overflow-scrolling:touch;padding:24px 24px calc(28px + env(safe-area-inset-bottom));
+  scroll-padding:20px;
+}
+#authModal #zAuthBody .field{margin:0 0 20px!important}
+#authModal #zAuthBody .field>label{display:block;font-size:13px;line-height:1.5;margin:0 0 8px;color:#24415c}
+#authModal #zAuthBody .field input:not([type=checkbox]):not([type=radio]),
+#authModal #zAuthBody .field select{min-height:48px;font-size:16px!important;max-width:100%}
+#authModal #zAuthBody fieldset{min-width:0;max-width:100%}
+#authModal #zAuthBody legend{max-width:100%;font-size:14px;line-height:1.5}
+#authModal #zAuthBody a{color:#295d83!important;text-decoration:underline;text-underline-offset:2px}
+#authModal #zAuthBody .bar>.btn{min-height:46px}
+#authModal #zAuthBody #savedPasswordHelp{font-size:12px;line-height:1.7}
+#authModal #zAuthBody #savedPasswordHelp summary{min-height:44px;display:list-item;padding:10px 0}
+#authModal #zAuthBody input[type=checkbox],#authModal #zAuthBody input[type=radio]{
+  width:20px!important;min-width:20px;height:20px;flex:0 0 20px;margin:2px 0;
+}
+#authModal #zLawfulUseAttestation>label{min-height:44px;padding:8px 0;margin:0!important;justify-content:flex-start}
+#authModal #zLegalConsentError{color:#a52c2c!important}
+@media(max-width:700px){
+  #authModal{padding:0!important;align-items:stretch!important}
+  #authModal .sheet{
+    width:100%!important;max-width:none!important;height:100vh!important;height:100dvh!important;
+    max-height:none!important;border:0!important;border-radius:0!important;margin:0!important;
+  }
+  #zAuthHeader{padding:calc(16px + env(safe-area-inset-top)) 16px 16px;gap:14px 10px}
+  #zAuthHeader #authTitle{font-size:22px!important}
+  #zAuthBody{padding:22px 20px calc(28px + env(safe-area-inset-bottom))}
+  #authModal #zAuthBody .bar{gap:10px}
+  #authModal #zAuthBody #signInForm>.bar>.btn{flex:1}
+}

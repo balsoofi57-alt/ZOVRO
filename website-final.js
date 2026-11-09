@@ -684,12 +684,53 @@
       const out=original.apply(this,arguments);
       try{
         const tabs=document.querySelectorAll('#authModal .tabs .btn');
-        const login=window.authMode!=='register';
-        tabs.forEach((t,i)=>t.classList.toggle('z-tab-active',login?i===0:i===1));
+        const login=document.getElementById('authTitle')?.textContent!=='Create account';
+        tabs.forEach((t,i)=>{
+          const active=login?i===0:i===1;t.classList.toggle('z-tab-active',active);
+          t.setAttribute('aria-pressed',String(active));
+        });
+        const body=document.getElementById('zAuthBody');if(body)body.scrollTop=0;
       }catch(_){}
       return out;
     };
     wrapped.__zovroTabs=true;window.renderAuth=wrapped;
     try{window.renderAuth()}catch(_){}
   });
+})();
+
+// Full-height authentication on phones; keep the original form and consent controls.
+(function(){
+  function init(){
+    const modal=document.getElementById('authModal'),sheet=modal?.querySelector('.sheet');
+    const title=document.getElementById('authTitle'),tabs=sheet?.querySelector('.tabs'),close=sheet?.querySelector('.z-sheet-close');
+    if(!sheet||!title||!tabs||!close||document.getElementById('zAuthHeader'))return;
+    const header=document.createElement('header');header.id='zAuthHeader';
+    const back=document.createElement('button');back.id='zAuthBack';back.type='button';back.className='z-page-back';back.setAttribute('aria-label','Back to previous page');
+    back.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m14 6-6 6 6 6M8 12h13"/></svg>';
+    back.onclick=()=>window.closeModal('authModal');
+    const body=document.createElement('div');body.id='zAuthBody';
+    header.append(back,title,close,tabs);
+    for(const node of [...sheet.childNodes])body.appendChild(node);
+    sheet.append(header,body);
+    // Later-loaded recovery helpers remain inside the same scrolling form area.
+    new MutationObserver(()=>{
+      for(const node of [...sheet.childNodes])if(node!==header&&node!==body)body.appendChild(node);
+    }).observe(sheet,{childList:true});
+    sheet.setAttribute('role','dialog');sheet.setAttribute('aria-modal','true');sheet.setAttribute('aria-labelledby','authTitle');
+    let wasOpen=false,returnFocus=null;
+    new MutationObserver(()=>{
+      const open=modal.classList.contains('open');
+      if(open&&!wasOpen){returnFocus=document.activeElement;body.scrollTop=0;back.focus({preventScroll:true})}
+      if(!open&&wasOpen&&returnFocus?.isConnected)returnFocus.focus({preventScroll:true});
+      wasOpen=open;
+    }).observe(modal,{attributes:true,attributeFilter:['class']});
+    modal.addEventListener('keydown',event=>{
+      if(event.key!=='Tab'||!modal.classList.contains('open'))return;
+      const focusable=[...sheet.querySelectorAll('button,a[href],input,select,textarea,summary,[tabindex="0"]')].filter(el=>!el.disabled&&el.getClientRects().length&&getComputedStyle(el).visibility!=='hidden');
+      const first=focusable[0],last=focusable[focusable.length-1];
+      if(event.shiftKey&&document.activeElement===first){event.preventDefault();last?.focus()}
+      else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first?.focus()}
+    });
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
 })();
