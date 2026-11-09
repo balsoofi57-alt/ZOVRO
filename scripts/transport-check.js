@@ -1,0 +1,54 @@
+'use strict';
+const assert=require('node:assert/strict');
+const fs=require('node:fs'),path=require('node:path');
+const p=require('../backend/transport-pricing');
+const root=path.resolve(__dirname,'..'),read=f=>fs.readFileSync(path.join(root,f),'utf8');
+async function main(){
+ assert.equal(p.isTransportService('Moving'),true);
+ for(const s of ['Furniture Moving','Furniture Delivery','Towing','Emergency Towing','Vehicle Transport','Hauling','Pickup-Truck Help','Local Courier'])assert.equal(p.isTransportService(s),true);
+ assert.equal(p.isTransportService('Plumbing'),false);
+ assert.equal(p.requiresLabor('Furniture Moving'),true);
+ assert.equal(p.requiresLabor('Towing'),false);
+ const req=p.validateTransport('Furniture Moving',{pickupAddress:'10 Main Street, Dearborn, MI',dropoffAddress:'40 Second St, Detroit, MI',workers:2,hours:2});
+ assert.deepEqual(req,{pickupAddress:'10 Main Street, Dearborn, MI',dropoffAddress:'40 Second St, Detroit, MI',workers:2,hours:2,includesLoadingUnloading:true});
+ assert.throws(()=>p.validateTransport('Moving',{...req,dropoffAddress:req.pickupAddress}),/different/);
+ assert.throws(()=>p.validateTransport('Moving',{...req,workers:20}),/1 to 8/);
+ assert.throws(()=>p.validateTransport('Moving',{...req,hours:2.3}),/half-hour/);
+ assert.throws(()=>p.validateTransport('Moving',null),/required/);
+ const quote=p.buildEstimate('Furniture Moving',req,16093.44,{}); // 10.0 miles
+ assert.equal(quote.distanceMiles,10);
+ assert.equal(quote.baseCents,6500);
+ assert.equal(quote.distanceCents,2750);
+ assert.equal(quote.laborCents,14000);
+ assert.equal(quote.estimatedTotalCents,23250);
+ assert.equal(quote.paymentCount,1);
+ assert.equal(quote.includesLabor,true);
+ assert.equal(p.buildEstimate('Towing',p.validateTransport('Towing',req),16093.44,{}).laborCents,0);
+ assert.throws(()=>p.buildEstimate('Moving',req,0),/valid drivable route/);
+ const secret='test-signing-secret-abcdefghijklmnopqrstuvwxyz';
+ const now=1730000000000;
+ const token=p.issueEstimateToken('Furniture Moving',req,quote,secret,now);
+ assert.deepEqual(p.verifyEstimateToken(token,'Furniture Moving',req,secret,now+1000),quote);
+ assert.equal(p.verifyEstimateToken(token,'Furniture Moving',{...req,workers:3},secret,now+1000),null);
+ assert.equal(p.verifyEstimateToken(token,'Furniture Moving',req,secret,now+900001),null);
+ assert.equal(p.verifyEstimateToken(token+'a','Furniture Moving',req,secret,now+1000),null);
+ assert.equal(p.verifyEstimateToken(token,'Towing',req,secret,now+1000),null);
+ const response=await p.drivingDistanceMeters(req.pickupAddress,req.dropoffAddress,{apiKey:'test-key',fetchImpl:async (url,options)=>{
+  assert.equal(url,'https://routes.googleapis.com/directions/v2:computeRoutes');
+  assert.equal(options.headers['X-Goog-FieldMask'],'routes.distanceMeters');
+  const body=JSON.parse(options.body);assert.equal(body.origin.address,req.pickupAddress);assert.equal(body.destination.address,req.dropoffAddress);
+  return {ok:true,json:async()=>({routes:[{distanceMeters:16093.44}]})};
+ }});
+ assert.equal(response,16093.44);
+ await assert.rejects(()=>p.drivingDistanceMeters(req.pickupAddress,req.dropoffAddress,{apiKey:''}),/not configured/);
+ const api=read('backend/server-core.js'),catalog=read('src/service-catalog.js'),matching=read('src/provider-services.js');
+ assert(api.includes("url.pathname==='/api/transport/estimate'"));
+ assert(api.includes('transportPricing.verifyEstimateToken'));
+ assert(api.includes('transport?transport.pickupAddress'));
+ assert(api.includes('const sos=b.source===\'sos\''),'Production SOS request checks must remain intact');
+ assert(catalog.includes("'Vehicle Transport'"),'Vehicle transportation service catalog missing');
+ assert(matching.includes("'Vehicle Transport':['transport my car'"),'Vehicle transportation matching missing');
+ assert(api.includes('transportEstimate'),'Structured estimate must persist on customer requests');
+ console.log('Production transport routing, one all-inclusive payment, signed quote, service matching, and existing SOS guards: PASS');
+}
+main().catch(error=>{console.error(error);process.exitCode=1});
