@@ -72,8 +72,8 @@ jobs:
               sys.exit(f"Expected one ZOVRO app, found {len(apps)}")
           app_id = apps[0]["id"]
 
-          builds = get("/v1/builds", {"filter[app]": app_id, "filter[version]": "1.1", "limit": "20"}).get("data", [])
-          print("ZOVRO 1.0.0 / build 1.1 status check")
+          builds = get("/v1/builds", {"filter[app]": app_id, "filter[version]": "2.1", "limit": "20"}).get("data", [])
+          print("ZOVRO 1.0.0 / build 2.1 status check")
           if not builds:
               print("Build is not visible as a processed build resource yet.")
               print("STATUS=AWAITING_APPLE_PROCESSING_OR_VISIBILITY")
