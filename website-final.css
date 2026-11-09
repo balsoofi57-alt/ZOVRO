@@ -1218,3 +1218,21 @@ body:has(.z-page-modal.open){overflow:hidden}
   .z-page-sheet .z-full-page-header>h2{font-size:21px!important}
   .z-full-page-body{padding-top:22px}
 }
+
+/* More sections are full pages with the shared page header. */
+body.z-more-subpage-open{overflow:hidden}
+#profile #zMoreMenu>details.z-more-subpage{
+  position:fixed!important;inset:0!important;z-index:70!important;margin:0!important;max-width:none!important;
+  width:100%!important;height:100vh;height:100dvh;overflow-y:auto!important;overscroll-behavior:contain;
+  border:0!important;border-radius:0!important;box-shadow:none!important;background:#eef2f6!important;
+  padding:0 0 calc(28px + env(safe-area-inset-bottom))!important;grid-column:auto!important;
+}
+#profile #zMoreMenu>details.z-more-subpage>summary{display:none!important}
+#profile #zMoreMenu>details:not(.z-more-subpage)>.z-more-subpage-header{display:none!important}
+#profile #zMoreMenu>details.z-more-subpage>.z-more-subpage-header{
+  position:sticky;top:0;z-index:2;margin:0!important;max-width:none!important;width:100%;
+}
+#profile #zMoreMenu>details.z-more-subpage>:not(summary):not(.z-more-subpage-header){
+  margin:18px max(16px,calc((100% - 800px)/2))!important;max-width:none!important;
+}
+#profile #zMoreMenu>details.z-more-subpage .legal a{color:#24527a!important;text-decoration:underline}
