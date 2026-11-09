@@ -1105,3 +1105,26 @@ body.z-silver-layout #zBrandLocation .z-official-brand{display:block;width:150px
   body.z-silver-layout .top .z-account-shortcut{grid-column:3;grid-row:1;width:44px;height:44px;margin:3px 0 0}
   body.z-silver-layout .top .z-web-nav,body.z-silver-layout .top .state{display:none!important}
 }
+
+/* Owner-requested uncluttered header and wider, more readable home. */
+body.z-silver-layout #zHeaderCity{display:none!important}
+body.z-silver-layout #home{max-width:none!important}
+body.z-silver-layout .shell{max-width:1240px!important}
+@media(max-width:700px){
+  body.z-silver-layout .shell{padding-left:12px!important;padding-right:12px!important}
+  body.z-silver-layout .top{
+    grid-template-columns:minmax(0,1fr) 48px;
+    padding-left:12px!important;padding-right:12px!important;
+  }
+  body.z-silver-layout #zBrandLocation .z-official-brand{width:144px;height:60px}
+  body.z-silver-layout .top .z-account-shortcut{
+    grid-column:2;width:48px;height:48px;justify-self:end;
+  }
+  body.z-silver-layout .z-category{
+    min-height:108px;padding:14px 12px;gap:10px;
+  }
+  body.z-silver-layout .z-category-label{font-size:14px;line-height:1.4}
+  body.z-silver-layout .z-quick{min-height:104px;padding:14px 12px}
+  body.z-silver-layout .z-quick-label{font-size:13px;line-height:1.4}
+  body.z-silver-layout .z-quick small{font-size:12px}
+}

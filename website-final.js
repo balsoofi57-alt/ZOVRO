@@ -744,7 +744,8 @@
     logo.setAttribute('aria-label','Detect current city using the location pin in the ZOVRO logo');
     logo.title='Use device location to find your city via BigDataCloud';
     image.replaceWith(logo);logo.appendChild(image);
-    const city=document.createElement('button');city.id='zHeaderCity';city.type='button';
+    // Keep the lookup state without the owner-removed visible city card.
+    const city=document.createElement('button');city.id='zHeaderCity';city.type='button';city.hidden=true;
     city.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 22S4 13 4 9a8 8 0 1 1 16 0c0 4-8 13-8 13zM9 9a3 3 0 1 0 6 0 3 3 0 1 0-6 0"/></svg><span><small>Current city</small><b id="zHeaderCityName">Enable location</b></span>';
     brand.after(city);
     const live=document.createElement('span');live.className='z-city-live';live.setAttribute('role','status');header.appendChild(live);
@@ -752,7 +753,10 @@
     if(requestLocation)requestLocation.textContent='Use location for a request  ›';
     const name=city.querySelector('b'),caption=city.querySelector('small');
     let busy=false,lastAttempt=0;
-    function setCity(text,message){name.textContent=text;live.textContent=message;city.setAttribute('aria-label',message);city.title=message}
+    function setCity(text,message){
+      name.textContent=text;live.textContent=message;city.setAttribute('aria-label',message);city.title=message;
+      logo.title=message;logo.setAttribute('aria-label','ZOVRO location. '+message);
+    }
     async function detect(interactive=false){
       if(busy)return;
       if(!navigator.geolocation||!window.isSecureContext){
@@ -776,6 +780,7 @@
         if(!text)throw new Error('City name unavailable');
         caption.textContent=result.city?'Current city':'Current area';
         setCity(text.slice(0,120),'Current '+(result.city?'city':'area')+': '+text+'. Tap to refresh device location. City lookup by BigDataCloud.');
+        if(interactive)window.toast?.('Current '+(result.city?'city':'area')+': '+text.slice(0,120));
       }catch(error){
         const denied=Number(error?.code)===1;
         setCity(denied?'Enable location':'Try location again',denied?'Allow location in browser or device settings to display your city.':'Your city could not be determined. Tap to retry. Manual service addresses still work.');
