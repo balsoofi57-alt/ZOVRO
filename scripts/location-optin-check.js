@@ -1,0 +1,20 @@
+'use strict';
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
+
+const root = path.resolve(__dirname, '..');
+const source = fs.readFileSync(path.join(root,'website-final.js'),'utf8');
+const html = fs.readFileSync(path.join(root,'index.html'),'utf8');
+const start = source.indexOf('// Header-only city detection');
+const end = source.indexOf('// 2026-11-09 · More sections', start);
+assert(start >= 0 && end > start, 'Must find header location block');
+const block = source.slice(start,end);
+assert(block.includes('logo.onclick=city.onclick=()=>detect(true)'), 'Header city GPS should require explicit tap');
+assert(block.includes('setCity(\'Use location\''), 'Initial city state must be optional');
+assert(!block.includes('automatic();'), 'Header must not automatically request GPS on launch or resume');
+assert(!block.includes('visibilitychange'), 'Returning to app should not silently request device location');
+assert(block.includes('window.gpsRead('), 'Tap should still be able to resolve city');
+assert(html.includes('id="reqAddress"'), 'Manual service address input must remain visible');
+assert(html.includes('id="reqLocationRefresh"'), 'Explicit GPS request button must remain available');
+console.log('Location privacy check passed: startup is manual, both GPS and address choices remain.');
