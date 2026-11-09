@@ -1,6 +1,6 @@
 'use strict';
 (function(){
-  const SERVICES=new Set(['Moving','Furniture Moving','Furniture Delivery','Appliance Delivery','Pickup-Truck Help','Hauling','Junk Removal','Local Courier','Towing','Emergency Towing']);
+  const SERVICES=new Set(['Moving','Furniture Moving','Furniture Delivery','Appliance Delivery','Pickup-Truck Help','Hauling','Junk Removal','Local Courier','Towing','Emergency Towing','Vehicle Transport']);
   const LABOR=new Set(['Moving','Furniture Moving','Furniture Delivery','Appliance Delivery','Pickup-Truck Help','Hauling','Junk Removal']);
   const $=id=>document.getElementById(id);
   let latest=null,busy=false;
