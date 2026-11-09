@@ -1,0 +1,72 @@
+name: ZOVRO Check Beta Tester Record and Reverse Assignment
+on:
+  push:
+    branches: [testflight/five-languages-20261109-3ce7a4c]
+    paths: [.github/workflows/zovro-tester-record-check.yml]
+permissions:
+  contents: read
+jobs:
+  inspect-tester:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - name: Install JWT support
+        run: python -m pip install -q "PyJWT[crypto]==2.10.1"
+      - name: Check tester record and try reverse beta group association
+        env:
+          K: ${{ secrets.ZOVRO_APP_STORE_CONNECT_API_KEY_ID }}
+          I: ${{ secrets.ZOVRO_APP_STORE_CONNECT_ISSUER_ID }}
+          P: ${{ secrets.ZOVRO_APP_STORE_CONNECT_API_PRIVATE_KEY_BASE64 }}
+        run: |
+          python - <<'PY'
+          import os, base64, datetime, json, urllib.request, urllib.parse, urllib.error
+          import jwt
+          now=int(datetime.datetime.now(datetime.timezone.utc).timestamp())
+          token=jwt.encode({"iss":os.environ["I"],"iat":now-5,"exp":now+600,"aud":"appstoreconnect-v1"},
+              base64.b64decode(os.environ["P"],validate=True),algorithm="ES256",
+              headers={"kid":os.environ["K"],"typ":"JWT"})
+          def api(method,path,params=None,data=None):
+              url="https://api.appstoreconnect.apple.com"+path
+              if params: url+="?"+urllib.parse.urlencode(params)
+              req=urllib.request.Request(url,method=method,
+                  data=None if data is None else json.dumps(data).encode(),headers={
+                  "Authorization":"Bearer "+token,"Accept":"application/json",
+                  "Content-Type":"application/json"})
+              try:
+                  with urllib.request.urlopen(req,timeout=25) as r:
+                      v=r.read()
+                      return json.loads(v) if v else {}
+              except urllib.error.HTTPError as e:
+                  print("REQUEST_HTTP_"+str(e.code)+"="+method+" "+path.split("?")[0].replace("betaTesters/","betaTesters/[redacted]/"))
+                  return {"error":e.code}
+          apps=api("GET","/v1/apps",{"filter[bundleId]":"com.zovro.app","limit":"10"}).get("data",[])
+          apps=[a for a in apps if a.get("attributes",{}).get("bundleId")=="com.zovro.app"]
+          if len(apps)!=1: raise SystemExit("ZOVRO_NOT_UNIQUE")
+          app=apps[0]["id"]
+          groups=api("GET","/v1/betaGroups",{"filter[app]":app,"limit":"100"}).get("data",[])
+          groups=[x for x in groups if x.get("attributes",{}).get("isInternalGroup") is True]
+          if len(groups)!=1: raise SystemExit("INTERNAL_GROUP_NOT_UNIQUE")
+          group=groups[0]["id"]
+          users=api("GET","/v1/users",{"limit":"200"}).get("data",[])
+          owners=[u for u in users if "ACCOUNT_HOLDER" in u.get("attributes",{}).get("roles",[])]
+          if len(owners)!=1: raise SystemExit("OWNER_NOT_UNIQUE")
+          email=owners[0].get("attributes",{}).get("username","")
+          testers=api("GET","/v1/betaTesters",{"filter[email]":email,"limit":"20"}).get("data",[])
+          testers=[t for t in testers if t.get("attributes",{}).get("email","").lower()==email.lower()]
+          if len(testers)!=1: raise SystemExit("MATCHING_TESTER_NOT_UNIQUE")
+          tester=testers[0]["id"]
+          current=api("GET","/v1/betaGroups/"+group+"/betaTesters",{"limit":"200"}).get("data",[])
+          if any(t.get("id")==tester for t in current):
+              print("OWNER_IN_ZOVRO_GROUP=TRUE")
+          else:
+              record=api("GET","/v1/betaTesters/"+tester)
+              print("GET_TESTER_BY_ID="+str("OK" if record.get("data",{}).get("id")==tester else "NOT_FOUND_OR_ERROR"))
+              if record.get("data",{}).get("id")==tester:
+                  resp=api("POST","/v1/betaTesters/"+tester+"/relationships/betaGroups",
+                    data={"data":[{"type":"betaGroups","id":group}]})
+                  print("REVERSE_GROUP_ASSOCIATION="+str("SUCCESS" if not resp.get("error") else "REJECTED"))
+              else:
+                  print("REVERSE_GROUP_ASSOCIATION=SKIPPED_STALE_RECORD")
+              current=api("GET","/v1/betaGroups/"+group+"/betaTesters",{"limit":"200"}).get("data",[])
+              print("OWNER_IN_ZOVRO_GROUP_AFTER="+str(any(t.get("id")==tester for t in current)))
+          PY
