@@ -563,3 +563,137 @@ body.z-silver-layout{overflow-x:clip}
 .z-avatar{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;background:#d7dde4;color:#10243a;font-weight:800;flex:0 0 auto}
 .z-leaflet-host{border-radius:14px;overflow:hidden;border:1px solid #d7dde4}
 .leaflet-container{background:#eef1f4}
+
+/* Unified premium finish. Visual only: preserve all flows and brand assets. */
+body.z-silver-layout{
+  background:#071c38!important;
+  -webkit-font-smoothing:antialiased;
+}
+body.z-silver-layout:before{background:none;opacity:0}
+body.z-silver-layout .top{
+  background:#071c38!important;
+  border-bottom:1px solid #ffffff1f!important;
+  min-height:94px;
+}
+body.z-silver-layout .z-official-brand{object-fit:contain}
+body.z-silver-layout #home{padding-top:12px}
+body.z-silver-layout .z-web-nav{gap:26px}
+body.z-silver-layout .z-web-nav a{font-weight:600;letter-spacing:.01em}
+body.z-silver-layout .state{
+  background:#132e4c!important;color:#d5e0ed!important;
+  border:1px solid #3e5874!important;
+  box-shadow:none!important;
+}
+body.z-silver-layout .z-account-shortcut{
+  width:46px;height:46px;border-color:#6a819b;
+  background:#152e4b;box-shadow:none;
+}
+body.z-silver-layout .z-account-shortcut svg{color:#e4c37b}
+body.z-silver-layout #smartMatch{margin:12px 0 28px!important}
+body.z-silver-layout #zLocationShortcut{
+  background:#112c4b!important;color:#dce8f5!important;
+  border:1px solid #45617f!important;border-radius:12px!important;
+  box-shadow:none!important;font-weight:550!important;
+}
+body.z-silver-layout #smartMatch h2{
+  font-size:26px!important;line-height:1.3!important;
+  letter-spacing:-.025em;margin:26px 0 15px!important;
+}
+body.z-silver-layout #zProblem{
+  background:#f0f3f7!important;color:#102039!important;
+  border:1px solid #bfccda!important;box-shadow:none!important;
+  min-height:96px;height:96px;padding:17px 88px 17px 18px!important;
+  border-radius:14px!important;font-size:16px!important;
+}
+body.z-silver-layout #zProblem::placeholder{color:#53667c!important}
+body.z-silver-layout .z-smart-actions{grid-template-columns:1fr!important}
+body.z-silver-layout #zSmartGo{
+  background:linear-gradient(135deg,#f4d792,#d9b45e)!important;
+  color:#29200e!important;border:1px solid #e4c57b!important;
+  box-shadow:0 3px 10px #0002!important;
+  width:100%;min-height:52px;border-radius:12px!important;
+  font-size:16px!important;font-weight:750!important;
+}
+body.z-silver-layout #zVoice{
+  background:#dce5ef!important;color:#183a60!important;
+  border:1px solid #bccbdc!important;min-height:44px;
+  box-shadow:none!important;top:12px;right:12px;
+}
+body.z-silver-layout .z-service-heading{margin:24px 0 14px}
+body.z-silver-layout .z-service-heading h2{font-size:20px!important;letter-spacing:-.015em}
+body.z-silver-layout .z-service-heading button{
+  background:transparent!important;border:0!important;
+  color:#d5e3f3!important;box-shadow:none!important;min-height:44px;
+}
+body.z-silver-layout .z-category-grid{gap:14px}
+body.z-silver-layout .z-category,
+body.z-silver-layout .z-quick{
+  background:linear-gradient(145deg,#edf2f7,#d4dfe9)!important;
+  border:1px solid #b7c6d5!important;border-radius:16px!important;
+  color:#102039!important;box-shadow:0 2px 5px #0002!important;
+  opacity:1!important;transform:none!important;
+}
+body.z-silver-layout .z-category{min-height:100px;padding:16px;gap:12px}
+body.z-silver-layout .z-icon-badge{
+  background:#f8fafc;border:1px solid #c4d2df;box-shadow:none;
+  border-radius:12px;width:44px;height:44px;flex-basis:44px;
+}
+body.z-silver-layout .z-icon-badge svg{color:#245a88!important;width:25px;height:25px}
+body.z-silver-layout .z-category-label{font-size:14px;font-weight:650;line-height:1.4}
+body.z-silver-layout .z-category:after,
+body.z-silver-layout .z-quick:after{font-size:21px;color:#60758a}
+body.z-silver-layout .z-category:hover,
+body.z-silver-layout .z-quick:hover{border-color:#e4c57b!important;box-shadow:0 5px 14px #0003!important}
+body.z-silver-layout .z-home-shortcuts{
+  border-color:#ffffff24;gap:14px;margin-top:24px;padding-top:22px;
+}
+body.z-silver-layout .z-quick{min-height:86px;font-weight:650}
+body.z-silver-layout .z-quick small{margin-top:4px;font-weight:400;font-size:12px}
+body.z-silver-layout .z-site-footer,
+body.z-silver-layout .z-site-footer a{color:#becbdc!important}
+.modal{background:rgba(3,15,31,.74)!important;backdrop-filter:blur(5px)}
+.modal .sheet{
+  background:#eef2f6!important;border-color:#bccbda!important;
+  box-shadow:0 18px 70px #0004!important;
+}
+.modal .sheet .card{
+  background:#e2e9f0!important;color:#102039!important;
+  border:1px solid #bdcbd8!important;border-radius:14px!important;
+  box-shadow:none!important;
+}
+.modal .sheet .field input:not([type=checkbox]):not([type=radio]),
+.modal .sheet .field select,.modal .sheet .field textarea{
+  background:#fafcfe!important;color:#102039!important;
+  border:1px solid #a9bbcc!important;box-shadow:none!important;
+}
+.modal .sheet .field input:focus,
+.modal .sheet .field select:focus,.modal .sheet .field textarea:focus{
+  outline:2px solid #2e6caa;outline-offset:2px;
+}
+.modal .sheet .muted,.modal .sheet small{color:#52667b!important}
+.modal .sheet .msg{border-radius:14px!important;border:1px solid #c2cedb}
+.modal .sheet .msg.me{background:#d9e8f7!important;color:#102039!important}
+.card.job button[onclick^="acceptJob("]{
+  min-height:48px!important;padding:12px 20px!important;
+  font-size:15px!important;animation:none!important;
+}
+#trackingMap.z-leaflet-host{display:block!important;padding:0!important;min-height:280px!important}
+#trackingStatus .row{align-items:center;gap:12px}
+.zmap-pill{background:#dfe8f2!important;color:#183957!important}
+@media(max-width:700px){
+  body.z-silver-layout .top{min-height:76px}
+  body.z-silver-layout #home{padding-top:6px}
+  body.z-silver-layout #smartMatch h2{font-size:23px!important;margin-top:23px!important}
+  body.z-silver-layout .z-category-grid{gap:10px}
+  body.z-silver-layout .z-category{min-height:100px;padding:13px 11px;gap:9px}
+  body.z-silver-layout .z-icon-badge{width:36px;height:40px;flex-basis:36px;border-radius:10px}
+  body.z-silver-layout .z-icon-badge svg{width:22px;height:22px}
+  body.z-silver-layout .z-category-label{font-size:13px}
+  body.z-silver-layout .z-category:after{display:none}
+  body.z-silver-layout .z-home-shortcuts{gap:10px}
+  body.z-silver-layout .z-quick{padding:13px 11px;gap:8px;min-height:94px}
+  body.z-silver-layout .z-quick:after{display:none}
+  body.z-silver-layout .z-quick-label{font-size:12px}
+  body.z-silver-layout .z-quick small{font-size:11px}
+  .modal .sheet{padding:26px 20px calc(28px + env(safe-area-inset-bottom))!important}
+}
