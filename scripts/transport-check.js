@@ -82,7 +82,7 @@ async function main(){
  assert(client.includes("route.insertAdjacentElement('afterend',wrap)"));
  assert(!client.includes('<input id="transportDropoff"'),'Client must not inject a duplicate destination input');
  assert(html.includes('transportEstimateToken:transport?.quoteToken'));
- assert(html.includes("location:transport?null:loc"));
+ assert(html.includes('location:loc,transport:transport?.value'),'Location is never automatically shared with manual pickup');
  assert(client.includes('Estimated all-in total:'));
  assert(client.includes('No separate labor checkout.'));
  assert(mobile.includes("'transport-client.js'"));
