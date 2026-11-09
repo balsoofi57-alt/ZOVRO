@@ -143,8 +143,7 @@ test('user-entered names, addresses, job descriptions and price notes are not lo
     ['other','<b translate="no">']
   ];
   for(const [field,prefix] of markers){
-    const value='
-+'{esc('+field+')}';
+    const value=String.fromCharCode(36)+'{esc('+field+')}';
     assert.ok(index.includes(prefix+value),field);
   }
 });
