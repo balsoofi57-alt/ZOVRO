@@ -120,3 +120,14 @@ test('multilingual label replacement never changes chat messages',()=>{
   assert.match(index,/<div id="chatList" translate="no"><\/div>/);
   assert.match(i18n,/p\.closest\('script,style,textarea,pre,code,svg,\[translate="no"\]'\)/);
 });
+
+
+test('translated status labels cannot change request history filters or registration tabs',()=>{
+  const app=fs.readFileSync('website-final.js','utf8');
+  assert.match(index,/data-job-status="\$\{esc\(j\.status\)\}"/);
+  assert.match(app,/const isHistory=\['Completed','Cancelled'\]\.includes\(card\.dataset\.jobStatus\)/);
+  assert.doesNotMatch(app,/card\.querySelector\('\.tag'\)\?\.textContent/);
+  assert.match(app,/const login=!document\.getElementById\('registerFields'\)\?\.querySelector\('#role'\)/);
+  assert.doesNotMatch(app,/authTitle'\)\?\.textContent!=='Create account'/);
+  assert.match(app,/\.bottom button\[onclick\*="nearby"\]/);
+});
