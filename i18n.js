@@ -57,6 +57,9 @@ function apply(root){
   document.documentElement.lang=code;
   document.documentElement.dir=code==='ar'?'rtl':'ltr';
   mountPicker();
+  // Keep phone numbers and access credentials LTR in Arabic; street addresses may contain either script.
+  document.querySelectorAll('input[type="tel"],input[type="email"],input[type="url"],input[type="password"],input[inputmode="numeric"]').forEach(el=>{if(el.dir!=='ltr')el.dir='ltr'});
+  document.querySelectorAll('#reqAddress,#transportDropoff,input[autocomplete="street-address"]').forEach(el=>{if(el.dir!=='auto')el.dir='auto'});
   const scope=root||document.body;
   const walker=document.createTreeWalker(scope,NodeFilter.SHOW_TEXT,{
     acceptNode(node){
