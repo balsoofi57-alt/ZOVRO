@@ -14,10 +14,13 @@ test('approved languages are registered in the ZOVRO app',()=>{
 });
 test('every supported translation has the main navigation and profile labels',()=>{
   const matched=i18n.match(/const LABELS=(\{[^\n]+\});/);
-  assert.ok(matched,'Translation dictionary not found');
+  const extra=i18n.match(/const EXTRA=(\{[^\n]+\});/);
+  assert.ok(matched&&extra,'Translation dictionaries not found');
   const map=JSON.parse(matched[1]);
+  const extensions=JSON.parse(extra[1]);
+  for(const locale of ['ar','es','fr','zh'])Object.assign(map[locale],extensions[locale]);
   for(const locale of ['ar','es','fr','zh']){
-    assert.ok(Object.keys(map[locale]).length>=80,locale);
+    assert.ok(Object.keys(map[locale]).length>=180,locale);
     for(const key of ['Home','Requests','Nearby','More','Profile','Language','Account & security','New request','Share location','Sign in']){
       assert.ok(map[locale][key],locale+': '+key);
     }
@@ -34,4 +37,25 @@ test('web and native share one Profile language selector',()=>{
   assert.doesNotMatch(prepare,/const chooser=/);
   assert.doesNotMatch(prepare,/\\n<script src="i18n\.js"><\/script>/);
   assert.match(prepare,/fs\.copyFileSync\(path\.join\(root,name\),path\.join\(out,name\)\)/);
+});
+
+test('transport and location safety messages are translated for every locale',()=>{
+  const extra=i18n.match(/const EXTRA=(\{[^\n]+\});/);
+  assert.ok(extra);
+  const extensions=JSON.parse(extra[1]);
+  for(const locale of ['ar','es','fr','zh']){
+    for(const key of [
+      'Type any pickup address, including for someone at another location.',
+      'Calculate miles & total',
+      'Request sent successfully',
+      'Account actions',
+      'To — drop-off / destination (required)'
+    ])assert.ok(extensions[locale][key],locale+': '+key);
+  }
+});
+test('RTL-safe addresses, passwords and international phone numbers',()=>{
+  assert.ok(i18n.includes('input[type="tel"]'));
+  assert.ok(i18n.includes('input[type="password"]'));
+  assert.ok(i18n.includes('#reqAddress,#transportDropoff'));
+  assert.ok(i18n.includes("el.dir='auto'"));
 });
