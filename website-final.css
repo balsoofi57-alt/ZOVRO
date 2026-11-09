@@ -1236,3 +1236,41 @@ body.z-more-subpage-open{overflow:hidden}
   margin:18px max(16px,calc((100% - 800px)/2))!important;max-width:none!important;
 }
 #profile #zMoreMenu>details.z-more-subpage .legal a{color:#24527a!important;text-decoration:underline}
+
+/* Shared web/native language picker; keep native language names readable. */
+.top .zovro-language,.z-doc-header .zovro-language{
+  flex:0 1 auto;max-width:132px;min-width:0;min-height:44px;
+  padding:8px 10px;border:1px solid #aebfce;border-radius:12px;
+  background:#f3f6f9;color:#142e48;font-family:inherit;font-size:14px;font-weight:600;line-height:1.4;cursor:pointer;
+}
+.z-doc-header .zovro-language{margin-inline-start:auto}
+.zovro-language:focus-visible{outline:3px solid #2e6caa;outline-offset:2px}
+html[lang="ar"] body{font-family:Tahoma,"Noto Sans Arabic",sans-serif;letter-spacing:normal}
+html[lang="zh-Hans"] body{font-family:"PingFang SC","Microsoft YaHei",sans-serif}
+html[dir="rtl"] .field label,html[dir="rtl"] .field input,html[dir="rtl"] .field textarea,
+html[dir="rtl"] .z-full-page-body,html[dir="rtl"] .z-menu-group{text-align:start}
+html[dir="rtl"] input[type="tel"],html[dir="rtl"] input[type="email"],
+html[dir="rtl"] input[type="password"]{direction:ltr;text-align:start}
+html[dir="rtl"] .z-doc-back svg,html[dir="rtl"] #zCatalogBack svg,
+html[dir="rtl"] .z-more-subpage-header button svg,
+html[dir="rtl"] .z-page-back svg{transform:scaleX(-1)}
+html[dir="rtl"] .leaflet-container{direction:ltr;text-align:left}
+/* Forms opened from a More subpage must remain above that full-page panel. */
+.modal.z-page-modal.open,.z-private-modal.z-page-modal.open{z-index:100!important}
+@media(max-width:600px){
+  .top .zovro-language{max-width:105px;padding-inline:6px;font-size:13px}
+  .top{gap:8px}
+  html[dir="rtl"] .z-category-label,html[lang="zh-Hans"] .z-category-label{white-space:normal}
+}
+@media(max-width:700px){
+  body.z-silver-layout .top{grid-template-columns:minmax(112px,1fr) minmax(90px,112px) 48px}
+  body.z-silver-layout .top .brand{min-width:0}
+  body.z-silver-layout .top .z-account-shortcut{grid-column:3}
+  body.z-silver-layout .top #zovroLanguage{
+    display:block!important;grid-column:2;grid-row:1;justify-self:end;align-self:center;
+    width:100%;max-width:120px;min-height:44px;margin:0;
+  }
+}
+@media(max-width:360px){
+  body.z-silver-layout #zBrandLocation .z-official-brand{width:110px}
+}

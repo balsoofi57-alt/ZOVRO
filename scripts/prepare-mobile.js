@@ -15,13 +15,16 @@ html=html.replaceAll('localStorage.zovroToken=token','ZOVRO_SECURE_SESSION.set(t
 html=html.replaceAll("localStorage.removeItem('zovroToken')",'ZOVRO_SECURE_SESSION.remove()');
 html=html.replace('boot();setInterval(()=>{if(me)loadJobs()},10000);',"ZOVRO_SECURE_SESSION.initialize().then(()=>{token=window.ZOVRO_SESSION_TOKEN||'';boot();setInterval(()=>{if(me)loadJobs()},10000)});");
 const state='<div id="state" class="state">Checking API…</div>';
-const chooser='<div style="display:flex;align-items:center;gap:8px"><select id="zovroLanguage" class="state" aria-label="Language" onchange="ZOVRO_I18N.setLanguage(this.value)"><option value="en">English</option><option value="es">Español</option></select><div id="state" class="state">Checking API…</div></div>';
-if(html.includes(state))html=html.replace(state,chooser);
+const chooser='<div style="display:flex;align-items:center;gap:8px"><select id="zovroLanguage" class="state" aria-label="Language"><option value="en">English</option><option value="es">Español</option><option value="ar">العربية</option><option value="zh">简体中文</option></select><div id="state" class="state">Checking API…</div></div>';
+if(!html.includes('id="zovroLanguage"')&&html.includes(state))html=html.replace(state,chooser);
 // The website already includes private-profile UI; inject it only once in mobile.
 html=html.replace('<script src="profile-security-client.js"></script>','');
-if(!html.includes('<script src="i18n.js"></script>'))html=html.replace('</body>','<script src="biometric-client.js"></script>\n<script src="secure-session.js"></script>\n<script src="i18n.js"></script>\n<script src="consent-client.js"></script>\n<script src="profile-security-client.js"></script>\n<script src="payment-client.js"></script>\n<script src="push-client.js"></script>\n<script src="payment-ui.js"></script>\n<script src="support-center.js"></script>\n</body>');
+// Localization is shared by web and mobile; it must not gate native session/payment scripts.
+for(const name of ['biometric-client.js','secure-session.js','consent-client.js','profile-security-client.js','payment-client.js','push-client.js','payment-ui.js','support-center.js']){
+  if(!new RegExp('<script[^>]+src="'+name.replaceAll('.','\\.')+'(?:\\?[^"]*)?"').test(html))html=html.replace('</body>','<script src="'+name+'"></script>\n</body>');
+}
 fs.writeFileSync(path.join(out,'index.html'),html);
-for(const name of ['manifest.webmanifest','service-worker.js','privacy.html','terms.html','support.html','biometric-client.js','secure-session.js','i18n.js','consent-client.js','profile-security-client.js','phone-verification-client.js','support-chat.js','support-assistant.js','admin.html','admin-requests-client.js','support-policy.js','password-recovery-client.js','payment-client.js','push-client.js','payment-ui.js','support-center.js','website-final.css','website-final.js','service-art.js','provider-service-picker.js','transport-client.js'])fs.copyFileSync(path.join(root,name),path.join(out,name));
+for(const name of ['manifest.webmanifest','service-worker.js','privacy.html','terms.html','support.html','biometric-client.js','secure-session.js','i18n-messages.js','i18n.js','consent-client.js','profile-security-client.js','phone-verification-client.js','support-chat.js','support-assistant.js','admin.html','admin-requests-client.js','support-policy.js','support-policy-page.js','password-recovery-client.js','payment-client.js','push-client.js','payment-ui.js','support-center.js','website-final.css','website-final.js','service-art.js','provider-service-picker.js','transport-client.js'])fs.copyFileSync(path.join(root,name),path.join(out,name));
 fs.mkdirSync(path.join(out,'src'),{recursive:true});
 for(const name of ['service-catalog.js','provider-services.js'])fs.copyFileSync(path.join(root,'src',name),path.join(out,'src',name));
 const leafletDist=path.join(root,'node_modules','leaflet','dist');

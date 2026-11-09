@@ -8,6 +8,7 @@ const PUBLIC_FILES = new Set([
   "biometric-client.js",
   "consent-client.js",
   "i18n.js",
+  "i18n-messages.js",
   "index.html",
   "live-map.js",
   "manifest.webmanifest",
