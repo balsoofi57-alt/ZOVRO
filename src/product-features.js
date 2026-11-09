@@ -1,5 +1,5 @@
 'use strict';
-const BRAND={name:'ZOVRO',slogan:'ANYWHERE. ANYTIME. NEAR YOU.',defaultLanguage:'en',languages:['en','es'],languageDisplay:'English | Spanish'};
+const BRAND={name:'ZOVRO',slogan:'ANYWHERE. ANYTIME. NEAR YOU.',defaultLanguage:'en',languages:['en','ar','es','fr','zh'],languageDisplay:'English | العربية | Español | Français | 简体中文'};
 const PRODUCT_FEATURES={
 branding:{nightCityTheme:true,blueGoldBlack:true,noPeople:true,englishPrimary:true,spanishOptional:true},
 launchCore:{sosDispatch:false,nearbyProviders:true,messaging:true,locationSharing:true,ratings:true,securePayments:true,requestLifecycle:true,providerAvailability:true,smartMatch:true,iNeedHelp:true},
@@ -9,7 +9,7 @@ providerTools:{portfolio:true,serviceRadius:true,onlineBusyOffline:true,workingH
 customerConvenience:{liveTracking:true,eta:true,favoriteProvider:true,rebookProvider:true,jobHistory:true,savedProperties:true,savedVehicles:true,vehicleProfiles:true,serviceReminders:true,waitlistNotifyMe:true,dynamicServiceArea:true,tips:true},
 commercial:{businessAccounts:true,propertyManagerMode:true,fleetAccounts:true,multiStopJobs:true,taxDocuments:true,providerSubscriptions:true,referralRewards:true},
 jobControl:{estimates:true,customerApproval:true,changeOrders:true,warrantyRecords:true,receipts:true},
-platform:{englishSpanishTranslation:true,accessibility:true,customerProviderBusinessModes:true,adminCommandCenter:true,supportSystem:true}
+platform:{fiveLanguageTranslation:true,accessibility:true,customerProviderBusinessModes:true,adminCommandCenter:true,supportSystem:true}
 };
 const LAUNCH_PHASES=[
 {id:'launch',name:'Launch Core',priorities:['Auto & Roadside','Home Services','Nearby provider discovery','Messaging','Location sharing','Payments','Ratings','Smart Match / I Need Help']},
