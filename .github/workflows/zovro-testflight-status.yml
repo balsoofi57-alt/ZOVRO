@@ -120,4 +120,39 @@ jobs:
                       )))
           except urllib.error.HTTPError as err:
               print("BETA_GROUP_STATUS=NOT_ACCESSIBLE_HTTP_" + str(err.code))
+
+          try:
+              users = get("/v1/users", {"limit": "200"}).get("data", [])
+              holders = [u for u in users if "ACCOUNT_HOLDER" in u.get("attributes", {}).get("roles", [])]
+              print("ACCOUNT_HOLDER_COUNT=" + str(len(holders)))
+              if len(holders) == 1:
+                  owner = holders[0]
+                  attrs = owner.get("attributes", {})
+                  print("OWNER_ALL_APPS_VISIBLE=" + str(attrs.get("allAppsVisible", "UNKNOWN")))
+                  email = attrs.get("username")
+                  if isinstance(email, str) and "@" in email:
+                      testers = get("/v1/betaTesters", {"filter[email]": email, "limit": "20"}).get("data", [])
+                      matched = [t for t in testers
+                                 if t.get("attributes", {}).get("email", "").lower() == email.lower()]
+                      print("MATCHING_BETA_TESTER_RECORDS=" + str(len(matched)))
+                      for t in matched:
+                          a = t.get("attributes", {})
+                          print("EXISTING_TESTER_STATE=" + str(a.get("state", "UNKNOWN")))
+                          print("EXISTING_TESTER_INVITE_TYPE=" + str(a.get("inviteType", "UNKNOWN")))
+                          memberships = get("/v1/betaTesters/" + t["id"] + "/betaGroups", {"limit": "200"}).get("data", [])
+                          print("TESTER_OTHER_GROUP_COUNT=" + str(len(memberships)))
+                          print("TESTER_INTERNAL_GROUP_COUNT=" + str(sum(
+                              bool(g.get("attributes", {}).get("isInternalGroup"))
+                              for g in memberships
+                          )))
+                          print("TESTER_HAS_ZOVRO_GROUP=" + str(any(
+                              g.get("id") in {x["id"] for x in internal}
+                              for g in memberships
+                          )))
+                          tester_apps = get("/v1/betaTesters/" + t["id"] + "/apps", {"limit": "200"}).get("data", [])
+                          print("TESTER_HAS_ZOVRO_APP=" + str(any(
+                              app.get("id") == app_id for app in tester_apps
+                          )))
+          except urllib.error.HTTPError as err:
+              print("TESTER_DIAGNOSTIC_STATUS=HTTP_" + str(err.code))
           PY
