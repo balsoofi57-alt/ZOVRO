@@ -422,3 +422,81 @@ body.z-silver-layout .z-quick-label small{color:#3c5874!important}
 #profile .z-secondary-assistance-content h3{font-size:15px;color:#233954;margin:0 0 12px}
 #profile .z-secondary-assistance #sosButton{display:block!important;width:auto!important;min-height:44px!important;background:#edf2f7!important;color:#3d546c!important;border:1px solid #c2cfde!important;border-radius:12px!important;font-size:13px!important;font-weight:750!important;box-shadow:none!important;padding:11px 14px!important}
 #profile .z-secondary-assistance #sosHelp{color:#596b7c!important;font-size:12px!important;line-height:1.55!important;margin:12px 0 0!important}
+
+/* =========================================================
+   UX & VISUAL POLISH · 2026-11-09 (owner-requested)
+   Goal: very easy to use + attractive look.
+   Additive layer only. Locked palette respected (navy,
+   silver, gold CTAs, blue accents). No business logic,
+   no layout replacement, no removed functionality.
+   ========================================================= */
+:root{--z-press:.97;--z-ease:cubic-bezier(.16,1,.3,1)}
+
+/* 1 · Instant press feedback on every tappable control */
+.btn,.z-category,.z-quick,.z-service-option,.z-menu-row,.z-account-shortcut,#zLocationShortcut,.z-catalog-list button{transition:transform .14s var(--z-ease),box-shadow .14s var(--z-ease),border-color .14s var(--z-ease),filter .14s var(--z-ease),background .14s var(--z-ease)!important}
+.btn:active,.z-category:active,.z-quick:active,.z-service-option:active,.z-menu-row:active,.z-account-shortcut:active,#zLocationShortcut:active,.z-catalog-list button:active{transform:scale(var(--z-press))!important}
+.btn:hover,.z-menu-row:hover{filter:brightness(1.03)}
+
+/* 2 · Primary CTA: warm gold with a soft premium glow */
+.primary,.ok,.hero .primary,.modal .sheet .primary{box-shadow:0 6px 18px rgba(176,141,60,.38),inset 0 1px 0 rgba(255,255,255,.55)!important}
+
+/* 3 · Modal sheets: gentle slide-up + drag handle */
+.modal .sheet{position:relative;animation:zSheetUp .34s var(--z-ease) both!important}
+@keyframes zSheetUp{from{transform:translateY(5%);opacity:.55}to{transform:translateY(0);opacity:1}}
+.modal .sheet::before{content:"";display:block;width:46px;height:5px;border-radius:99px;background:rgba(16,32,57,.22);margin:0 auto 14px}
+.modal{transition:background .25s ease}
+
+/* 4 · Always-visible close button on sheets */
+.z-sheet-close{position:absolute;top:14px;right:14px;width:42px;height:42px;border-radius:13px;border:1px solid #aab7c4;background:linear-gradient(#f6f8fa,#e6ebf1);color:#14263b;font-size:21px;font-weight:700;line-height:1;cursor:pointer;display:grid;place-items:center;z-index:3;padding:0}
+.z-sheet-close:hover{background:#e8edf3;border-color:#8fa2b4}
+.z-sheet-close:focus-visible{outline:3px solid #175c9d;outline-offset:2px}
+.modal .sheet>h2{padding-right:52px}
+
+/* 5 · Toast: softer, floating, clearly visible */
+.toast{border-radius:14px!important;box-shadow:0 12px 32px rgba(7,17,31,.30)!important;font-weight:700!important;padding:13px 18px!important;letter-spacing:-.005em;transform:translateX(-50%) translateY(10px)!important;transition:transform .28s var(--z-ease),opacity .28s ease!important}
+.toast.show{transform:translateX(-50%) translateY(0)!important}
+
+/* 6 · Color-coded request status tags (instant readability) */
+.tag.z-status-waiting{background:#f8eed6!important;color:#7a5a10!important;border:1px solid #dcc389!important}
+.tag.z-status-active{background:#dceafd!important;color:#14498f!important;border:1px solid #aec9ef!important}
+.tag.z-status-done{background:#def4e6!important;color:#14683c!important;border:1px solid #abdcbe!important}
+.tag.z-status-cancelled{background:#fce4e2!important;color:#9c231d!important;border:1px solid #e6aca7!important}
+.job{border-left:4px solid #9fb2c5!important}
+.job.z-job-done{border-left-color:#3f9e6a!important}
+.job.z-job-cancelled{border-left-color:#c0463d!important}
+.job.z-job-active{border-left-color:#2f6fc4!important}
+
+/* 7 · Friendly empty states with a clear next action */
+.z-empty{text-align:center;padding:36px 18px!important}
+.z-empty .z-empty-icon{font-size:42px;display:block;line-height:1;margin-bottom:12px}
+.z-empty b{font-size:17px;display:block}
+.z-empty p{margin:8px auto 18px;max-width:340px}
+.z-empty .btn{min-width:210px;margin:0 auto}
+
+/* 8 · Gentle staggered entrance for home cards */
+body.z-silver-layout #zCategoryGrid .z-category,body.z-silver-layout .z-home-shortcuts .z-quick{animation:zFadeIn .5s var(--z-ease) both}
+body.z-silver-layout #zCategoryGrid .z-category:nth-child(2){animation-delay:.05s}
+body.z-silver-layout #zCategoryGrid .z-category:nth-child(3){animation-delay:.1s}
+body.z-silver-layout #zCategoryGrid .z-category:nth-child(4){animation-delay:.15s}
+body.z-silver-layout #zCategoryGrid .z-category:nth-child(5){animation-delay:.2s}
+body.z-silver-layout #zCategoryGrid .z-category:nth-child(6){animation-delay:.25s}
+body.z-silver-layout .z-home-shortcuts .z-quick:nth-child(2){animation-delay:.3s}
+@keyframes zFadeIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+
+/* 9 · A touch more depth on home cards */
+body.z-silver-layout .z-category,body.z-silver-layout .z-quick{box-shadow:0 7px 20px rgba(2,13,26,.20)!important}
+body.z-silver-layout #zProblem{transition:border-color .18s ease,box-shadow .18s ease}
+body.z-silver-layout #zProblem:focus{box-shadow:0 0 0 4px rgba(35,95,160,.25)}
+
+/* 10 · Keep motion respectful */
+@media(prefers-reduced-motion:reduce){.modal .sheet,body.z-silver-layout #zCategoryGrid .z-category,body.z-silver-layout .z-home-shortcuts .z-quick{animation:none!important}.btn,.z-category,.z-quick,.z-service-option,.z-menu-row,.z-account-shortcut,#zLocationShortcut,.z-catalog-list button{transition:none!important}.btn:active,.z-category:active,.z-quick:active,.z-service-option:active,.z-menu-row:active,.z-account-shortcut:active,#zLocationRefresh:active,.z-catalog-list button:active{transform:none!important}}
+
+/* 11 · Readable headings, subtitles and footer on the navy app background
+   (Jobs / Nearby / Profile pages). Text inside light cards stays dark. */
+body.z-silver-layout .sectionHead h2{color:#f4f7fc!important}
+body.z-silver-layout .sectionHead p{color:#b9c6d6!important}
+body.z-silver-layout .z-site-footer,body.z-silver-layout .z-site-footer a{color:#b9c6d6!important}
+
+/* 12 · Full-width app header band on large screens. */
+body.z-silver-layout .top{margin-left:calc(50% - 50vw)!important;margin-right:calc(50% - 50vw)!important}
+body.z-silver-layout{overflow-x:clip}

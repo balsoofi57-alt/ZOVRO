@@ -358,3 +358,60 @@
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',ready);else ready();
 })();
+
+// 2026-11-09 UX polish: sheet close buttons, color-coded statuses,
+// friendly empty states. Additive only; existing handlers untouched.
+(function(){
+  function ready(fn){document.readyState==='loading'?document.addEventListener('DOMContentLoaded',fn):fn()}
+  function statusClass(text){
+    const t=String(text||'').toLowerCase();
+    if(t.includes('cancel'))return 'z-status-cancelled';
+    if(t.includes('completed'))return 'z-status-done';
+    if(t.includes('looking')||t.includes('searching'))return 'z-status-waiting';
+    return 'z-status-active';
+  }
+  function jobClass(text){
+    const t=String(text||'').toLowerCase();
+    if(t.includes('cancel'))return 'z-job-cancelled';
+    if(t.includes('completed'))return 'z-job-done';
+    return 'z-job-active';
+  }
+  function init(){
+    // Always-visible close button on every modal sheet.
+    document.querySelectorAll('.modal .sheet').forEach(sheet=>{
+      if(sheet.querySelector('.z-sheet-close'))return;
+      const modal=sheet.closest('.modal');
+      if(!modal||!modal.id)return;
+      const close=document.createElement('button');
+      close.type='button';close.className='z-sheet-close';close.setAttribute('aria-label','Close');close.innerHTML='×';
+      close.addEventListener('click',()=>{if(typeof window.closeModal==='function')window.closeModal(modal.id)});
+      sheet.prepend(close);
+    });
+    // Color-coded statuses + friendly empty states in the request list.
+    const list=document.getElementById('jobList');
+    if(!list)return;
+    function enhance(){
+      for(const tag of list.querySelectorAll('.tag')){
+        if(!tag.dataset.zStatusDone){tag.dataset.zStatusDone='1';tag.classList.add(statusClass(tag.textContent))}
+      }
+      for(const job of list.querySelectorAll('.card.job')){
+        const tag=job.querySelector('.tag');
+        if(tag&&!job.dataset.zJobDone){job.dataset.zJobDone='1';job.classList.add(jobClass(tag.textContent))}
+      }
+      const empty=list.querySelector('.card:not(.job)');
+      if(empty&&!empty.dataset.zEmptyDone){
+        const text=(empty.textContent||'').trim();
+        if(text==='No requests yet.'){
+          empty.dataset.zEmptyDone='1';empty.classList.add('z-empty');
+          empty.innerHTML='<span class="z-empty-icon">🛠️</span><b>No requests yet</b><p class="muted">When something breaks, describe the problem and ZOVRO will match you with a nearby professional.</p><button type="button" class="btn primary" onclick="newRequest()">Request help</button>';
+        }else if(text==='Sign in to see jobs.'){
+          empty.dataset.zEmptyDone='1';empty.classList.add('z-empty');
+          empty.innerHTML='<span class="z-empty-icon">📋</span><b>Sign in to see your requests</b><p class="muted">Track your requests, chat with your professional and follow the job live.</p><button type="button" class="btn primary" onclick="openAuth()">Sign in</button>';
+        }
+      }
+    }
+    enhance();
+    new MutationObserver(enhance).observe(list,{childList:true,subtree:true});
+  }
+  ready(init);
+})();
