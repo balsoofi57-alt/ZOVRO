@@ -134,12 +134,17 @@ test('translated status labels cannot change request history filters or registra
 
 
 test('user-entered names, addresses, job descriptions and price notes are not localized',()=>{
-  const mark='$'+'{esc(';
-  for(const field of ['j.details','j.address','j.changeOrder.reason','j.lastHandoffReason','me.name','other']){
-    const value=mark+field+')}';
-    const before=index.lastIndexOf(value);
-    assert.ok(before>=0,field);
-    const line=index.slice(Math.max(0,before-180),before);
-    assert.match(line,/translate="no"/,field);
+  const markers=[
+    ['j.details','<div class="muted" translate="no">'],
+    ['j.address','<span translate="no">'],
+    ['j.changeOrder.reason','Final / updated price reason: <span translate="no">'],
+    ['j.lastHandoffReason','Reason: <span translate="no">'],
+    ['me.name','<b translate="no">'],
+    ['other','<b translate="no">']
+  ];
+  for(const [field,prefix] of markers){
+    const value='
++'{esc('+field+')}';
+    assert.ok(index.includes(prefix+value),field);
   }
 });
