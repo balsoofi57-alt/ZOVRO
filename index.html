@@ -145,7 +145,7 @@ function setRequestGpsStatus(english,params={}){
  status.value=window.ZOVRO_I18N?.format?.(english,params)||english.replace(/\{([A-Za-z][A-Za-z0-9_]*)\}/g,(_,key)=>Object.prototype.hasOwnProperty.call(params,key)?String(params[key]):'{'+key+'}');
  status.dir=window.ZOVRO_I18N?.getLanguage?.()==='ar'?'rtl':'ltr';
 }
-document.addEventListener('zovro:language-changed',()=>{
+if(typeof document!=='undefined')document.addEventListener('zovro:language-changed',()=>{
  const status=$('reqLocationStatus');if(!status||status.hidden||!status.dataset.i18nKey)return;
  try{setRequestGpsStatus(status.dataset.i18nKey,JSON.parse(status.dataset.i18nParams||'{}'))}catch(_){}
 });
