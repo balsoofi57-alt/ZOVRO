@@ -2,9 +2,23 @@
 (function () {
   let modal, log, input, status, returnTo, transcript = [], owner, pending = false, submitted = '', attempt = null, answering = false, generation = 0, escalation = 'general';
   const signedIn = () => typeof me !== 'undefined' && me ? me.id : null;
+  const currentLanguage=()=>window.ZOVRO_I18N?.getLanguage?.()||'en';
+  // Policy-approved automated answers are available in English, Arabic and Spanish.
+  // Keep French/Chinese customer questions for a support ticket; never invent an answer.
+  const supportIntro={
+    en:'Welcome to ZOVRO support. Automated answers currently cover English, Arabic and Spanish. For other languages, sign in and submit a support ticket. Never share passwords, verification codes or card details.',
+    ar:'مرحبًا بك في دعم ZOVRO. تتوفر الإجابات الآلية حاليًا بالإنجليزية والعربية والإسبانية. للغات الأخرى، سجّل الدخول وأرسل تذكرة دعم. لا تشارك كلمات المرور أو رموز التحقق أو بيانات البطاقة.',
+    es:'Bienvenido al soporte de ZOVRO. Las respuestas automáticas están disponibles en inglés, árabe y español. Para otros idiomas, inicia sesión y envía un ticket. No compartas contraseñas, códigos de verificación ni datos de tarjetas.',
+    fr:'Bienvenue dans l’assistance ZOVRO. Les réponses automatiques sont proposées en anglais, en arabe et en espagnol. Pour les autres langues, connectez-vous et envoyez un ticket au support. Ne partagez jamais de mots de passe, de codes de vérification ou de données de carte.',
+    zh:'欢迎使用 ZOVRO 支持服务。自动回复目前支持英语、阿拉伯语和西班牙语。使用其他语言时，请登录并提交支持工单。请勿分享密码、验证码或银行卡信息。'
+  };
+  const unsupportedReply={
+    fr:'Je ne peux pas fournir de réponse automatique vérifiée en français pour le moment. Connectez-vous et sélectionnez « Contacter le service client » pour envoyer votre demande à l’équipe de support. Aucun agent en direct n’est connecté et aucun délai de réponse n’est garanti.',
+    zh:'目前无法提供经过审核的中文自动答复。请登录后选择“联系客户支持”，提交您的问题供支持团队审核。当前没有在线人工客服，也无法保证回复时间。'
+  };
   function message(role, text) {
     const item = document.createElement('p');
-    item.className = 'msg'; item.dir = 'auto';
+    item.className = 'msg'; item.dir = 'auto'; item.setAttribute('translate','no');
     item.textContent = (role === 'user' ? 'You: ' : 'ZOVRO: ') + text;
     log.appendChild(item); log.scrollTop = log.scrollHeight;
     transcript.push({role, text});
@@ -54,10 +68,13 @@
       message('user', text); input.value = ''; answering = true;
       const send = document.querySelector('#supportChatForm button[type=submit]'); send.disabled = true;
       status.textContent = 'Reviewing your question…';
-      let result = window.ZOVRO_SUPPORT_ASSISTANT.answer({text});
+      const locale=currentLanguage();
+      let result=unsupportedReply[locale]
+        ? {answerId:'human-review',language:locale,reply:unsupportedReply[locale],humanReviewRequired:true}
+        : window.ZOVRO_SUPPORT_ASSISTANT.answer({text,locale});
       try {
-        if (result.answerId === 'human-review' && document.getElementById('supportAllowAI').checked && !document.getElementById('supportAIChoice').hidden) {
-          const out = await api('/support/answer', {method:'POST',signal:AbortSignal.timeout(12000),body:JSON.stringify({text,history,allowAI:true})});
+        if (!unsupportedReply[locale] && result.answerId === 'human-review' && document.getElementById('supportAllowAI').checked && !document.getElementById('supportAIChoice').hidden) {
+          const out = await api('/support/answer', {method:'POST',signal:AbortSignal.timeout(12000),body:JSON.stringify({text,history,locale,allowAI:true})});
           if (typeof out.reply === 'string' && out.reply.length <= 4000 && ['en','ar','es'].includes(out.language) && typeof out.humanReviewRequired === 'boolean') result = out;
         }
       } catch (_) { /* Approved fallback remains available during provider outages. */ }
@@ -106,7 +123,7 @@
     document.getElementById('supportChatTicket').disabled = pending;
     returnTo?.closest('.modal')?.classList.remove('open');
     modal.classList.add('open');
-    if (!transcript.length) message('assistant', 'Welcome to ZOVRO support. Tell me what you need help with. I can explain app features or help you send a case to customer support. You can write in English, Arabic or Spanish.');
+    if (!transcript.length) message('assistant',supportIntro[currentLanguage()]||supportIntro.en);
     input.focus();
   }
   window.ZOVRO_SUPPORT_CHAT = {open};
