@@ -141,7 +141,7 @@ function requestAddressTypedManually(){
 function requestMessage(message){$('requestStatus').textContent=message}
 function setRequestGpsStatus(english,params={}){
  const status=$('reqLocationStatus');if(!status)return;
- status.dataset.i18nKey=english;status.dataset.i18nParams=JSON.stringify(params);
+ if(status.dataset){status.dataset.i18nKey=english;status.dataset.i18nParams=JSON.stringify(params);}
  status.value=window.ZOVRO_I18N?.format?.(english,params)||english.replace(/\{([A-Za-z][A-Za-z0-9_]*)\}/g,(_,key)=>Object.prototype.hasOwnProperty.call(params,key)?String(params[key]):'{'+key+'}');
  status.dir=window.ZOVRO_I18N?.getLanguage?.()==='ar'?'rtl':'ltr';
 }
