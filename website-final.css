@@ -625,6 +625,9 @@ body.z-silver-layout .z-service-heading button{
   background:transparent!important;border:0!important;
   color:#d5e3f3!important;box-shadow:none!important;min-height:44px;
 }
+body.z-silver-layout .modal .z-service-heading button{
+  color:#214c73!important;
+}
 body.z-silver-layout .z-category-grid{gap:14px}
 body.z-silver-layout .z-category,
 body.z-silver-layout .z-quick{
