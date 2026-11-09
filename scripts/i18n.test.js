@@ -59,3 +59,16 @@ test('RTL-safe addresses, passwords and international phone numbers',()=>{
   assert.ok(i18n.includes('#reqAddress,#transportDropoff'));
   assert.ok(i18n.includes("el.dir='auto'"));
 });
+
+test('all catalog categories and service names are localized in four non-English languages',()=>{
+  const catalog=require('../src/service-catalog');
+  const serviceMap=JSON.parse(i18n.match(/const SERVICE_LABELS=(\{[^\n]+\});/)[1]);
+  for(const language of ['ar','es','fr','zh']){
+    for(const category of catalog.SERVICE_CATALOG){
+      assert.ok(serviceMap[language][category.label.en],language+': category '+category.label.en);
+    }
+    for(const service of catalog.ALL_SERVICES){
+      assert.ok(serviceMap[language][service.label.en],language+': service '+service.label.en);
+    }
+  }
+});
