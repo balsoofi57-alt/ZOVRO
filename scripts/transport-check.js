@@ -10,11 +10,21 @@ async function main(){
  assert.equal(p.requiresLabor('Furniture Moving'),true);
  assert.equal(p.requiresLabor('Towing'),false);
  const req=p.validateTransport('Furniture Moving',{pickupAddress:'10 Main Street, Dearborn, MI',dropoffAddress:'40 Second St, Detroit, MI',workers:2,hours:2});
- assert.deepEqual(req,{pickupAddress:'10 Main Street, Dearborn, MI',dropoffAddress:'40 Second St, Detroit, MI',workers:2,hours:2,includesLoadingUnloading:true});
+ assert.deepEqual(req,{pickupAddress:'10 Main Street, Dearborn, MI',dropoffAddress:'40 Second St, Detroit, MI',workers:2,hours:2,includesLoadingUnloading:true,pickupLocation:null});
  assert.throws(()=>p.validateTransport('Moving',{...req,dropoffAddress:req.pickupAddress}),/different/);
  assert.throws(()=>p.validateTransport('Moving',{...req,workers:20}),/1 to 8/);
  assert.throws(()=>p.validateTransport('Moving',{...req,hours:2.3}),/half-hour/);
  assert.throws(()=>p.validateTransport('Moving',null),/required/);
+ // Third-party manual address must NEVER inherit the requester's device GPS.
+ assert.equal(p.validateTransport('Towing',{pickupAddress:'35000 Ford Rd, Westland, MI',dropoffAddress:'7800 Michigan Ave, Detroit, MI',pickupLocation:null}).pickupLocation,null);
+ const gps={lat:42.320123,lng:-83.184567,accuracy:17,capturedAt:new Date().toISOString()};
+ const roadside=p.validateTransport('Towing',{pickupAddress:'',dropoffAddress:'100 Michigan Avenue, Detroit, MI',pickupLocation:gps});
+ assert.match(roadside.pickupAddress,/^GPS location: 42.320123, -83.184567$/);
+ assert.deepEqual(roadside.pickupLocation,gps);
+ assert.throws(()=>p.validateTransport('Towing',{pickupAddress:'',dropoffAddress:'100 Michigan Avenue, Detroit, MI'}),/pickup and drop-off/);
+ assert.throws(()=>p.validateTransport('Towing',{pickupLocation:{...gps,capturedAt:new Date(Date.now()-180000).toISOString()},dropoffAddress:'100 Michigan Avenue, Detroit, MI'}),/expired or is invalid/);
+ assert.throws(()=>p.validateTransport('Towing',{pickupLocation:{...gps,lat:123},dropoffAddress:'100 Michigan Avenue, Detroit, MI'}),/expired or is invalid/);
+
  const quote=p.buildEstimate('Furniture Moving',req,16093.44,{}); // 10.0 miles
  assert.equal(quote.distanceMiles,10);
  assert.equal(quote.baseCents,6500);
@@ -40,11 +50,22 @@ async function main(){
   return {ok:true,json:async()=>({routes:[{distanceMeters:16093.44}]})};
  }});
  assert.equal(response,16093.44);
+ const gpsResponse=await p.drivingDistanceMeters(roadside.pickupAddress,roadside.dropoffAddress,{apiKey:'test-key',pickupLocation:roadside.pickupLocation,fetchImpl:async (url,options)=>{
+  const body=JSON.parse(options.body);
+  assert.deepEqual(body.origin,{location:{latLng:{latitude:gps.lat,longitude:gps.lng}}});
+  assert.deepEqual(body.destination,{address:roadside.dropoffAddress});
+  return {ok:true,json:async()=>({routes:[{distanceMeters:8046.72}]})};
+ }});
+ assert.equal(gpsResponse,8046.72);
+
  await assert.rejects(()=>p.drivingDistanceMeters(req.pickupAddress,req.dropoffAddress,{apiKey:''}),/not configured/);
  const api=read('backend/server-core.js'),catalog=read('src/service-catalog.js'),matching=read('src/provider-services.js');
  assert(api.includes("url.pathname==='/api/transport/estimate'"));
  assert(api.includes('transportPricing.verifyEstimateToken'));
  assert(api.includes('transport?transport.pickupAddress'));
+ assert(api.includes('const loc=transport?transport.pickupLocation:b.location;'));
+ assert(api.includes('pickupLocation:transport.pickupLocation'));
+
  assert(api.includes('const sos=b.source===\'sos\''),'Production SOS request checks must remain intact');
  assert(catalog.includes("'Vehicle Transport'"),'Vehicle transportation service catalog missing');
  assert(matching.includes("'Vehicle Transport':['transport my car'"),'Vehicle transportation matching missing');
