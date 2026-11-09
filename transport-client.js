@@ -8,14 +8,15 @@
   const encode=text=>String(text??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
   function values(){
     const service=$('reqService')?.value||'';
-    const pickupAddress=String($('reqAddress')?.value||'').trim().replace(/\s+/g,' ');
+    const pickupLocation=window.ZOVRO_ACTIVE_PICKUP_LOCATION?.()||null;
+    const pickupAddress=pickupLocation?'GPS location: '+Number(pickupLocation.lat).toFixed(6)+', '+Number(pickupLocation.lng).toFixed(6):String($('reqAddress')?.value||'').trim().replace(/\s+/g,' ');
     const dropoffAddress=String($('transportDropoff')?.value||'').trim().replace(/\s+/g,' ');
     const labor=LABOR.has(service);
-    return {service,transport:{pickupAddress,dropoffAddress,workers:labor?Number($('transportWorkers')?.value):0,hours:labor?Number($('transportHours')?.value):0,includesLoadingUnloading:labor}};
+    return {service,transport:{pickupAddress,dropoffAddress,workers:labor?Number($('transportWorkers')?.value):0,hours:labor?Number($('transportHours')?.value):0,includesLoadingUnloading:labor,pickupLocation}};
   }
   function fingerprint(x){return JSON.stringify(x)}
   function invalidate(){
-    latest=null;const output=$('transportQuote');if(output)output.textContent='Enter both addresses, then calculate driving miles and the estimated all-inclusive price.';
+    latest=null;const output=$('transportQuote');if(output)output.textContent='Enter pickup by address or GPS and a destination, then calculate road miles and the all-inclusive estimate.';
   }
   function sync(){
     const service=$('reqService')?.value||'',active=SERVICES.has(service);
@@ -34,6 +35,10 @@
     if(heading)heading.textContent=active?'From pickup to destination':'Where are you going?';
     if(subheading)subheading.textContent=active?'Enter both addresses (A → B). Road miles and a single all-inclusive estimate can be calculated below.':'Enter a starting address (A). Add a destination (B) when this service involves transportation.';
     if(hint)hint.textContent=active?'Required: complete destination street and city. Pickup must be a different place.':'Optional for other services. Choose Moving, Vehicle Transport, or Towing to request mileage-based transport.';
+    const currentGps=window.ZOVRO_ACTIVE_PICKUP_LOCATION?.();
+    const addressInput=$('reqAddress'),fromHint=$('routeFromHint');
+    if(addressInput)addressInput.placeholder=currentGps?'GPS pickup selected — type an address to switch':'Type a street address, city, state';
+    if(fromHint)fromHint.textContent=currentGps?'Your current GPS pin is the starting point. Type another address to switch to manual pickup.':'You can type any address here, including for someone at a different location.';
     const note=$('transportPricingNote');
     if(note)note.textContent=LABOR.has(service)?'One combined price includes the vehicle, road miles, and loading/unloading workers. One payment after approval.':'One combined price for the transport and its driving miles. One payment after approval.';
     if(latest&&latest.fingerprint!==fingerprint(values()))invalidate();
@@ -47,8 +52,8 @@
   function collect(service){
     if(!SERVICES.has(service))return null;
     const x=values();
-    if(x.transport.pickupAddress.length<8||x.transport.dropoffAddress.length<8)return {error:'Enter a complete pickup and a different drop-off address, including city.'};
-    if(x.transport.pickupAddress.toLowerCase()===x.transport.dropoffAddress.toLowerCase())return {error:'Pickup and drop-off must be different places.'};
+    if((!x.transport.pickupLocation&&x.transport.pickupAddress.length<8)||x.transport.dropoffAddress.length<8)return {error:'Type a pickup address or use your current GPS, and enter a complete destination street and city.'};
+    if(!x.transport.pickupLocation&&x.transport.pickupAddress.toLowerCase()===x.transport.dropoffAddress.toLowerCase())return {error:'Pickup and drop-off must be different places.'};
     if(LABOR.has(service)&&(!Number.isInteger(x.transport.workers)||x.transport.workers<1||x.transport.workers>8||x.transport.hours<1||x.transport.hours>16||!Number.isFinite(x.transport.hours)))return {error:'Choose 1–8 moving workers and 1–16 working hours.'};
     const valid=latest&&latest.fingerprint===fingerprint(x)&&latest.expiresAt>Date.now();
     return {value:x.transport,quoteToken:valid?latest.token:null};
@@ -79,6 +84,7 @@
       (Number.isFinite(estimate?.distanceMiles)?'<div>'+estimate.distanceMiles.toFixed(1)+' driving miles</div>':'')+
       (t.includesLoadingUnloading?'<div>Loading/unloading included: '+encode(t.workers)+' workers · '+encode(t.hours)+' hours</div>':'')+
       (Number.isInteger(estimate?.estimatedTotalCents)?'<div>Planning estimate (all-in): '+usd(estimate.estimatedTotalCents)+'</div>':'<div>Provider will confirm one all-inclusive price.</div>')+
+      (t.pickupLocation&&Number.isFinite(t.pickupLocation.lat)&&Number.isFinite(t.pickupLocation.lng)?'<div><a href="https://www.google.com/maps?q='+encodeURIComponent(t.pickupLocation.lat+','+t.pickupLocation.lng)+'" target="_blank" rel="noopener noreferrer">Open GPS pickup in Maps</a></div>':'')+
       '<small>Only the approved provider quote is payable, in a single payment.</small></div>';
   }
   function restore(job){
