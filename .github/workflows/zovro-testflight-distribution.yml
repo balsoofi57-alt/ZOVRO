@@ -72,6 +72,9 @@ jobs:
                       print("Error codes:", [
                           x.get("code") for x in details.get("errors", [])
                       ])
+                      print("Error details:", [
+                          str(x.get("detail", ""))[:250] for x in details.get("errors", [])
+                      ])
                   except Exception:
                       pass
                   raise
@@ -131,11 +134,16 @@ jobs:
           if any(x.get("id") == build_id for x in linked):
               print("BUILD_GROUP_LINK=ALREADY_PRESENT")
           else:
-              request("POST", "/v1/builds/" + build_id +
-                      "/relationships/betaGroups", body={
-                          "data": [{"type": "betaGroups", "id": group_id}]
-                      })
-              print("BUILD_GROUP_LINK=ADDED")
+              try:
+                  request("POST", "/v1/builds/" + build_id +
+                          "/relationships/betaGroups", body={
+                              "data": [{"type": "betaGroups", "id": group_id}]
+                          })
+                  print("BUILD_GROUP_LINK=ADDED")
+              except urllib.error.HTTPError as error:
+                  if error.code != 422:
+                      raise
+                  print("BUILD_GROUP_LINK=UNSUPPORTED_OR_REJECTED_422")
           linked = request("GET", "/v1/betaGroups/" + group_id + "/builds", {
               "limit": "200"
           }).get("data", [])
