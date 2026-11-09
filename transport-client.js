@@ -20,7 +20,7 @@
   function sync(){
     const service=$('reqService')?.value||'',active=SERVICES.has(service);
     const wrap=$('transportFields');if(!wrap)return;
-    wrap.hidden=!active;
+    wrap.hidden=!active;wrap.classList.toggle('hidden',!active);
     const labor=$('transportLabor');if(labor)labor.hidden=!LABOR.has(service);
     const label=document.querySelector('label[for="reqAddress"]');
     if(label)label.textContent=active?'Pickup / starting address':'Your address';
