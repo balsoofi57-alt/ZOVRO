@@ -72,3 +72,29 @@ test('all catalog categories and service names are localized in four non-English
     }
   }
 });
+
+test('customer service search accepts Arabic, Spanish, French and Chinese service names',()=>{
+  const catalog=require('../src/service-catalog');
+  const base=JSON.parse(i18n.match(/const LABELS=(\{[^\n]+\});/)[1]);
+  const extra=JSON.parse(i18n.match(/const EXTRA=(\{[^\n]+\});/)[1]);
+  const service=JSON.parse(i18n.match(/const SERVICE_LABELS=(\{[^\n]+\});/)[1]);
+  const dict={};
+  for(const lang of ['ar','es','fr','zh'])dict[lang]={...service[lang],...extra[lang],...base[lang]};
+  const inputs={ar:'نقل الأثاث',es:'Mudanza de muebles',fr:'Déménagement de meubles',zh:'家具搬运'};
+  const prior=global.window;
+  try{
+    for(const [lang,label] of Object.entries(inputs)){
+      global.window={ZOVRO_I18N:{
+        getLanguage:()=>lang,
+        translate:(en,locale)=>dict[locale]?.[en]||en
+      }};
+      const result=catalog.smartMatch(label);
+      assert.equal(result[0].service.id,'furniture-moving',lang);
+      assert.ok(result[0].score>=.94,lang);
+      assert.equal(catalog.localizedLabel(catalog.findServiceById('furniture-moving'),lang),label);
+    }
+  }finally{
+    if(prior===undefined)delete global.window;
+    else global.window=prior;
+  }
+});
