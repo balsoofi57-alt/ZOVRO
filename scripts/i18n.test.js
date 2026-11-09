@@ -98,3 +98,20 @@ test('customer service search accepts Arabic, Spanish, French and Chinese servic
     else global.window=prior;
   }
 });
+
+test('support, recovery and payment messages are present in all approved languages',()=>{
+  const catalog=JSON.parse(i18n.match(/const CUSTOMER_FLOW_LABELS=(\{[^\n]+\});/)[1]);
+  for(const locale of ['ar','es','fr','zh']){
+    assert.ok(Object.keys(catalog[locale]).length>=45);
+    for(const key of ['ZOVRO Support','Contact customer support','Send verification code','Payment cancelled','Safety report']){
+      assert.ok(catalog[locale][key],locale+': '+key);
+    }
+  }
+});
+test('unsupported automated support languages route to human review without claiming a live agent',()=>{
+  const support=fs.readFileSync('support-chat.js','utf8');
+  assert.ok(support.includes("unsupportedReply[locale]"));
+  assert.ok(support.includes("!unsupportedReply[locale] && result.answerId === 'human-review'"));
+  assert.ok(support.includes("item.setAttribute('translate','no')"));
+  assert.ok(support.includes("JSON.stringify({text,history,locale,allowAI:true})"));
+});
