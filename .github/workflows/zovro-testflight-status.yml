@@ -171,7 +171,7 @@ jobs:
                   f"/v1/builds/{builds[0]['id']}/buildBetaDetail"
               ).get("data", {}).get("attributes", {})
               valid = builds[0].get("attributes", {}).get("processingState") == "VALID"
-              ready = ready_detail.get("internalBuildState") == "READY_FOR_BETA_TESTING"
+              ready = ready_detail.get("internalBuildState") in ("READY_FOR_BETA_TESTING", "IN_BETA_TESTING")
               auto = internal[0].get("attributes", {}).get("hasAccessToAllBuilds") is True
               print("OWNER_IN_ZOVRO_INTERNAL_GROUP=" + str(membership))
               print("BUILD_AVAILABLE_TO_INTERNAL_GROUP=" + str(valid and ready and auto))
