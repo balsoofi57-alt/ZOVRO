@@ -19,14 +19,16 @@ const chooser='<div style="display:flex;align-items:center;gap:8px"><select id="
 if(html.includes(state))html=html.replace(state,chooser);
 // The website already includes private-profile UI; inject it only once in mobile.
 html=html.replace('<script src="profile-security-client.js"></script>','');
-if(!html.includes('<script src="i18n.js"></script>'))html=html.replace('</body>','<link rel="stylesheet" href="leaflet.css">\n<script src="leaflet.js"></script>\n<script src="biometric-client.js"></script>\n<script src="secure-session.js"></script>\n<script src="i18n.js"></script>\n<script src="consent-client.js"></script>\n<script src="profile-security-client.js"></script>\n<script src="payment-client.js"></script>\n<script src="push-client.js"></script>\n<script src="payment-ui.js"></script>\n<script src="live-map.js"></script>\n<script src="support-center.js"></script>\n</body>');
+if(!html.includes('<script src="i18n.js"></script>'))html=html.replace('</body>','<script src="biometric-client.js"></script>\n<script src="secure-session.js"></script>\n<script src="i18n.js"></script>\n<script src="consent-client.js"></script>\n<script src="profile-security-client.js"></script>\n<script src="payment-client.js"></script>\n<script src="push-client.js"></script>\n<script src="payment-ui.js"></script>\n<script src="support-center.js"></script>\n</body>');
 fs.writeFileSync(path.join(out,'index.html'),html);
-for(const name of ['manifest.webmanifest','service-worker.js','privacy.html','terms.html','support.html','biometric-client.js','secure-session.js','i18n.js','consent-client.js','profile-security-client.js','phone-verification-client.js','support-chat.js','support-assistant.js','admin.html','admin-requests-client.js','support-policy.js','password-recovery-client.js','payment-client.js','push-client.js','payment-ui.js','live-map.js','support-center.js','website-final.css','website-final.js','provider-service-picker.js'])fs.copyFileSync(path.join(root,name),path.join(out,name));
+for(const name of ['manifest.webmanifest','service-worker.js','privacy.html','terms.html','support.html','biometric-client.js','secure-session.js','i18n.js','consent-client.js','profile-security-client.js','phone-verification-client.js','support-chat.js','support-assistant.js','admin.html','admin-requests-client.js','support-policy.js','password-recovery-client.js','payment-client.js','push-client.js','payment-ui.js','support-center.js','website-final.css','website-final.js','provider-service-picker.js'])fs.copyFileSync(path.join(root,name),path.join(out,name));
 fs.mkdirSync(path.join(out,'src'),{recursive:true});
 for(const name of ['service-catalog.js','provider-services.js'])fs.copyFileSync(path.join(root,'src',name),path.join(out,'src',name));
 const leafletDist=path.join(root,'node_modules','leaflet','dist');
-fs.copyFileSync(path.join(leafletDist,'leaflet.js'),path.join(out,'leaflet.js'));
-fs.copyFileSync(path.join(leafletDist,'leaflet.css'),path.join(out,'leaflet.css'));
-fs.cpSync(path.join(leafletDist,'images'),path.join(out,'images'),{recursive:true});
+fs.mkdirSync(path.join(out,'assets','leaflet'),{recursive:true});
+fs.copyFileSync(path.join(root,'live-map.js'),path.join(out,'assets','live-map.js'));
+fs.copyFileSync(path.join(leafletDist,'leaflet.js'),path.join(out,'assets','leaflet','leaflet.js'));
+fs.copyFileSync(path.join(leafletDist,'leaflet.css'),path.join(out,'assets','leaflet','leaflet.css'));
+fs.cpSync(path.join(leafletDist,'images'),path.join(out,'assets','leaflet','images'),{recursive:true});
 fs.cpSync(path.join(root,'assets'),path.join(out,'assets'),{recursive:true});
 console.log('Prepared ZOVRO mobile bundle',JSON.stringify({api,version:pkg.version,channel,oneSignalAppId,webDir:'www',secureSession:true,biometricUnlock:true,legalConsent:true,privateProfile:true,liveMaps:true,supportCenter:true,mapLibrary:'leaflet-local',mapTileUrl}));
