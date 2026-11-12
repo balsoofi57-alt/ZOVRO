@@ -28,6 +28,9 @@ assert.ok(js.includes("['More Services',null,'more']"),'One full-directory entry
 assert.ok(!js.includes("button('See all  ›'"),'Second full-directory entry is redundant');
 assert.ok(!js.includes("className='z-home-shortcuts'"),'Repeated nearby/request navigation cards must be removed');
 assert.ok(!js.includes("id='zSupportStrip'"),'Duplicate Support shortcuts must not be inserted');
+assert.equal(count(js,'data-support-chat aria-label="Open ZOVRO support chat"'),1,'Exactly one accessible support chat control in More');
+assert.ok(js.includes('<button type="button" class="z-menu-row" data-support-chat'),'Support chat must be a real actionable button');
+assert.ok(fs.readFileSync('support-chat.js','utf8').includes("event.target.closest('a[href="),'Existing delegated support chat click handler must remain');
 assert.ok(!js.includes("Payment help  ›"),'Payment help must not mirror the Help Center URL');
 
 // Requests is navigation, not another place to initiate the same service flow.
