@@ -327,9 +327,9 @@
     const showTab=i=>{tabs[i]?.click();window.scrollTo({top:0,behavior:'smooth'})};
     // The bottom and web nav are hidden on compact silver-layout phones.
     // Keep exactly one visible More/account entry in the mobile header.
-    const account=button('',()=>{showTab(3);document.getElementById('zAccountMenu').open=true},'z-account-shortcut');
-    account.setAttribute('aria-label','More and account');
-    account.innerHTML=icon('account');
+    const account=button('',()=>showTab(3),'z-account-shortcut');
+    account.setAttribute('aria-label','More menu');
+    account.innerHTML=icon('more');
     document.querySelector('.top').appendChild(account);
     // GPS remains opt-in inside the request form, never a second Home shortcut.
     const services=document.getElementById('services');const oldHeading=services.previousElementSibling;if(oldHeading?.classList.contains('sectionHead'))oldHeading.hidden=true;
