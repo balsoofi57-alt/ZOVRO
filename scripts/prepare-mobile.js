@@ -27,6 +27,7 @@ for(const name of ['service-catalog.js','provider-services.js'])fs.copyFileSync(
 const leafletDist=path.join(root,'node_modules','leaflet','dist');
 fs.mkdirSync(path.join(out,'assets','leaflet'),{recursive:true});
 fs.copyFileSync(path.join(root,'live-map.js'),path.join(out,'live-map.js'));
+fs.copyFileSync(path.join(root,'provider-directory-client.js'),path.join(out,'provider-directory-client.js'));
 fs.copyFileSync(path.join(leafletDist,'leaflet.js'),path.join(out,'assets','leaflet','leaflet.js'));
 fs.copyFileSync(path.join(leafletDist,'leaflet.css'),path.join(out,'assets','leaflet','leaflet.css'));
 fs.cpSync(path.join(leafletDist,'images'),path.join(out,'assets','leaflet','images'),{recursive:true});

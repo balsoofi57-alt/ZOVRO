@@ -41,6 +41,7 @@ function publicDiscoveryRequest(r){
     pricing:r.pricing,
     urgent:!!r.urgent,
     status:r.status,
+    directRequest:!!r.preferredProviderId,
     createdAt:r.createdAt,
     privacy:'Exact customer identity, address, location and messages are shared only after you accept the job.'
   };
@@ -122,7 +123,7 @@ http.createServer=function(handler,...args){
     const accept=url.pathname.match(/^\/api\/requests\/([^/]+)\/accept$/);
     if(accept&&actor){
       const db=readDb(),r=(db.requests||[]).find(x=>x.id===accept[1]);
-      if(r&&!r.providerId){
+      if(r&&!r.providerId&&!(r.preferredProviderId&&r.preferredProviderId===actor.user.id)){
         const eligibility=acceptanceEligibility(db,actor.user,r);
         if(!eligibility.ok)return json(res,403,{error:eligibility.reason,distanceMiles:eligibility.distanceMiles??null,radiusMiles:eligibility.radiusMiles??null});
       }
