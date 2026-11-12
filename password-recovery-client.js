@@ -32,7 +32,7 @@
       login.classList.remove('open');modal.classList.add('open');el('recoveryPhone').focus();
       try{const result=await request('recovery/status');if(current!==sequence)return;
         available=result.available===true;el('recoverySubmit').disabled=!available;
-        el('recoveryStatus').textContent=available?'We'll send a code to the registered phone if your account is found.':'Password reset is temporarily unavailable. You can chat with support here or check again later.';
+        el('recoveryStatus').textContent=available?'A code is sent to the registered phone if your account is found.':'Password reset is temporarily unavailable. You can chat with support here or check again later.';
       }catch(error){if(current===sequence)el('recoveryStatus').textContent=error.name==='TimeoutError'?'The server took too long. Close and try again.':error.message;}
     };
     trigger.onclick=checkAvailability;
