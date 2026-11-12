@@ -18,6 +18,19 @@
   const currentUser=()=>{try{return typeof me!=='undefined'?me:null}catch{return null}};
   const currentJobs=()=>{try{return typeof jobs!=='undefined'&&Array.isArray(jobs)?jobs:[]}catch{return []}};
   const customerLocation={mode:'none',manual:''}; // Never persist coordinates or send them during home browsing.
+  function resetPrivateHome(){
+    customerLocation.mode='none';customerLocation.manual='';
+    const manual=byId('zHomeManualAddress');if(manual)manual.value='';
+    setLocation('Choose location');
+    hideSuggestions();
+    const query=byId('zHomeSearch');if(query)query.value='';
+    if(locationPanel)locationPanel.hidden=true;
+    const toggle=byId('zHomeLocationToggle');if(toggle)toggle.setAttribute('aria-expanded','false');
+    if(noticePanel)noticePanel.hidden=true;
+    if(bell)bell.dataset.unread='';
+    if(threads)threads.replaceChildren();
+    if(activeCard){activeCard.hidden=true;activeCard.replaceChildren()}
+  }
   let inMessages=false,notifyBusy=false,notifAccount=null,notifLast=0;
   let searchInput,results,locationTitle,locationPanel,activeCard,threads,noticePanel,noticeList,bell;
   const tabs=()=>[...document.querySelectorAll('nav.bottom button')];
@@ -103,7 +116,7 @@
     toggle.append(glyph,text,arrow);
     locationPanel=make('div','z-home-location-options');locationPanel.id='zHomeLocationOptions';locationPanel.hidden=true;
     const gps=make('button','z-home-location-action','Use my current location');gps.type='button';gps.id='zHomeUseGPS';
-    const note=make('p','z-home-hint','Location is optional. It is shared with a provider only after you review and send a request.');
+    const note=make('p','z-home-hint','Location is optional. GPS city lookup uses a geocoding service; providers receive your location only after you review and send a request.');
     const manualLabel=make('label','','Or enter a service address');manualLabel.htmlFor='zHomeManualAddress';
     const manual=make('input');manual.type='text';manual.id='zHomeManualAddress';manual.autocomplete='street-address';manual.maxLength=200;
     manual.placeholder='Street address, city, state';
@@ -282,7 +295,14 @@
         for(const n of list){
           const item=make('button','z-notification-item'+(!n.read?' z-unread':''));item.type='button';
           item.append(make('strong','',String(n.title||'ZOVRO update')),make('span','',String(n.text||'')));
-          item.onclick=()=>{noticePanel.hidden=true;requestNav()};
+          item.onclick=()=>{
+            noticePanel.hidden=true;
+            const requestId=String(n.meta?.requestId||'');
+            const job=currentJobs().find(j=>j.id===requestId&&j.providerId);
+            if(n.meta?.type==='message'&&job){call('openChat',requestId);return}
+            if(!requestId&&/verification|account/i.test(String(n.meta?.type||'')+' '+String(n.title||''))){tabs()[3]?.click();return}
+            requestNav();
+          };
           noticeList.appendChild(item);
         }
       }
@@ -306,7 +326,21 @@
       if(logo)brand.replaceWith(logo);
     }
     ensureNoticePanel();
+    for(const method of ['logout','deleteAccount']){
+      const original=window[method];
+      if(typeof original!=='function'||original.__zHomePrivateReset)continue;
+      const wrapped=async function(...args){
+        const result=await original.apply(this,args);
+        if(!currentUser())resetPrivateHome();
+        return result;
+      };
+      wrapped.__zHomePrivateReset=true;window[method]=wrapped;
+    }
+    let priorAccountId=currentUser()?.id||null;
     setInterval(()=>{
+      const latestAccountId=currentUser()?.id||null;
+      if(priorAccountId&&priorAccountId!==latestAccountId)resetPrivateHome();
+      priorAccountId=latestAccountId;
       const actor=currentUser();
       if(!actor){if(bell)bell.dataset.unread='';notifAccount=null;return}
       if(document.visibilityState==='hidden')return;
