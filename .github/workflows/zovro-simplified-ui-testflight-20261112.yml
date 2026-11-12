@@ -25,3 +25,5 @@ jobs:
             -d '{"ref":"main","inputs":{"upload_testflight":"true"}}' \
             "https://api.github.com/repos/${GITHUB_REPOSITORY}/actions/workflows/ios-release.yml/dispatches"
           echo "iOS dispatch accepted; the actual upload is verified in the separate workflow."
+
+# Re-dispatch after final approved duplicate-action and support-chat fixes on main 0e8fd42c9a86587650b7b375cf2c681e4bf76b04.
