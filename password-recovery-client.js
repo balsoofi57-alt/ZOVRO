@@ -24,7 +24,7 @@
     modal.addEventListener('keydown',event=>{if(event.key==='Escape'){event.preventDefault();close();}});
     async function checkAvailability(){
       const previous=el('recoveryPhone').value.trim(),registered=el('phone')?.value.trim();
-      const phone=previous&&previous!=='+1'?previous:(registered&&registered!=='+1'?registered:'+1);
+      const phone=previous&&previous!=='+1'?previous:(registered&&registered!=='+1'?registered:'+1');
       const current=++sequence;challenge=null;busy=false;available=false;el('recoveryForm').reset();el('recoveryPhone').value=phone;el('recoverySubmit').hidden=false;
       el('recoveryPhone').readOnly=false;el('recoveryCodeFields').hidden=true;el('recoveryRetry').hidden=true;el('recoveryBack').textContent='Back to sign in';
       for(const id of ['recoveryCode','recoveryPassword','recoveryConfirm'])el(id).required=false;
