@@ -1,0 +1,64 @@
+name: ZOVRO Native Auth Preview
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'biometric-client.js'
+      - 'secure-session.js'
+      - 'scripts/patch-native.js'
+      - 'scripts/prepare-mobile.js'
+      - 'package.json'
+      - '.github/workflows/native-auth-preview.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  android-biometric-preview:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - run: npm install --no-audit --no-fund
+      - run: node scripts/prepare-mobile.js
+      - run: |
+          npx --no-install cap add android
+          npx --no-install cap sync android
+          node scripts/patch-native.js
+          grep -q 'android.permission.USE_BIOMETRIC' android/app/src/main/AndroidManifest.xml
+      - run: |
+          cd android
+          chmod +x gradlew
+          ./gradlew assembleDebug --stacktrace
+  ios-biometric-preview:
+    runs-on: macos-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --no-audit --no-fund
+      - run: node scripts/prepare-mobile.js
+      - run: |
+          npx --no-install cap add ios
+          npx --no-install cap sync ios
+          node scripts/patch-native.js
+          grep -q 'NSFaceIDUsageDescription' ios/App/App/Info.plist
+      - name: Verify unsigned iOS simulator build
+        run: |
+          set -euo pipefail
+          if [[ -d ios/App/App.xcworkspace ]]; then
+            container=(-workspace ios/App/App.xcworkspace)
+          else
+            container=(-project ios/App/App.xcodeproj)
+          fi
+          xcodebuild "${container[@]}" -scheme App -configuration Debug -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' -derivedDataPath build/AuthPreview CODE_SIGNING_ALLOWED=NO build
