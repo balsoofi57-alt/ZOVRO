@@ -14,6 +14,7 @@ on:
       - 'secure-session.js'
       - 'i18n.js'
       - 'profile-security-client.js'
+      - 'profile-photo-client.js'
       - 'live-map.js'
       - 'support-center.js'
       - 'push-client.js'
