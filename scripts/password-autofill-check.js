@@ -17,7 +17,7 @@ vm.runInContext(html.match(/^function openAuth\(\).*$/m)[0]+'\n'+html.slice(fnSt
  c.authMode='register';c.renderAuth();assert.equal($('password').autocomplete,'new-password');
  c.authMode='login';c.renderAuth();$('phone').value='+13135550100';$('password').value='test-secret-only';
  const first=c.submitAuth();await c.submitAuth();assert.equal(calls,1,'Double submission must not create extra sessions');
- settle.reject(Object.assign(Error('Invalid credentials'),{status:401}));await Promise.resolve();assert.equal(calls,2,'Legacy phone number receives one limited 401 fallback');
+ settle.reject(Object.assign(Error('Invalid credentials'),{status:401}));await new Promise(resolve=>setImmediate(resolve));assert.equal(calls,2,'Legacy phone number receives one limited 401 fallback');
  settle.reject(Object.assign(Error('Invalid credentials'),{status:401}));await first;assert.equal($('authSubmit').disabled,false);assert.deepEqual(storage,{});
  assert.match($('authStatus').textContent,/new password/,'Failed login should show recovery-specific guidance');
  const retry=c.submitAuth();settle.resolve({token:'test-session',user:{id:'u'}});await retry;
