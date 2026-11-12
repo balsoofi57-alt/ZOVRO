@@ -13,7 +13,10 @@ const count=(s,x)=>s.split(x).length-1;
 
 // One primary, non-service-specific start action in Smart Match. Service
 // categories, voice dictation and manual/GPS pickup choices remain distinct.
-assert.equal(count(js,'id="zSmartGo"'),1,'Smart Match must be the one primary start button');
+assert.equal(count(js,'id="zSmartGo"'),1,'Retained hidden Smart Match wiring must not be duplicated');
+assert.ok(js.includes("const startRequest=button('Help Now',()=>openHelp(''),'btn primary')"),'One compact generic request button must remain visible with the service categories');
+assert.equal(count(js,"startRequest.id='zStartRequest'"),1,'Exactly one visible generic request shortcut is required');
+assert.ok(css.includes('body.z-silver-layout #smartMatch>.z-smart-box'),'Preserve the user-approved removal of the full Smart Match composer');
 assert.equal(count(js,"document.getElementById('zSmartGo').addEventListener('click'"),1,'Smart Match must have one event handler');
 assert.equal(count(js,"document.getElementById('zSmartGo').onclick"),0,'Duplicate onclick handler would launch the request twice');
 for(const dead of ['id="zHeroHelp"','id="zHeroProvider"','id="zMobileHelp"','id="nativeMobileHelp"','id="zLocationShortcut"']){
