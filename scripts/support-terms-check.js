@@ -22,7 +22,7 @@ assert.match(page,/question\.replaceChildren\(\)/);
 assert.match(page,/answer\.textContent=''/);
 assert.match(mobile,/'support-policy-page\.js'/,'Support FAQ controller must ship with native builds');
 for(const [path,document] of [['terms.html',terms],['terms/index.html',publicTerms]]){
- for(const clause of ['U.S. federal, state and local law','Zero tolerance for threats, theft and fraud','No off-platform arrangements or circumvention','will terminate each participating customer or service professional account immediately following confirmation','not necessarily a criminal offense']){
+ for(const clause of ['U.S. federal, state and local law','Zero tolerance for threats, theft and fraud','No off-platform arrangements or circumvention','will terminate each participating customer or service professional account immediately following confirmation','not necessarily a criminal offense','Minimum legal working age and protection of minors','Fair Labor Standards Act','Youth Employment Standards Act (YESA)','independent contractor, subcontractor, volunteer, trainee, or unpaid helper']){
   assert.ok(document.includes(clause),path+': missing '+clause);
  }
  assert.match(document,/person who refuses an off-platform proposal is not considered a participant/);
