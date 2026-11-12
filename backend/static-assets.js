@@ -3,6 +3,7 @@ const fs = require('fs');
 const path = require('path');
 // Explicit public files only. Never serve application source, configuration or data.
 const PUBLIC_FILES = new Set([
+  "address-autocomplete.js",
   "admin-requests-client.js",
   "admin.html",
   "biometric-client.js",
