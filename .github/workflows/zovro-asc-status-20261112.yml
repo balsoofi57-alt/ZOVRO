@@ -39,7 +39,7 @@ jobs:
           print("RECENT_BUILD_COUNT="+str(len(builds)))
           for a in builds[:8]:
               attr=a.get("attributes",{})
-              print("BUILD version="+str(attr.get("version"))+" uploaded="+str(attr.get("uploadedDate"))+" processing="+str(attr.get("processingState"))+" expired="+str(attr.get("expired")))
+              print("BUILD version="+str(attr.get("version"))+" uploaded="+str(attr.get("uploadedDate"))+" processing="+str(attr.get("processingState"))+" expired="+str(attr.get("expired"))+" nonExemptEncryption="+str(attr.get("usesNonExemptEncryption","UNKNOWN")))
               try:
                   detail=get("/v1/builds/"+a["id"]+"/buildBetaDetail").get("data",{}).get("attributes",{})
                   print("INTERNAL_STATE="+str(detail.get("internalBuildState","UNKNOWN")))
