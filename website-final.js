@@ -614,7 +614,7 @@
 })();
 
 // 2026-11-09 · Simple 2-step request wizard (owner-requested):
-// Step 1 "What" (description + auto service), Step 2 "Where" (address first,
+// Step 1 "What" (optional description + selected service), Step 2 "Where" (address first,
 // GPS optional). All original IDs, handlers and validation logic untouched.
 (function(){
   function ready(fn){document.readyState==='loading'?document.addEventListener('DOMContentLoaded',fn):fn()}
@@ -632,8 +632,8 @@
       if(n===2)setTimeout(()=>{document.getElementById('reqAddress')?.focus()},60);
     }
     next.addEventListener('click',()=>{
-      const details=document.getElementById('reqDetails');
-      if(!details||!details.value.trim()){details?.focus();window.toast('Please describe what you need help with');return}
+      const service=document.getElementById('reqService');
+      if(!service?.value){service?.focus();window.toast('Please choose a service to continue');return}
       show(2);
     });
     back.addEventListener('click',()=>show(1));
