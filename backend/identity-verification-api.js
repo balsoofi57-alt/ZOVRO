@@ -2,6 +2,7 @@
 // Government ID check. Identity images and ID numbers go directly to Stripe Identity,
 // never into ZOVRO's JSON database, application logs, or provider profiles.
 const http=require('node:http');
+const crypto=require('node:crypto');
 const {readDb,writeDb}=require('./database');
 const {currentUser}=require('./request-privacy');
 const {encryptSensitive}=require('./profile-privacy');
@@ -20,7 +21,8 @@ const safeState=u=>({
 function eligible(u){return !!(u&&u.role==='provider'&&u.identityVerified===true&&u.identityAgeConfirmed===true&&u.identityVerification?.status==='verified')}
 function legalName(v){const name=String(v||'').trim().replace(/\s+/g,' ');return name.length>=5&&name.length<=120&&name.split(' ').length>=2?name:null}
 function normalizedName(s){return String(s||'').normalize('NFKD').replace(/[\u0300-\u036f]/g,'').replace(/[^\p{L}\p{N} ]/gu,' ').toLocaleLowerCase('en').replace(/\s+/g,' ').trim()}
-function nameMatches(input,output){const source=normalizedName(input).split(' ').filter(Boolean),verified=normalizedName([output?.first_name,output?.last_name].filter(Boolean).join(' ')).split(' ').filter(Boolean);return source.length>=2&&verified.length>=2&&source.length===verified.length&&source.every(t=>verified.includes(t))}
+function nameProof(value){const canonical=normalizedName(value).split(' ').filter(Boolean).sort().join(' ');return crypto.createHmac('sha256',PROFILE_KEY).update(canonical).digest('hex')}
+function nameMatches(inputProof,output){const name=[output?.first_name,output?.last_name].filter(Boolean).join(' ');if(!/^[a-f0-9]{64}$/.test(String(inputProof||''))||normalizedName(name).split(' ').length<2)return false;const x=Buffer.from(inputProof,'hex'),y=Buffer.from(nameProof(name),'hex');return crypto.timingSafeEqual(x,y)}
 function adultDob(value,now=new Date()){const year=Number(value?.year),month=Number(value?.month),day=Number(value?.day);if(!Number.isInteger(year)||!Number.isInteger(month)||!Number.isInteger(day)||year<1900||month<1||month>12||day<1||day>31)return false;const birthday=new Date(Date.UTC(year,month-1,day));if(birthday.getUTCFullYear()!==year||birthday.getUTCMonth()!==month-1||birthday.getUTCDate()!==day)return false;let age=now.getUTCFullYear()-year;if((now.getUTCMonth()+1)<month||((now.getUTCMonth()+1)===month&&now.getUTCDate()<day))age--;return age>=18&&age<125}
 function json(res,status,data){if(res.headersSent)return;res.writeHead(status,{'content-type':'application/json; charset=utf-8','cache-control':'no-store','x-content-type-options':'nosniff','referrer-policy':'no-referrer'});res.end(JSON.stringify(data))}
 function requestBody(req){return new Promise((resolve,reject)=>{let data='',bytes=0,done=false;req.on('data',chunk=>{bytes+=chunk.length;if(bytes>5000){done=true;reject(new Error('Request too large'));req.resume();return}if(!done)data+=chunk});req.on('end',()=>{if(done)return;try{resolve(data?JSON.parse(data):{})}catch{reject(new Error('Invalid request'))}});req.on('error',reject)})}
@@ -47,7 +49,7 @@ async function refresh(u,db){
  if(data.id!==sessionId||data.type!=='document'||data.client_reference_id!==u.id||data.metadata?.zovro_provider_id!==u.id)throw new Error('Identity verification could not be matched to your account');
  if(isProduction&&data.livemode!==true)throw new Error('Live identity verification is required');
  if(data.status==='verified'){
-  if(adultDob(data.verified_outputs?.dob)&&nameMatches(state.legalNameNormalized,data.verified_outputs)){
+  if(adultDob(data.verified_outputs?.dob)&&nameMatches(state.legalNameProof,data.verified_outputs)){
    u.identityVerified=true;u.identityAgeConfirmed=true;state.status='verified';state.verifiedAt=new Date().toISOString();
   }else{
    u.identityVerified=false;u.identityAgeConfirmed=false;state.status='manual_review';
@@ -78,7 +80,7 @@ async function route(req,res,next){
    if(!name)return json(res,400,{error:'Enter your full legal first and last name exactly as shown on your ID'});
    if(Buffer.byteLength(PROFILE_KEY)<32)return json(res,503,{error:'Secure verification configuration is unavailable'});
    const old=u.identityVerification||{};
-   if(old.sessionId&&['requires_input','processing'].includes(old.status)&&old.legalNameNormalized===name){
+   if(old.sessionId&&['requires_input','processing'].includes(old.status)&&old.legalNameProof===nameProof(name)){
     const s=await stripe('GET','/identity/verification_sessions/'+encodeURIComponent(old.sessionId));
     if(s.id===old.sessionId&&s.client_reference_id===u.id&&s.status==='requires_input'&&/^https:\/\/verify\.stripe\.com\//.test(s.url||'')){
      return json(res,200,{identity:safeState(u),verificationUrl:s.url});
@@ -96,7 +98,7 @@ async function route(req,res,next){
    const session=await stripe('POST','/identity/verification_sessions',form,'zovro-identity-'+u.id+'-'+Date.now());
    if(!/^vs_[A-Za-z0-9]+$/.test(session?.id||'')||session.client_reference_id!==u.id||!/^https:\/\/verify\.stripe\.com\//.test(session.url||''))throw new Error('Secure verification link was not returned');
    u.identityVerified=false;u.identityAgeConfirmed=false;
-   u.identityVerification={provider:'stripe',sessionId:session.id,status:'requires_input',legalNameEncrypted:encryptSensitive(name,PROFILE_KEY),legalNameNormalized:name,createdAt:new Date().toISOString()};
+   u.identityVerification={provider:'stripe',sessionId:session.id,status:'requires_input',legalNameEncrypted:encryptSensitive(name,PROFILE_KEY),legalNameProof:nameProof(name),createdAt:new Date().toISOString()};
    writeDb(db);
    return json(res,201,{identity:safeState(u),verificationUrl:session.url});
   }
