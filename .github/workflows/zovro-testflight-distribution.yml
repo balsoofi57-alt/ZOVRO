@@ -2,7 +2,7 @@ name: ZOVRO TestFlight Internal Distribution
 on:
   push:
     branches:
-      - testflight/fix-location-prompt-20261109
+      - testflight/provider-directory-20261111
     paths:
       - .github/workflows/zovro-testflight-distribution.yml
 
@@ -89,19 +89,19 @@ jobs:
           builds = []
           for attempt in range(48):
               builds = request("GET", "/v1/builds", {
-                  "filter[app]": app_id, "filter[version]": "3.1", "limit": "20"
+                  "filter[app]": app_id, "filter[version]": "4.1", "limit": "20"
               }).get("data", [])
               if len(builds) == 1 and builds[0].get("attributes", {}).get("processingState") == "VALID":
                   break
               if len(builds) > 1:
-                  sys.exit("Ambiguous matching Build 3.1; no changes made")
+                  sys.exit("Ambiguous matching Build 4.1; no changes made")
               print("APPLE_BUILD_2_1_PROCESSING_ATTEMPT=" + str(attempt + 1), flush=True)
               time.sleep(20)
           if len(builds) != 1:
-              sys.exit("Apple has not indexed Build 3.1 yet; no changes made")
+              sys.exit("Apple has not indexed Build 4.1 yet; no changes made")
           build = builds[0]
           if build.get("attributes", {}).get("processingState") != "VALID":
-              sys.exit("Build 3.1 is not processed/VALID; no changes made")
+              sys.exit("Build 4.1 is not processed/VALID; no changes made")
           build_id = build["id"]
           current = build["attributes"].get("usesNonExemptEncryption")
           print("PREVIOUS_NONEXEMPT_FLAG=" + str(current))
