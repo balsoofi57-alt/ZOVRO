@@ -487,9 +487,9 @@
     const refreshButton=toolbar?.querySelector('button[onclick="loadJobs()"]');
     const status=document.createElement('p');status.id='zJobsStatus';status.className='z-page-status';status.setAttribute('role','status');toolbar?.after(status);
     const filters=document.createElement('div');filters.id='zRequestFilters';filters.setAttribute('role','group');filters.setAttribute('aria-label','Filter requests');
-    let selected='all';
+    let selected='active';
     for(const [value,label] of [['all','All'],['active','Active'],['history','History']]){
-      const button=document.createElement('button');button.type='button';button.dataset.zRequestFilter=value;button.setAttribute('aria-pressed',String(value==='all'));
+      const button=document.createElement('button');button.type='button';button.dataset.zRequestFilter=value;button.setAttribute('aria-pressed',String(value==='active'));
       const text=document.createElement('span');text.textContent=label;const count=document.createElement('span');count.className='z-filter-count';
       button.append(text,count);button.onclick=()=>{selected=value;updateFilters()};filters.appendChild(button);
     }
@@ -508,7 +508,6 @@
         card.classList.toggle('z-request-filtered',!visible);if(visible)shown++;
       }
       filters.hidden=!cards.length;
-      if(!cards.length)selected='all';
       for(const button of filters.children){
         const value=button.dataset.zRequestFilter;
         button.setAttribute('aria-pressed',String(selected===value));button.querySelector('.z-filter-count').textContent=String(counts[value]);
@@ -516,6 +515,13 @@
       empty.hidden=!cards.length||shown>0;
     }
     updateFilters();new MutationObserver(updateFilters).observe(list,{childList:true,subtree:true});
+    // Each time My Requests is opened, show active requests by default.
+    let wasHidden=jobsPage.classList.contains('hidden');
+    new MutationObserver(()=>{
+      const hidden=jobsPage.classList.contains('hidden');
+      if(wasHidden&&!hidden){selected='active';updateFilters()}
+      wasHidden=hidden;
+    }).observe(jobsPage,{attributes:true,attributeFilter:['class']});
     const discovery=nearby.querySelector(':scope > .card');discovery?.classList.add('z-discovery-form');
     const select=document.getElementById('nearbyService');select?.setAttribute('aria-label','Choose a service');
     const locationButton=discovery?.querySelector('button[onclick="findNearby()"]');
