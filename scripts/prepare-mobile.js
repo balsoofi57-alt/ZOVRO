@@ -9,15 +9,32 @@ const channel=process.env.ZOVRO_BUILD_CHANNEL||'release';
 const oneSignalAppId=String(process.env.ONESIGNAL_APP_ID||'7992b022-6c11-4a66-bad4-8cbd114266d0').trim();
 const mapTileUrl=String(process.env.ZOVRO_MAP_TILE_URL||'https://tile.openstreetmap.org/{z}/{x}/{y}.png').trim();
 html=html.replace('<head>','<head><script>window.ZOVRO_CONFIG={apiBase:'+JSON.stringify(api)+',appVersion:'+JSON.stringify(pkg.version)+',buildChannel:'+JSON.stringify(channel)+',oneSignalAppId:'+JSON.stringify(oneSignalAppId)+',mapTileUrl:'+JSON.stringify(mapTileUrl)+'};<\/script>');
-html=html.replace("const API='https://zovro-api.onrender.com'","const API=(window.ZOVRO_CONFIG?.apiBase||'https://zovro-api-final.onrender.com')");
-html=html.replace("let token=localStorage.zovroToken||''","let token='' ");
-html=html.replaceAll('localStorage.zovroToken=token','ZOVRO_SECURE_SESSION.set(token)');
-html=html.replaceAll("localStorage.removeItem('zovroToken')",'ZOVRO_SECURE_SESSION.remove()');
-html=html.replace('boot();setInterval(()=>{if(me)loadJobs()},10000);',"ZOVRO_SECURE_SESSION.initialize().then(()=>{token=window.ZOVRO_SESSION_TOKEN||'';boot();setInterval(()=>{if(me)loadJobs()},10000)});");
-// Language selector is shared by web and native in Profile / More, not in the compact header.
+// The native bundle must track the actual production index.html, not older bootstrap strings.
+function replaceExactly(label, before, after) {
+  const matches = html.split(before).length - 1;
+  if (matches !== 1) throw new Error('Mobile parity: expected one ' + label + ', found ' + matches);
+  html = html.replace(before, after);
+}
+if (!html.includes("const API=(window.ZOVRO_CONFIG?.apiBase||'https://zovro-api-final.onrender.com')")) {
+  throw new Error('Mobile parity: web API configuration changed; review native packaging');
+}
+replaceExactly('session bootstrap',
+  "let token='';try{token=localStorage.getItem('zovroToken')||''}catch(_){token=''}",
+  "let token='';");
+replaceExactly('session save',
+  'try{localStorage.zovroToken=token}catch(_){}',
+  'void window.ZOVRO_SECURE_SESSION?.set?.(token);');
+const tokenClear = "localStorage.removeItem('zovroToken')";
+const clears = html.split(tokenClear).length - 1;
+if (clears !== 3) throw new Error('Mobile parity: expected three session-clear paths, found ' + clears);
+html = html.replaceAll(tokenClear, 'void window.ZOVRO_SECURE_SESSION?.remove?.()');
+// secure-session.js is loaded after the inline app and restores native credentials.
+// Keep the original web boot path, request flow, visuals and all linked client files.
+// Keep the approved five-language selector inside Profile / More only.
 // The website already includes private-profile UI; inject it only once in mobile.
 html=html.replace('<script src="profile-security-client.js?v=7"></script>','');
 if(!html.includes('<script src="secure-session.js"></script>'))html=html.replace('</body>','<script src="biometric-client.js"></script>\n<script src="secure-session.js"></script>\n<script src="consent-client.js"></script>\n<script src="profile-security-client.js"></script>\n<script src="payment-client.js"></script>\n<script src="push-client.js"></script>\n<script src="payment-ui.js"></script>\n<script src="support-center.js"></script>\n</body>');
+if((html.match(/<script src="i18n\\.js(?:\\?[^\"]*)?"\s*><\\/script>/g)||[]).length!==1)throw new Error('ZOVRO i18n: expected exactly one language script in mobile bundle');
 fs.writeFileSync(path.join(out,'index.html'),html);
 for(const name of ['manifest.webmanifest','service-worker.js','privacy.html','terms.html','support.html','biometric-client.js','secure-session.js','i18n.js','consent-client.js','profile-security-client.js','phone-verification-client.js','support-chat.js','support-assistant.js','admin.html','admin-requests-client.js','support-policy.js','password-recovery-client.js','payment-client.js','push-client.js','payment-ui.js','support-center.js','website-final.css','website-final.js','service-art.js','provider-service-picker.js','transport-client.js'])fs.copyFileSync(path.join(root,name),path.join(out,name));
 fs.mkdirSync(path.join(out,'src'),{recursive:true});
