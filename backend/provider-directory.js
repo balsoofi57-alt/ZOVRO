@@ -4,7 +4,7 @@
 // The existing automatic nearby dispatch stays unchanged.
 const http=require('http'),crypto=require('crypto');
 const {readDb,writeDb}=require('./database');
-const {currentUser}=require('./request-privacy');
+const {currentUser,locationFresh,milesBetween}=require('./request-privacy');
 const {publicProfile}=require('./profile-privacy');
 const {matchesService}=require('../src/provider-services');
 const originalCreateServer=http.createServer.bind(http);
@@ -79,9 +79,22 @@ async function directoryApi(req,res,next){
       if(r.providerId||['Completed','Cancelled'].includes(r.status))return json(res,409,{error:'This request already has a provider or is closed'});
       if(b.open===true){
         r.preferredProviderId=null;r.preferredProviderName=null;r.directRequest=false;r.status='Looking for providers';r.updatedAt=now();
-        const pros=(db.users||[]).filter(u=>activeProvider(u)&&u.availability!==false&&matchesService(u,r.service)&&!(r.declinedProviderIds||[]).includes(u.id)).slice(0,20);
-        for(const u of pros)notify(db,u.id,'New service request',r.service+': '+String(r.details||'').slice(0,120),{requestId:r.id,type:'new_request'});
-        r.notifiedProviders=pros.length;audit(db,me.id,'request.open_to_all',{requestId:r.id});writeDb(db);
+        // Match the normal dispatch radius when GPS was explicitly provided. Never
+        // notify unrelated or far-away providers simply because a direct pro declined.
+        const candidates=(db.users||[]).filter(u=>activeProvider(u)&&u.availability!==false&&matchesService(u,r.service)&&!(r.declinedProviderIds||[]).includes(u.id));
+        const within=radius=>candidates.map(u=>{
+          if(!r.location)return {user:u,distanceMiles:null};
+          const loc=(db.providerLocations||[]).find(x=>x.providerId===u.id);
+          if(!locationFresh(loc))return null;
+          const distance=milesBetween(+r.location.lat,+r.location.lng,+loc.lat,+loc.lng);
+          return distance<=radius?{user:u,distanceMiles:+distance.toFixed(1)}:null;
+        }).filter(Boolean).sort((a,b)=>(a.distanceMiles??0)-(b.distanceMiles??0));
+        let radius=r.urgent?15:25,pros=within(radius);
+        if(!pros.length&&r.location){radius=r.urgent?30:50;pros=within(radius);}
+        pros=pros.slice(0,r.urgent?12:20);
+        for(const entry of pros)notify(db,entry.user.id,'New service request',r.service+': '+String(r.details||'').slice(0,120),{requestId:r.id,type:'new_request',distanceMiles:entry.distanceMiles});
+        r.notifiedProviders=pros.length;r.dispatchRadiusMiles=r.location?radius:null;
+        audit(db,me.id,'request.open_to_all',{requestId:r.id,notifiedProviders:pros.length,radiusMiles:r.dispatchRadiusMiles});writeDb(db);
         return json(res,200,{id:r.id,status:r.status,notifiedProviders:pros.length});
       }
       const pro=(db.users||[]).find(u=>u.id===String(b.providerId||''));
