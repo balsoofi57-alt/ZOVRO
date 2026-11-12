@@ -88,10 +88,12 @@
     }
   }
   async function renderLoginShortcut(){
+    if(document.getElementById('authTitle')?.textContent!=='Sign in'){document.getElementById(LOGIN_BUTTON_ID)?.remove();return;}
     if(document.getElementById(LOGIN_BUTTON_ID)||!enabled())return;
     const status=await check();if(!status.available)return;
     const password=document.querySelector('input[type="password"]');if(!password)return;
     const saved=await window.ZOVRO_SECURE_SESSION?.get?.();if(!saved)return;
+    if(document.getElementById(LOGIN_BUTTON_ID)||document.getElementById('authTitle')?.textContent!=='Sign in')return;
     const host=password.closest('.field')||password.parentElement;if(!host)return;
     const btn=document.createElement('button');
     btn.type='button';btn.id=LOGIN_BUTTON_ID;btn.className='btn ghost';btn.style.cssText='width:100%;margin-top:10px;display:flex;align-items:center;justify-content:center;gap:8px';
@@ -99,13 +101,46 @@
     btn.onclick=unlockSavedSession;
     host.insertAdjacentElement('afterend',btn);
   }
+  // Opt in once, on a supported native device, after a successful sign-in.
+  async function renderOptIn(){
+    const form=document.getElementById('signInForm');
+    if(!form||enabled()||document.getElementById('zovroFaceIdOptIn'))return;
+    const status=await check();
+    if(!status.available||enabled()||document.getElementById('zovroFaceIdOptIn'))return;
+    const label=document.createElement('label');
+    label.id='zovroBiometricOptInLabel';
+    label.style.cssText='display:flex;gap:10px;align-items:center;margin-top:12px;color:inherit;cursor:pointer';
+    const checkbox=document.createElement('input');
+    checkbox.id='zovroFaceIdOptIn';checkbox.type='checkbox';
+    checkbox.style.cssText='width:20px;height:20px;flex:0 0 20px';
+    const text=document.createElement('span');text.textContent='Use Face ID for faster sign-in next time';
+    label.append(checkbox,text);form.appendChild(label);
+  }
+  function wrapSuccessfulLogin(){
+    const original=window.submitAuth;
+    if(typeof original!=='function'||original.__zovroBiometricOptIn)return;
+    const wrapped=async function(){
+      const optIn=document.getElementById('zovroFaceIdOptIn')?.checked===true;
+      const before=typeof token!=='undefined'?String(token||''):'';
+      const result=await original.apply(this,arguments);
+      const after=typeof token!=='undefined'?String(token||''):'';
+      if(optIn&&after&&after!==before){
+        try{await window.ZOVRO_SECURE_SESSION?.set?.(after);await enable();}
+        catch{toastSafe('You can enable Face ID later from Profile & Security.')}
+      }
+      return result;
+    };
+    wrapped.__zovroBiometricOptIn=true;
+    window.submitAuth=wrapped;
+  }
   function shouldProtect(){return enabled()}
   window.ZOVRO_BIOMETRIC={check,authenticate,enable,disable,unlockSavedSession,renderLoginShortcut,shouldProtect,status:()=>({enabled:enabled(),native:!!plugin()})};
-  function boot(){renderCard();setTimeout(renderLoginShortcut,200)}
+  function boot(){renderCard();wrapSuccessfulLogin();renderOptIn();setTimeout(renderLoginShortcut,200)}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
   const observer=new MutationObserver(()=>{
     if(document.getElementById('profile')&&!document.getElementById('biometricCard'))renderCard();
     if(!document.getElementById(LOGIN_BUTTON_ID))renderLoginShortcut();
+    if(!enabled()&&!document.getElementById('zovroFaceIdOptIn'))renderOptIn();
   });
   observer.observe(document.documentElement,{childList:true,subtree:true});
 })();
