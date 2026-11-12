@@ -76,15 +76,22 @@ jobs:
                   with urlopen(request,timeout=30) as response:
                       return json.load(response)
               except HTTPError as error:
-                  raise RuntimeError('Apple App Store Connect returned HTTP '+str(error.code)+' for a read-only lookup') from None
+                  try:
+                      details = json.load(error).get('errors',[])
+                      reason = '; '.join(str(x.get('code',''))+' '+str(x.get('title',''))+' '+str(x.get('detail','')) for x in details)[:350]
+                  except Exception:
+                      reason = 'No additional details'
+                  raise RuntimeError('Apple App Store Connect returned HTTP '+str(error.code)+' for a read-only lookup: '+reason) from None
 
           apps = api('/v1/apps',{'filter[bundleId]':'com.zovro.app','limit':'2'}).get('data',[])
           if not apps:
               raise SystemExit('No App Store Connect app record found for com.zovro.app')
           print('ZOVRO App Store Connect: app record located')
           appid = apps[0]['id']
-          fields = 'version,processingState,uploadedDate,buildAudienceType,expired'
-          builds = api('/v1/apps/'+appid+'/builds',{'fields[builds]':fields,'sort':'-uploadedDate','limit':'8'}).get('data',[])
+          # The app's related-builds endpoint accepts its simplest documented form.
+          builds = api('/v1/apps/'+appid+'/builds',{'limit':'50'}).get('data',[])
+          builds.sort(key=lambda b:(b.get('attributes') or {}).get('uploadedDate') or '',reverse=True)
+          builds = builds[:8]
           print('Build records returned:', len(builds))
           for item in builds:
               a=item.get('attributes') or {}
