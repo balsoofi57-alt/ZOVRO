@@ -9,14 +9,14 @@ const {encryptSensitive}=require('./profile-privacy');
 const baseCreateServer=http.createServer.bind(http);
 const PROFILE_KEY=String(process.env.ZOVRO_PROFILE_ENCRYPTION_KEY||'');
 const STRIPE_KEY=String(process.env.STRIPE_SECRET_KEY||'');
-const isProduction=process.env.NODE_ENV==='production';
+const isProduction=process.env.NODE_ENV==='production'||String(process.env.RENDER||'').toLowerCase()==='true'||Boolean(process.env.RENDER_SERVICE_ID);
 const safeState=u=>({
  status:u.identityVerification?.status||'not_started',
  verified:eligible(u),
  legalNameProvided:!!u.identityVerification?.legalNameEncrypted,
  verifiedAt:u.identityVerification?.verifiedAt||null,
  canWork:eligible(u),
- configured:/^sk_(test|live)_[A-Za-z0-9]+/.test(STRIPE_KEY)&&(!isProduction||STRIPE_KEY.startsWith('sk_live_'))
+ configured:/^sk_live_[A-Za-z0-9]+/.test(STRIPE_KEY)
 });
 function eligible(u){return !!(u&&u.role==='provider'&&u.identityVerified===true&&u.identityAgeConfirmed===true&&u.identityVerification?.status==='verified')}
 function legalName(v){const name=String(v||'').trim().replace(/\s+/g,' ');return name.length>=5&&name.length<=120&&name.split(' ').length>=2?name:null}
@@ -27,7 +27,7 @@ function adultDob(value,now=new Date()){const year=Number(value?.year),month=Num
 function json(res,status,data){if(res.headersSent)return;res.writeHead(status,{'content-type':'application/json; charset=utf-8','cache-control':'no-store','x-content-type-options':'nosniff','referrer-policy':'no-referrer'});res.end(JSON.stringify(data))}
 function requestBody(req){return new Promise((resolve,reject)=>{let data='',bytes=0,done=false;req.on('data',chunk=>{bytes+=chunk.length;if(bytes>5000){done=true;reject(new Error('Request too large'));req.resume();return}if(!done)data+=chunk});req.on('end',()=>{if(done)return;try{resolve(data?JSON.parse(data):{})}catch{reject(new Error('Invalid request'))}});req.on('error',reject)})}
 async function stripe(method,path,params,idempotency){
- if(!/^sk_(test|live)_[A-Za-z0-9]+/.test(STRIPE_KEY)||isProduction&&!STRIPE_KEY.startsWith('sk_live_'))throw new Error('Government ID verification is not configured yet');
+ if(!/^sk_live_[A-Za-z0-9]+/.test(STRIPE_KEY))throw new Error('Government ID verification is not configured yet');
  const headers={authorization:'Bearer '+STRIPE_KEY};
  let url='https://api.stripe.com/v1'+path;
  let body;
@@ -47,7 +47,7 @@ async function refresh(u,db){
  if(!/^vs_[A-Za-z0-9]+$/.test(String(sessionId||'')))return safeState(u);
  const data=await stripe('GET','/identity/verification_sessions/'+encodeURIComponent(sessionId),[['expand[]','verified_outputs']]);
  if(data.id!==sessionId||data.type!=='document'||data.client_reference_id!==u.id||data.metadata?.zovro_provider_id!==u.id)throw new Error('Identity verification could not be matched to your account');
- if(isProduction&&data.livemode!==true)throw new Error('Live identity verification is required');
+ if(data.livemode!==true)throw new Error('Live identity verification is required');
  if(data.status==='verified'){
   if(adultDob(data.verified_outputs?.dob)&&nameMatches(state.legalNameProof,data.verified_outputs)){
    u.identityVerified=true;u.identityAgeConfirmed=true;state.status='verified';state.verifiedAt=new Date().toISOString();
