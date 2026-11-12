@@ -1,0 +1,66 @@
+name: ZOVRO Add Ready Build 351.1 to Existing Internal TestFlight Group
+on:
+  push:
+    branches: [release/testflight-android-20261112]
+    paths: ['.github/workflows/zovro-internal-group-351-20261112.yml']
+permissions:
+  contents: read
+jobs:
+  internal-only:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - name: Install Apple API JWT support
+        run: python -m pip install --quiet --disable-pip-version-check "PyJWT[crypto]==2.10.1"
+      - name: Link only preexisting ZOVRO internal group to eligible build 351.1
+        env:
+          APPLE_KEY_ID: ${{ secrets.ZOVRO_APP_STORE_CONNECT_API_KEY_ID }}
+          APPLE_ISSUER_ID: ${{ secrets.ZOVRO_APP_STORE_CONNECT_ISSUER_ID }}
+          APPLE_PRIVATE_KEY_BASE64: ${{ secrets.ZOVRO_APP_STORE_CONNECT_API_PRIVATE_KEY_BASE64 }}
+        run: |
+          python - <<'PY'
+          import os,base64,datetime,json,urllib.parse,urllib.request,urllib.error,sys
+          import jwt
+          for name in ("APPLE_KEY_ID","APPLE_ISSUER_ID","APPLE_PRIVATE_KEY_BASE64"):
+              if not os.getenv(name): sys.exit("Missing Apple API credential; no action")
+          now=int(datetime.datetime.now(datetime.timezone.utc).timestamp())
+          jwt_token=jwt.encode({"iss":os.environ["APPLE_ISSUER_ID"],"iat":now-30,"exp":now+600,"aud":"appstoreconnect-v1"},base64.b64decode(os.environ["APPLE_PRIVATE_KEY_BASE64"],validate=True),algorithm="ES256",headers={"kid":os.environ["APPLE_KEY_ID"],"typ":"JWT"})
+          def request(method,path,params=None,payload=None):
+              url="https://api.appstoreconnect.apple.com"+path
+              if params: url+="?"+urllib.parse.urlencode(params)
+              body=json.dumps(payload,separators=(',',':')).encode() if payload is not None else None
+              headers={"Authorization":"Bearer "+jwt_token,"Accept":"application/json"}
+              if body is not None: headers["Content-Type"]="application/json"
+              req=urllib.request.Request(url,headers=headers,method=method,data=body)
+              try:
+                  with urllib.request.urlopen(req,timeout=40) as resp:
+                      buf=resp.read()
+                      return json.loads(buf) if buf else {}
+              except urllib.error.HTTPError as error:
+                  detail=error.read().decode("utf-8","replace")[:1000]
+                  sys.exit("Apple rejected "+method+" group association: HTTP "+str(error.code)+" "+detail)
+          apps=request("GET","/v1/apps",{"filter[bundleId]":"com.zovro.app","limit":"5"}).get("data",[])
+          apps=[a for a in apps if a.get("attributes",{}).get("bundleId")=="com.zovro.app"]
+          if len(apps)!=1: sys.exit("ZOVRO app mismatch; no action")
+          app_id=apps[0]["id"]
+          builds=request("GET","/v1/builds",{"filter[app]":app_id,"sort":"-uploadedDate","limit":"25"}).get("data",[])
+          matches=[b for b in builds if b.get("attributes",{}).get("version")=="351.1"]
+          if len(matches)!=1: sys.exit("Target build not unique; no action")
+          build=matches[0];attrs=build["attributes"]
+          if attrs.get("processingState")!="VALID" or attrs.get("usesNonExemptEncryption") is not False: sys.exit("Build 351.1 is not valid and compliant; no action")
+          beta=request("GET","/v1/builds/"+build["id"]+"/buildBetaDetail").get("data",{}).get("attributes",{})
+          if beta.get("internalBuildState") not in ("READY_FOR_BETA_TESTING","IN_BETA_TESTING"): sys.exit("Build 351.1 not eligible; no action")
+          groups=request("GET","/v1/betaGroups",{"filter[app]":app_id,"limit":"100"}).get("data",[])
+          internal=[g for g in groups if g.get("attributes",{}).get("isInternalGroup") is True]
+          if len(internal)!=1 or internal[0].get("attributes",{}).get("hasAccessToAllBuilds") is not True: sys.exit("Existing auto-distribution internal group mismatch; no action")
+          group=internal[0]
+          def membership():
+              all_builds=request("GET","/v1/betaGroups/"+group["id"]+"/builds",{"limit":"200"}).get("data",[])
+              return any(x.get("id")==build["id"] for x in all_builds)
+          if membership():
+              print("351_1_ALREADY_LINKED_TO_INTERNAL_GROUP=true")
+          else:
+              request("POST","/v1/builds/"+build["id"]+"/relationships/betaGroups",payload={"data":[{"type":"betaGroups","id":group["id"]}]})
+              print("APPLE_ACCEPTED_EXISTING_INTERNAL_GROUP_LINK=true")
+          print("351_1_LINKED_AFTER_ACTION="+str(membership()))
+          PY
