@@ -58,7 +58,7 @@ async function main(){
  await assert.rejects(()=>p.drivingDistanceMeters(req.pickupAddress,req.dropoffAddress,{apiKey:''}),/not configured/);
  const html=read('index.html'),client=read('transport-client.js'),mobile=read('scripts/prepare-mobile.js'),api=read('backend/server-core.js');
  assert(html.includes('transport-client.js?v=manual-gps-pickup-20261108'));
- assert(html.includes('website-final.css?v=from-to-route-20261108'));
+ assert.match(html,/website-final\.css\?v=[a-z0-9][a-z0-9-]*/, 'Shared CSS stays cache-busted as the UI evolves');
  assert(html.includes('id="routeFromLabelText"'));
  assert(html.includes('id="routeToLabelText"'));
  assert(html.includes('id="reqLocationRefresh"'));
