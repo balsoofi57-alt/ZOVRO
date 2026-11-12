@@ -47,6 +47,15 @@ jobs:
                   print("INTERNAL_STATE=UNAVAILABLE")
           groups=get("/v1/betaGroups",{"filter[app]":app_id,"limit":"100"}).get("data",[])
           print("INTERNAL_BETA_GROUPS="+str(sum(g.get("attributes",{}).get("isInternalGroup")==True for g in groups)))
+          for group in groups:
+              attrs=group.get("attributes",{})
+              if attrs.get("isInternalGroup") is not True: continue
+              print("INTERNAL_AUTO_ALL_BUILDS="+str(attrs.get("hasAccessToAllBuilds","UNKNOWN")))
+              linked=get("/v1/betaGroups/"+group["id"]+"/builds",{"limit":"200"}).get("data",[])
+              print("INTERNAL_GROUP_BUILD_COUNT="+str(len(linked)))
+              for b in builds[:5]:
+                  print("GROUP_BUILD version="+str(b.get("attributes",{}).get("version"))+" present="+str(any(x.get("id")==b.get("id") for x in linked)))
+
           PY
 
 # Follow-up read-only Apple processing check after successful IPA upload.
