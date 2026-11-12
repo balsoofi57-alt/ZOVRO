@@ -1278,3 +1278,8 @@ body.z-more-subpage-open{overflow:hidden}
 #authModal .z-forgot-password-link{display:block;margin:5px 0 8px auto;padding:7px 2px;background:transparent;color:#f0d79f;border:0;text-decoration:underline;text-underline-offset:3px;font-size:14px;font-weight:650;cursor:pointer}
 #authModal .z-forgot-password-link[hidden]{display:none}
 #authModal .z-forgot-password-link:focus-visible{outline:2px solid #f0d79f;outline-offset:3px;border-radius:4px}
+
+/* The themed button/layout rules must never reveal inactive reset steps. */
+#passwordRecoveryModal #recoveryCodeFields[hidden],
+#passwordRecoveryModal #recoveryRetry[hidden],
+#passwordRecoveryModal #recoverySubmit[hidden]{display:none!important}
