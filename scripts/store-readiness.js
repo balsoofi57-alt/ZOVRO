@@ -14,6 +14,23 @@ if(!prepare.includes("'payment-ui.js'")||!prepare.includes('zovro-api-final.onre
 for(const token of ['quoteJob','payJob','releasePayment','ZOVRO_PAYMENTS.payRequest'])if(!paymentUi.includes(token)){console.error('Secure payment UX missing:',token);bad=true}
 if(!paymentClient.includes('window.ZOVRO_SESSION_TOKEN')){console.error('Payment client is not using the synchronized secure ZOVRO session');bad=true}
 for(const legacy of ["localStorage.getItem('zovroToken')","localStorage.getItem('zovro_token')","localStorage.getItem('token')"]){if(paymentClient.includes(legacy)){console.error('Payment client contains legacy localStorage auth fallback:',legacy);bad=true}}
-if(/html\s*=\s*html\.replaceAll?\([^\n]*localStorage\.zovroToken=token[^\n]*ZOVRO_SECURE_SESSION\.set\(token\)/.test(prepare)===false&&prepare.includes("localStorage.zovroToken=token")){console.error('Mobile preparation still writes the auth token to localStorage');bad=true}
-if(prepare.includes("localStorage.removeItem('zovroToken')")&&!prepare.includes("ZOVRO_SECURE_SESSION.remove()")){console.error('Mobile preparation still removes auth through legacy localStorage');bad=true}
+// Verify the actual generated Capacitor HTML instead of checking template string literals.
+let mobileHtml='';
+try{
+  require('node:child_process').execFileSync(process.execPath,[path.join(root,'scripts/prepare-mobile.js')],{cwd:root,stdio:'pipe',env:{...process.env,ZOVRO_BUILD_CHANNEL:'qa'}});
+  mobileHtml=fs.readFileSync(path.join(root,'www/index.html'),'utf8');
+}catch(e){console.error('Mobile bundle preparation failed:',e.stderr?.toString().slice(-1500)||e.message);bad=true}
+if(mobileHtml){
+  for(const legacy of ["localStorage.getItem('zovroToken')","localStorage.zovroToken=token","localStorage.removeItem('zovroToken')"]){
+    if(mobileHtml.includes(legacy)){console.error('Native bundle still has legacy session storage:',legacy);bad=true}
+  }
+  for(const secure of ["window.ZOVRO_SECURE_SESSION?.set?.(token)","window.ZOVRO_SECURE_SESSION?.remove?.()"]){
+    if(!mobileHtml.includes(secure)){console.error('Native bundle missing secure session action:',secure);bad=true}
+  }
+  for(const asset of ['website-final.css','website-final.js','transport-client.js','service-art.js']){
+    const src=path.join(root,asset),native=path.join(root,'www',asset);
+    if(!fs.existsSync(native)||!fs.readFileSync(src).equals(fs.readFileSync(native))){console.error('Mobile/website asset mismatch:',asset);bad=true}
+  }
+  if(!mobileHtml.includes('ZOVRO_CONFIG')||!mobileHtml.includes('zovro-api-final.onrender.com')){console.error('Mobile bundle is missing production API configuration');bad=true}
+}
 if(bad)process.exit(1);console.log('ZOVRO store-readiness check passed.');
