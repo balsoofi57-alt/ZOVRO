@@ -49,6 +49,16 @@ async function backend(){
   const register=async(role,phone)=>{const r=await call('POST','/api/auth/register',{name:'SOS Test '+role,phone,password:'StrongPass22!',role,service:'Roadside Assistance'});assert.equal(r.status,201);return r.data};
   const c=await register('customer','13135550101'),p=await register('provider','13135550102');
   await call('POST','/api/provider/location',{lat:42.32,lng:-83.18,accuracy:10},p.token);
+// Isolated test-only fixture. An unverified provider is excluded by default.
+const {DatabaseSync}=require('node:sqlite');
+const fixture=new DatabaseSync(path.join(data,'zovro.sqlite'));
+try{
+ const row=fixture.prepare('SELECT data FROM users WHERE id=?').get(p.user.id);
+ const provider=JSON.parse(row.data);
+ provider.identityVerified=true;provider.identityAgeConfirmed=true;
+ provider.identityVerification={status:'verified',provider:'stripe',verifiedAt:new Date().toISOString()};
+ fixture.prepare('UPDATE users SET data=? WHERE id=?').run(JSON.stringify(provider),provider.id);
+}finally{fixture.close()}
   const payload={source:'sos',clientRequestId:crypto.randomUUID(),service:'Roadside Assistance',details:'SOS test',urgent:true,location:{lat:42.315,lng:-83.19,accuracy:10,capturedAt:new Date().toISOString()}};
   assert.equal((await call('POST','/api/requests',payload)).status,401);
   assert.equal((await call('POST','/api/requests',payload,p.token)).status,403);
