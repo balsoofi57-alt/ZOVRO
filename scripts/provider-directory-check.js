@@ -24,6 +24,7 @@ const c=await reg('Dir Customer','1313'+S+'1','customer');
 const p1=await reg('Sam Plumber','2484'+S+'1','provider','Plumbing');
 const p2=await reg('Ali Plumber','2484'+S+'2','provider','Plumbing');
 const p3=await reg('Tow Guy','2484'+S+'3','provider','Roadside Assistance');
+const p4=await reg('Far Plumber','2484'+S+'4','provider','Plumbing');
 const dir=await call('GET','/api/providers/directory?service=Plumbing',null,c.token);
 const ids=dir.providers.map(x=>x.id);
 if(!ids.includes(p1.user.id)||!ids.includes(p2.user.id)||ids.includes(p3.user.id))throw new Error('directory filter wrong '+JSON.stringify(ids));
@@ -49,6 +50,20 @@ await call('POST','/api/requests/'+id+'/choose-provider',{providerId:p2.user.id}
 await call('POST','/api/requests/'+id+'/accept',{},p2.token);
 await call('POST','/api/requests/'+id+'/messages',{text:'On my way soon'},p2.token);
 cr=(await call('GET','/api/requests',null,c.token)).requests.find(r=>r.id===id);if(cr.providerId!==p2.user.id||cr.status!=='Accepted')throw new Error('accept failed');
+// Direct-decline fallback must notify only nearby matching pros when a
+// customer explicitly included GPS. A far-away pro must get no alert.
+await call('POST','/api/provider/location',{lat:42.3314,lng:-83.0458},p2.token);
+await call('POST','/api/provider/location',{lat:40.7128,lng:-74.0060},p4.token);
+const geoMade=await call('POST','/api/requests',{service:'Plumbing',details:'Dripping shower pipe',address:'Detroit, MI',location:{lat:42.3314,lng:-83.0458},preferredProviderId:p1.user.id},c.token);
+const geoId=geoMade.request.id;
+await call('POST','/api/requests/'+geoId+'/decline-direct',{reason:'Unavailable'},p1.token);
+const broadcast=await call('POST','/api/requests/'+geoId+'/choose-provider',{open:true},c.token);
+if(broadcast.notifiedProviders!==1)throw new Error('Nearby fallback notified '+broadcast.notifiedProviders+' providers, expected 1');
+const nearNotices=(await call('GET','/api/notifications',null,p2.token)).notifications;
+const farNotices=(await call('GET','/api/notifications',null,p4.token)).notifications;
+if(!nearNotices.some(n=>n.meta?.requestId===geoId&&n.meta?.type==='new_request'))throw new Error('Nearby provider did not receive request');
+if(farNotices.some(n=>n.meta?.requestId===geoId))throw new Error('Far-away provider was notified');
+
 // existing broadcast flow still works
 const open=await call('POST','/api/requests',{service:'Plumbing',details:'Toilet running constantly',address:'2 Main St'},c.token);
 if(open.request.status!=='Looking for providers')throw new Error('broadcast flow changed');
