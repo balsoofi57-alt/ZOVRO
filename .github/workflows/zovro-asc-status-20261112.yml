@@ -48,3 +48,5 @@ jobs:
           groups=get("/v1/betaGroups",{"filter[app]":app_id,"limit":"100"}).get("data",[])
           print("INTERNAL_BETA_GROUPS="+str(sum(g.get("attributes",{}).get("isInternalGroup")==True for g in groups)))
           PY
+
+# Follow-up read-only Apple processing check after successful IPA upload.
