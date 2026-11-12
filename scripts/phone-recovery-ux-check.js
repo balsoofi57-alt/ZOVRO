@@ -30,6 +30,7 @@ assert.equal(phone.normalize('+442071838750'),'+442071838750','Do not overwrite 
 assert.equal(phone.normalize(''),'', 'Empty phone must not submit');
 assert.equal(phone.normalize('+1'),'','Country prefix alone is not a phone number');
 assert.equal(phone.normalize('+1+13135551234'),null,'Never accept a double-prefix phone number');
+assert.equal(phone.normalize('+113135551234'),'+13135551234','Correct accidental duplicated +1 from full-number autofill');
 phone.bind(input);
 assert.equal(input.value,'+1','Default +1 should be visible before typing');
 let prevented=false;
@@ -43,6 +44,10 @@ input.value='+442071838750';
 handlers.focus();
 assert.equal(input.value,'+442071838750','Do not overwrite a previously entered international number');
 assert.match(html,/<input id="phone" name="username" type="tel"[^>]+required value="\+1"/);
+assert.match(html,/window\.ZOVRO_PHONE_INPUT\?\.normalize\(rawPhone\)/,'Normalize before login or registration');
+assert.match(html,/phone\.slice\(2\)/,'Fallback for legacy ten-digit accounts');
+assert.match(html,/id="authStatus" role="alert"/,'Keep sign-in errors readable');
+assert.match(recovery,/el\('password'\)\.value=''/,'Clear stale iPhone autofilled password after reset');
 assert.match(html,/<script src="phone-input-client\.js\?v=/);
 assert.match(html,/document\.getElementById\('forgotPasswordButton'\)\?\.toggleAttribute\('hidden',authMode!=='login'\)/);
 assert.match(recovery,/closest\('\.field'\)\.after\(trigger\)/);
@@ -50,7 +55,7 @@ assert.match(recovery,/window\.ZOVRO_PHONE_INPUT\?\.bind\(document\.getElementBy
 assert.match(recovery,/value="\+1" placeholder="\+1 \(313\) 555-1234"/);
 assert.match(recovery,/const phone=window\.ZOVRO_PHONE_INPUT\?\.normalize\(el\('recoveryPhone'\)\.value\)/);
 assert.match(recovery,/available=result\.available===true/,'Reset must remain gated by actual backend availability');
-assert.match(recovery,/el\('phone'\)\.value=el\('recoveryPhone'\)\.value/,'Prefill login when reset is confirmed');
+assert.match(recovery,/el\('phone'\)\.value=window\.ZOVRO_PHONE_INPUT\?\.normalize\(el\('recoveryPhone'\)\.value\)/,'Prefill normalized login phone after reset is confirmed');
 assert.match(assets,/"phone-input-client\.js"/,'Serve helper on deployed website');
 assert.match(mobile,/'phone-input-client\.js'/,'Include helper in iOS/Android bundles');
 assert.match(css,/\.z-forgot-password-link\[hidden\]\{display:none\}/,'Hide forgot-password link during registration');

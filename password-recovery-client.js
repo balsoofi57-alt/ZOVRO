@@ -52,7 +52,7 @@
           el('recoverySubmit').textContent='Save new password';el('recoveryStatus').textContent=out.message||'Enter the code you received and set your new password.';el('recoveryCode').focus();
         }else{
           await request('reset-password',{challenge,code:el('recoveryCode').value.trim(),newPassword:el('recoveryPassword').value});if(current!==sequence)return;
-          el('phone').value=el('recoveryPhone').value;challenge=null;el('recoveryCodeFields').hidden=true;
+          el('phone').value=window.ZOVRO_PHONE_INPUT?.normalize(el('recoveryPhone').value)||el('recoveryPhone').value.trim();el('password').value='';challenge=null;el('recoveryCodeFields').hidden=true;
           el('recoveryStatus').textContent='Password updated. Sign in with your new password.';
           el('recoverySubmit').hidden=true;el('recoveryBack').textContent='Sign in now';el('recoveryBack').focus();
         }

@@ -4,6 +4,7 @@
   function normalize(value){
     const v=String(value??'').trim().replace(/[\s().-]/g,'');
     if(!v||v==='+1')return '';
+    if(/^\+11[2-9]\d{9}$/.test(v))return '+1'+v.slice(3); // +1 pasted over an existing +1
     if(/^\d{10}$/.test(v))return '+1'+v;
     if(/^1\d{10}$/.test(v))return '+'+v;
     if(/^\+[1-9]\d{7,14}$/.test(v))return v;
