@@ -27,3 +27,4 @@ jobs:
           echo "iOS dispatch accepted; the actual upload is verified in the separate workflow."
 
 # Re-dispatch after final approved duplicate-action and support-chat fixes on main 0e8fd42c9a86587650b7b375cf2c681e4bf76b04.
+# Request internal-only TestFlight upload of simplified ZOVRO main 8c66e2e841fd5c029396a42556012dc9d0357e8c (PR #181 merged; QA passed).
