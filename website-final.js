@@ -325,8 +325,13 @@
       b.replaceChildren(badge,text);return b;
     };
     const showTab=i=>{tabs[i]?.click();window.scrollTo({top:0,behavior:'smooth'})};
-    // Single Home request handler is installed above. GPS remains opt-in inside
-    // the request form; account management remains under the More tab.
+    // The bottom and web nav are hidden on compact silver-layout phones.
+    // Keep exactly one visible More/account entry in the mobile header.
+    const account=button('',()=>{showTab(3);document.getElementById('zAccountMenu').open=true},'z-account-shortcut');
+    account.setAttribute('aria-label','More and account');
+    account.innerHTML=icon('account');
+    document.querySelector('.top').appendChild(account);
+    // GPS remains opt-in inside the request form, never a second Home shortcut.
     const services=document.getElementById('services');const oldHeading=services.previousElementSibling;if(oldHeading?.classList.contains('sectionHead'))oldHeading.hidden=true;
     const categories=document.createElement('section');categories.id='zCategoryGrid';categories.innerHTML='<div class="z-service-heading"><h2>Services</h2></div><div class="z-category-grid"></div>';
     smart.insertAdjacentElement('afterend',categories);
@@ -379,6 +384,8 @@
     const provider=document.querySelector('#zProviderMenu>summary');if(provider)provider.textContent='Work with ZOVRO';
     const support=document.getElementById('zSupportMenu');const links=document.createElement('div');links.innerHTML='<a class="z-menu-row" href="mailto:support@zovro.work">Contact Support <span>›</span></a>';support.insertBefore(links,support.children[1]);
     const manage=document.createElement('section');manage.id='zManageMenu';manage.className='z-menu-group';manage.innerHTML='<h3>Manage</h3>';
+    // One route to requests on compact phones, whose bottom tabs are hidden.
+    manage.appendChild(button('My requests  ›',()=>showTab(1),'z-menu-row'));
     manage.appendChild(button('Notifications  ›',()=>{const d=document.getElementById('zAccountMenu');d.open=true;const field=document.getElementById('smsNotifications');if(field){field.scrollIntoView({block:'center'});field.focus()}else{window.toast('Manage ZOVRO notifications in your device settings. Provider SMS preferences are in your account.')}},'z-menu-row'));
     document.getElementById('zMoreMenu').insertBefore(manage,support);
   }
