@@ -114,7 +114,7 @@
     const parts=query.split(',').map(s=>s.trim()).filter(Boolean);
     const place=(parts.length>1?parts[1]:parts[0]||'').toLowerCase();
     const explicitState=(parts.length>2?parts[2]:'').trim();
-    const local=LOCAL_CITIES.has(place)&&(!explicitState||/^MI\\b/i.test(explicitState));
+    const local=LOCAL_CITIES.has(place)&&(!explicitState||explicitState.toUpperCase().split(' ')[0]==='MI');
     const params={f:'json',text:query,countryCode:'USA',location:BIAS,maxSuggestions:String(MAX),category:'Address,Street Address,Postal,Populated Place'};
     // Only narrow the launch-area cities when the user has not named another state.
     // Never restrict other cities/states: requests can be made for distant locations.
