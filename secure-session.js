@@ -28,13 +28,19 @@
     let saved=await get();
     if(legacy){await set(legacy);saved=legacy;localStorage.removeItem(KEY)}
     if(saved&&!currentToken()){
-      setRuntime(saved);
-      await restoreAccount();
+      // A biometric-enabled native app must stay logged out until the user
+      // explicitly completes device authentication. Never silently hydrate /me.
+      if(window.ZOVRO_BIOMETRIC?.shouldProtect?.()){
+        setRuntime('');
+      }else{
+        setRuntime(saved);
+        await restoreAccount();
+      }
     }else if(currentToken()){
       await set(currentToken());localStorage.removeItem(KEY);setRuntime(currentToken());
     }else setRuntime('');
     ready=true;
-    return {native:!!native,restored:!!saved};
+    return {native:!!native,restored:!!saved&&!window.ZOVRO_BIOMETRIC?.shouldProtect?.(),locked:!!saved&&!!window.ZOVRO_BIOMETRIC?.shouldProtect?.()};
   }
   async function sync(){
     if(!ready||busy)return;busy=true;
