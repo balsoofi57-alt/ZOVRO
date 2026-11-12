@@ -2,13 +2,17 @@
   'use strict';
   const PREF='zovroBiometricUnlock';
   const LOGIN_BUTTON_ID='zovroFaceIdLogin';
-  const plugin=()=>window.Capacitor?.Plugins?.BiometricAuthNative||window.Capacitor?.Plugins?.BiometricAuth||null;
+  const plugin=()=>window.Capacitor?.Plugins?.NativeBiometric||window.Capacitor?.Plugins?.BiometricAuthNative||window.Capacitor?.Plugins?.BiometricAuth||null;
   const enabled=()=>localStorage.getItem(PREF)==='1';
   const setEnabled=value=>{if(value)localStorage.setItem(PREF,'1');else localStorage.removeItem(PREF)};
   async function check(){
     const p=plugin();
     if(!p)return {available:false,native:false};
     try{
+      if(typeof p.isAvailable==='function'){
+        const info=await p.isAvailable({useFallback:true});
+        return {available:info?.isAvailable===true,native:true,info};
+      }
       if(typeof p.checkBiometry==='function'){
         const info=await p.checkBiometry();
         return {available:!!info?.isAvailable,native:true,info};
@@ -30,6 +34,7 @@
       androidBiometryStrength:'weak'
     };
     try{
+      if(typeof p.verifyIdentity==='function'){await p.verifyIdentity({reason,title:'ZOVRO secure sign-in',subtitle:reason,description:'Verify your identity to access your saved session',useFallback:true});return true}
       if(typeof p.internalAuthenticate==='function'){await p.internalAuthenticate(options);return true}
       if(typeof p.authenticate==='function'){await p.authenticate(options);return true}
       return false;
@@ -62,9 +67,9 @@
     if(!enabled())return false;
     const status=await check();
     if(!status.available){toastSafe('Face ID / biometrics are not available on this device.');return false}
-    const saved=await window.ZOVRO_SECURE_SESSION?.get?.();
-    if(!saved){toastSafe('Sign in once with your phone and password, then Face ID can be used next time.');return false}
     if(!(await authenticate('Sign in to ZOVRO with Face ID'))){toastSafe('Face ID sign-in was canceled or could not be verified.');return false}
+    const saved=await window.ZOVRO_SECURE_SESSION?.get?.();
+    if(!saved){toastSafe('Your saved sign-in is no longer available. Please enter your password.');return false}
     try{
       window.ZOVRO_SESSION_TOKEN=String(saved||'');
       try{token=String(saved||'')}catch{}
@@ -79,11 +84,14 @@
       if(typeof resumeRequestIntent==='function')resumeRequestIntent();
       toastSafe('Signed in with Face ID.');
       return true;
-    }catch{
-      try{await window.ZOVRO_SECURE_SESSION?.remove?.()}catch{}
+    }catch(e){
       window.ZOVRO_SESSION_TOKEN='';
       try{token=''}catch{}
-      toastSafe('Your saved sign-in has expired. Please sign in with your password once.');
+      try{me=null;if(typeof renderAccount==='function')renderAccount()}catch{}
+      if(Number(e?.status)===401||Number(e?.status)===403){
+        try{await window.ZOVRO_SECURE_SESSION?.remove?.()}catch{}
+        toastSafe('Your saved sign-in has expired. Please sign in with your password once.');
+      }else toastSafe('Network connection unavailable. Your saved sign-in has been kept; try Face ID again.');
       return false;
     }
   }
@@ -134,6 +142,8 @@
     window.submitAuth=wrapped;
   }
   function shouldProtect(){return enabled()}
+  // A successful unlock has already supplied a live bearer token; a failed
+  // biometric prompt must never restore it or silently unlock the account.
   window.ZOVRO_BIOMETRIC={check,authenticate,enable,disable,unlockSavedSession,renderLoginShortcut,shouldProtect,status:()=>({enabled:enabled(),native:!!plugin()})};
   function boot(){renderCard();wrapSuccessfulLogin();renderOptIn();setTimeout(renderLoginShortcut,200)}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
