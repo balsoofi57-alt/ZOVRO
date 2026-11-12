@@ -16,7 +16,7 @@ let logs='';server.stdout.on('data',x=>logs+=x);server.stderr.on('data',x=>logs+
 const base='http://127.0.0.1:'+port;
 async function post(endpoint,data){
  return fetch(base+'/api/auth/'+endpoint,{method:'POST',
- headers:{'content-type':'application/json','x-zovro-lawful-use-attestation':'accepted-v1'},
+ headers:{'content-type':'application/json','x-zovro-lawful-use-attestation':'accepted-v1','x-zovro-terms-version':'2026-09-27','x-zovro-privacy-version':'2026-09-22'},
  body:JSON.stringify(data)});
 }
 (async()=>{
