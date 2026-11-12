@@ -2,7 +2,7 @@
 const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
 const html=fs.readFileSync(require('node:path').join(__dirname,'../index.html'),'utf8');
 assert.match(html,/<form id="signInForm"[^>]*method="post"[^>]*autocomplete="on"[^>]*onsubmit="event.preventDefault\(\);submitAuth\(\)"/);
-assert.match(html,/<input id="phone"[^>]*name="username"[^>]*type="tel"[^>]*autocomplete="username"/);
+assert.match(html,/<input id="phone"[^>]*name="username"[^>]*type="text"[^>]*autocomplete="username"/);
 assert.match(html,/<input id="password"[^>]*name="password"[^>]*type="password"[^>]*autocomplete="current-password"/);
 assert.match(html,/<button id="authSubmit"[^>]*type="submit"/);
 const nodes=new Map(),storage={},messages=[];let calls=0,settle;
@@ -10,8 +10,8 @@ const $=id=>{if(!nodes.has(id))nodes.set(id,{value:'',disabled:false,textContent
 const c=vm.createContext({$,authMode:'login',token:'',me:null,localStorage:storage,setPasswordVisible(){},closeModal(){},renderAccount(){},loadJobs(){},resumeRequestIntent(){},toast:m=>messages.push(m),api:()=>{calls++;return new Promise((resolve,reject)=>settle={resolve,reject})}});
 vm.runInContext(html.match(/^function openAuth\(\).*$/m)[0]+'\n'+html.match(/^(?:let authBusy=false;)?async function submitAuth\(\).*$/m)[0],c);
 (async()=>{
- $('password').value='previous secret';c.renderAuth();assert.equal($('password').value,'');assert.equal($('password').autocomplete,'current-password');
- c.authMode='register';c.renderAuth();assert.equal($('password').autocomplete,'new-password');
+ $('password').value='previous secret';c.renderAuth();assert.equal($('password').value,'');assert.equal($('password').autocomplete,'current-password');assert.equal($('phone').type,'text');
+ c.authMode='register';c.renderAuth();assert.equal($('password').autocomplete,'new-password');assert.equal($('phone').type,'tel');
  c.authMode='login';c.renderAuth();$('phone').value='+13135550100';$('password').value='test-secret-only';
  const first=c.submitAuth();await c.submitAuth();assert.equal(calls,1,'Double submission must not create extra sessions');
  settle.reject(Error('Invalid credentials'));await first;assert.equal($('authSubmit').disabled,false);assert.deepEqual(storage,{});
