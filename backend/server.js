@@ -19,6 +19,7 @@ const database=require('./database');
   require('./response-security');
   require('./consent-guard');
   require('./request-privacy');
+  require('./identity-verification-api');
   require('./profile-private-api');
   require('./profile-photo-api');
   require('./workflow-api');
