@@ -61,3 +61,4 @@ jobs:
 # Follow-up read-only Apple processing check after successful IPA upload.
 # Read-only recheck: confirm Apple processing of previous simplified UI delivery from 2026-11-12T13:42:46Z.
 # Read-only Apple group and latest-build check after confirmed 351.1 compliance restoration.
+# Read-only check after final simplified UI IPA upload succeeded 2026-11-12T14:01:00Z.
