@@ -55,7 +55,12 @@ assert.ok(css.includes('@media (min-width:701px){.top .z-account-shortcut{displa
 assert.ok(css.includes('body.z-silver-layout nav.bottom'),'Compact layout hides bottom tabs and needs an alternative');
 
 assert.ok(js.includes("group('Become a service provider','zProviderMenu')"),'One provider enrollment section remains');
-assert.ok(js.includes("id=\"zProviderJoinBtn\""),'Provider enrollment action remains');
+assert.ok(!js.includes('id="zProviderJoinBtn"'),'Provider enrollment must not repeat the Sign in action');
+assert.ok(js.includes('open More → My Account → Create account'),'Provider instructions preserve onboarding access');
+assert.ok(js.includes("homeAccount.hidden=true"),'Legacy account summary must be hidden after moving into My Account');
+assert.ok(css.includes('#zAccountMenu #accountBox[hidden]{display:none!important}'),'Hide duplicate legacy account summary');
+assert.ok(!js.includes('<button type="button" class="btn primary" onclick="openAuth()">Sign in</button>'),'Requests empty state must not repeat Account sign-in');
+assert.ok(!js.includes('<a href="#profile">More</a><a href="support.html">Support</a>'),'Desktop header must not duplicate Support destination already in More and footer');
 assert.ok(js.includes("id=\"z-smart-match\"")===false,'Do not accidentally rename the live Smart Match container');
 assert.ok(html.includes('id="requestSuccessModal"')&&html.includes('View my request</button>'),'Post-submit request tracking remains');
 
