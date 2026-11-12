@@ -59,3 +59,4 @@ jobs:
           PY
 
 # Follow-up read-only Apple processing check after successful IPA upload.
+# Read-only recheck: confirm Apple processing of previous simplified UI delivery from 2026-11-12T13:42:46Z.
