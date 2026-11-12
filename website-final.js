@@ -334,6 +334,12 @@
     // GPS remains opt-in inside the request form, never a second Home shortcut.
     const services=document.getElementById('services');const oldHeading=services.previousElementSibling;if(oldHeading?.classList.contains('sectionHead'))oldHeading.hidden=true;
     const categories=document.createElement('section');categories.id='zCategoryGrid';categories.innerHTML='<div class="z-service-heading"><h2>Services</h2></div><div class="z-category-grid"></div>';
+    // The old Smart Match composer was intentionally hidden in the approved
+    // silver design. Keep one compact, visible generic request action instead.
+    const startRequest=button('Help Now',()=>openHelp(''),'btn primary');
+    startRequest.id='zStartRequest';
+    startRequest.setAttribute('aria-label','Start a new service request');
+    categories.querySelector('.z-service-heading').appendChild(startRequest);
     smart.insertAdjacentElement('afterend',categories);
     let catalog,catalogBackAction=null,catalogTrigger=null;
     function openCatalog(categoryId,title){
