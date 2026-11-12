@@ -9,6 +9,10 @@
   if(window.ZOVRO_ADDRESS_AUTOCOMPLETE)return;
   const ENDPOINT='https://geocode.arcgis.com/arcgis/rest/services/World/GeocodeServer/suggest';
   const BIAS='-83.1763,42.3223'; // Dearborn, MI (lng,lat) — fixed, not the user's location.
+  // Explicitly constrain unqualified local-city queries; a proximity bias by itself
+  // can show similarly named towns in another state (e.g. Dearborn, Missouri).
+  const LOCAL_CITIES=new Set(['dearborn','dearborn heights','detroit']);
+  const SOUTHEAST_MI_EXTENT='-84.4,41.5,-82.3,43.2';
   const FIELD_IDS=['reqAddress','transportDropoff','zHomeManualAddress','zPrivAddress'];
   const MIN_CHARS=3,DELAY=220,MAX=6;
   const cache=new Map();
@@ -107,7 +111,15 @@
     if(cache.has(key))return cache.get(key);
     if(active.controller)active.controller.abort();
     const controller=typeof AbortController==='function'?new AbortController():null;active.controller=controller;
-    const url=ENDPOINT+'?'+new URLSearchParams({f:'json',text:query,countryCode:'USA',location:BIAS,maxSuggestions:String(MAX),category:'Address,Street Address,Postal,Populated Place'});
+    const parts=query.split(',').map(s=>s.trim()).filter(Boolean);
+    const place=(parts.length>1?parts[1]:parts[0]||'').toLowerCase();
+    const explicitState=(parts.length>2?parts[2]:'').trim();
+    const local=LOCAL_CITIES.has(place)&&(!explicitState||/^MI\\b/i.test(explicitState));
+    const params={f:'json',text:query,countryCode:'USA',location:BIAS,maxSuggestions:String(MAX),category:'Address,Street Address,Postal,Populated Place'};
+    // Only narrow the launch-area cities when the user has not named another state.
+    // Never restrict other cities/states: requests can be made for distant locations.
+    if(local)params.searchExtent=SOUTHEAST_MI_EXTENT;
+    const url=ENDPOINT+'?'+new URLSearchParams(params);
     const res=await fetch(url,{signal:controller?.signal,credentials:'omit',referrerPolicy:'no-referrer',cache:'no-store'});
     if(!res.ok)throw new Error('Address lookup failed');
     const data=await res.json();
