@@ -48,11 +48,18 @@ assert.ok(request.includes('id="transportDropoff"'),'Destination entry remains')
 assert.ok(request.includes('id="zReqSend"'),'Final send action remains');
 assert.ok(more.includes('id="sosButton"'),'Secondary urgent roadside flow remains');
 assert.ok(js.includes("group('Find nearby providers','zNearbyMenu')"),'Nearby search remains in More');
-assert.ok(js.includes("account.setAttribute('aria-label','More menu')"),'Phone needs one visible More entry when bottom nav is hidden');
-assert.ok(js.includes("const account=button('',()=>showTab(3),'z-account-shortcut')"),'Mobile shortcut must open More without auto-entering a submenu');
+assert.ok(js.includes("account.setAttribute('aria-label','More menu')"),'Legacy top entry stays available for safe notification-bell reuse');
+assert.ok(js.includes("const account=button('',()=>showTab(3),'z-account-shortcut')"),'Existing header shortcut must be reused, not duplicated');
 assert.ok(js.includes("button('My requests  ›',()=>showTab(1)"),'Requests must remain reachable from More on phones');
 assert.ok(css.includes('@media (min-width:701px){.top .z-account-shortcut{display:none!important}}'),'Desktop must use only the web More navigation');
-assert.ok(css.includes('body.z-silver-layout nav.bottom'),'Compact layout hides bottom tabs and needs an alternative');
+assert.ok(css.includes('body.z-silver-layout nav.bottom'),'Legacy navigation rule is preserved; home-ux.css intentionally overrides it for the new four-tab mobile navigation');
+const homeCss=fs.readFileSync('home-ux.css','utf8');
+const homeJs=fs.readFileSync('home-ux-client.js','utf8');
+assert.ok(homeCss.includes('body.z-silver-layout nav.bottom.z-simple-nav.z-home-bottom-nav'),'Four mobile tabs override the previous hidden bottom navigation');
+assert.ok(homeJs.includes("['messages','Messages','messages']"),'Messages must be a distinct navigation destination');
+assert.ok(homeJs.includes("bell.onclick=()=>loadNotifications(true)"),'The existing top shortcut must become the notification bell');
+assert.ok(homeJs.includes("const button=byId('zStartRequest')"),'Reuse the only Help Now button; do not add another');
+assert.ok(homeJs.includes("call('startRequestWithLocation',params)"),'Home actions must reuse the existing request form');
 
 assert.ok(js.includes("group('Become a service provider','zProviderMenu')"),'One provider enrollment section remains');
 assert.ok(!js.includes('id="zProviderJoinBtn"'),'Provider enrollment must not repeat the Sign in action');
