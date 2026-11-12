@@ -20,6 +20,7 @@ const database=require('./database');
   require('./consent-guard');
   require('./request-privacy');
   require('./profile-private-api');
+  require('./profile-photo-api');
   require('./workflow-api');
   require('./html-inject');
   require('./product-expansion');
