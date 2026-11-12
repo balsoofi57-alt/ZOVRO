@@ -10,7 +10,7 @@
   ar:['ما هو ZOVRO؟','هل الرخصة إلزامية للتسجيل؟','لماذا تحتاجون موقعي؟','أين إعدادات حسابي؟','كيف أتواصل مع مقدم الخدمة المعين؟','هل التحقق يغني عن الترخيص؟'],
   es:['¿Qué es ZOVRO?','¿Necesito una licencia para registrarme en ZOVRO?','¿Por qué necesitan mi ubicación?','¿Dónde están los ajustes de mi cuenta?','¿Cómo contacto a mi proveedor asignado?','¿La verificación reemplaza una licencia?']
  };
- const elements=[...document.querySelectorAll('[data-z-i18n]')];
+ const elements=[...(document.querySelectorAll?.('[data-z-i18n]')||[])];
  const english={};
  for(const el of elements)english[el.dataset.zI18n]=el.innerHTML;
  const dictionaries={
@@ -79,11 +79,13 @@
  function locale(){return Object.hasOwn(dictionaries,language.value)?language.value:'en'}
  function refresh(){
   const lang=locale(),dictionary=dictionaries[lang],rtl=lang==='ar';
-  document.documentElement.lang=lang;
-  document.documentElement.dir=rtl?'rtl':'ltr';
+  if(document.documentElement){
+   document.documentElement.lang=lang;
+   document.documentElement.dir=rtl?'rtl':'ltr';
+  }
   document.title=dictionary.title+' — ZOVRO';
   for(const el of elements)el.innerHTML=dictionary[el.dataset.zI18n]??english[el.dataset.zI18n]??'';
-  const back=document.querySelector('.z-doc-back');
+  const back=document.querySelector?.('.z-doc-back');
   if(back)back.setAttribute('aria-label',lang==='ar'?'العودة إلى الصفحة الرئيسية':lang==='es'?'Volver al inicio':'Back to ZOVRO home');
   question.replaceChildren();
   for(const text of questions[lang]){
