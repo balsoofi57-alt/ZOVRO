@@ -933,6 +933,8 @@ body.z-silver-layout #zSilverCatalog #zCatalogClose{
   background:transparent;color:#c1d2e1;font:inherit;font-size:13px;font-weight:650;cursor:pointer;
 }
 #zRequestFilters button[aria-pressed="true"]{background:linear-gradient(135deg,#f0f4f7,#cdd8e2);color:#15364f;border-color:#b9cad8;box-shadow:0 2px 6px #00132140}
+#zRequestFilters button[data-z-request-filter="active"][aria-pressed="true"]{background:linear-gradient(135deg,#20d54d,#12ac39);color:#fff;border-color:#1ac64a;box-shadow:0 2px 8px #001b104d;font-weight:800;font-size:15px}
+#zRequestFilters button[data-z-request-filter="active"][aria-pressed="true"] .z-filter-count{background:#ffffff24;color:#fff}
 .z-filter-count{font-size:11px;min-width:23px;padding:3px 5px;border-radius:7px;background:#ffffff16}
 [aria-pressed="true"] .z-filter-count{background:#173b5912;color:#285574}
 #jobs #jobList{display:grid;gap:14px}
