@@ -896,8 +896,11 @@
         if(navigator.permissions?.query){
           const permission=await navigator.permissions.query({name:'geolocation'});
           if(permission.state==='denied'){setCity('Enable location','Allow location in browser or device settings to display your city.');return}
-        }
-      }catch(_){}
+          // Opening the Home screen must not prompt for device location.
+          // Refresh silently only if the user has already granted access.
+          if(permission.state!=='granted')return;
+        }else return;
+      }catch(_){return}
       detect();
     }
     document.addEventListener('visibilitychange',()=>{
