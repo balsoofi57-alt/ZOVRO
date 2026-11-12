@@ -45,4 +45,21 @@ assert.ok(js.includes("group('Become a service provider','zProviderMenu')"),'One
 assert.ok(js.includes("id=\"zProviderJoinBtn\""),'Provider enrollment action remains');
 assert.ok(js.includes("id=\"z-smart-match\"")===false,'Do not accidentally rename the live Smart Match container');
 assert.ok(html.includes('id="requestSuccessModal"')&&html.includes('View my request</button>'),'Post-submit request tracking remains');
+
+// Full-page sheets supply their own accessible Close control. The inline
+// Cancel/Close and manual Refresh buttons would be the same function again.
+assert.ok(js.includes("close.className='z-page-close'"),'Full-page modal close must remain');
+assert.ok(js.includes("if(modal.id==='trackingModal'&&typeof window.closeTracking==='function')"),'Tracking Close must stop the polling lifecycle');
+assert.ok(html.includes('setInterval(refreshTracking,5000)'),'Live tracking still updates without manual Refresh');
+for(const redundant of [
+  '<button class="btn ghost" type="button" onclick="closeModal(\'authModal\')">Cancel</button>',
+  '<button class="btn ghost" onclick="closeModal(\'requestModal\')">Cancel</button>',
+  '<button class="btn ghost" style="margin-top:10px" onclick="closeModal(\'chatModal\')">Close</button>',
+  '<button class="btn ghost" onclick="closeTracking()">Close</button>',
+  '<button class="btn ghost" onclick="refreshTracking()">Refresh</button>',
+  '<button class="btn ghost" style="width:100%;margin-top:10px" onclick="closeModal(\'requestSuccessModal\')">Done</button>'
+]){
+  assert.ok(!html.includes(redundant),'Duplicate modal control removed: '+redundant);
+}
+
 console.log('One action / one button: duplicate shortcuts removed, unique service and safety flows preserved.');
