@@ -55,7 +55,7 @@ assert.match(recovery,/window\.ZOVRO_PHONE_INPUT\?\.bind\(document\.getElementBy
 assert.match(recovery,/value="\+1" placeholder="\+1 \(313\) 555-1234"/);
 assert.match(recovery,/const phone=window\.ZOVRO_PHONE_INPUT\?\.normalize\(el\('recoveryPhone'\)\.value\)/);
 assert.match(recovery,/available=result\.available===true/,'Reset must remain gated by actual backend availability');
-assert.match(recovery,/el\('phone'\)\.value=el\('recoveryPhone'\)\.value/,'Prefill login when reset is confirmed');
+assert.match(recovery,/el\('phone'\)\.value=window\.ZOVRO_PHONE_INPUT\?\.normalize\(el\('recoveryPhone'\)\.value\)/,'Prefill normalized login phone after reset is confirmed');
 assert.match(assets,/"phone-input-client\.js"/,'Serve helper on deployed website');
 assert.match(mobile,/'phone-input-client\.js'/,'Include helper in iOS/Android bundles');
 assert.match(css,/\.z-forgot-password-link\[hidden\]\{display:none\}/,'Hide forgot-password link during registration');
