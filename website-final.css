@@ -1269,3 +1269,7 @@ body.z-more-subpage-open{overflow:hidden}
 /* One More entry per viewport: desktop uses the web navigation; the mobile
    layout hides web and bottom tabs, so it keeps the account icon in the top bar. */
 @media (min-width:701px){.top .z-account-shortcut{display:none!important}}
+
+/* The legacy account summary is kept for existing scripts, but the one
+   visible Sign in / Create account entry is in More > My Account. */
+#zAccountMenu #accountBox[hidden]{display:none!important}

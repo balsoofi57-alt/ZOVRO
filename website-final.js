@@ -147,8 +147,8 @@
     }
 
     if(features&&!document.getElementById('providerJoin')){
-      const p=document.createElement('section');p.id='providerJoin';p.className='z-provider-join';p.innerHTML='<div><div class="z-section-kicker">For providers</div><h2>Turn your skills into nearby jobs.</h2><p>Create your provider profile, set your availability and receive service requests near you.</p></div><button class="btn primary" id="zProviderJoinBtn">Join ZOVRO</button>';
-      features.insertAdjacentElement('afterend',p);document.getElementById('zProviderJoinBtn').onclick=()=>call('openAuth');
+      const p=document.createElement('section');p.id='providerJoin';p.className='z-provider-join';p.innerHTML='<div><div class="z-section-kicker">For providers</div><h2>Turn your skills into nearby jobs.</h2><p>To join as a professional, open More → My Account → Create account, then choose Service provider. There is no second registration form.</p></div>';
+      features.insertAdjacentElement('afterend',p);
     }
 
     const howSection=document.getElementById('howItWorks');
@@ -213,7 +213,7 @@
     function group(label,id){const d=document.createElement('details');d.className='z-menu-group';d.id=id;const s=document.createElement('summary');s.textContent=label;d.appendChild(s);menu.appendChild(d);return d}
     const account=group('Account & security','zAccountMenu');
     for(const id of ['profileBox','accountActions']){const node=document.getElementById(id);if(node)account.appendChild(node)}
-    const homeAccount=document.getElementById('accountBox');if(homeAccount){const h=homeAccount.previousElementSibling;if(h?.classList.contains('sectionHead'))h.hidden=true;account.appendChild(homeAccount)}
+    const homeAccount=document.getElementById('accountBox');if(homeAccount){const h=homeAccount.previousElementSibling;if(h?.classList.contains('sectionHead'))h.hidden=true;account.appendChild(homeAccount);homeAccount.hidden=true;homeAccount.setAttribute('aria-hidden','true')}
     const nearby=group('Find nearby providers','zNearbyMenu');
     const find=document.createElement('button');find.type='button';find.className='btn primary';find.textContent='Find nearby providers';find.onclick=()=>{tabs[2].click();tabs[2].classList.remove('active');tabs[3].classList.add('active')};nearby.appendChild(find);
     const support=group('Help, support & legal','zSupportMenu');
@@ -238,7 +238,7 @@
     const home=document.getElementById('home'),smart=document.getElementById('smartMatch');
     if(!home||!smart)return;
     document.body.classList.add('z-silver-layout');
-    const webNav=document.querySelector('.z-web-nav');if(webNav){webNav.innerHTML='<a href="#home">Home</a><a href="#zCategoryGrid">Services</a><a href="#profile">More</a><a href="support.html">Support</a>';for(const a of webNav.querySelectorAll('a[href^="#"]'))a.onclick=()=>{document.querySelectorAll('.bottom button')[a.hash==='#profile'?3:0]?.click()}}
+    const webNav=document.querySelector('.z-web-nav');if(webNav){webNav.innerHTML='<a href="#home">Home</a><a href="#zCategoryGrid">Services</a><a href="#profile">More</a>';for(const a of webNav.querySelectorAll('a[href^="#"]'))a.onclick=()=>{document.querySelectorAll('.bottom button')[a.hash==='#profile'?3:0]?.click()}}
     const tabs=[...document.querySelectorAll('.bottom button')];
     const iconPaths={car:'M3 15V9l3-5h12l3 5v6M3 10h18M5 15v4M19 15v4M6 13h2M16 13h2M3 15h18',home:'M3 11 12 3l9 8M5 10v11h5v-7h4v7h5V10',clean:'m14 3-6 11M6 12l8 5-4 5-7-4zM18 4v5M16 6h4',tree:'M12 3c-4 0-5 3-4 5-5 1-5 7-1 8h10c4-1 4-7-1-8 1-2 0-5-4-5zM12 16v6',truck:'M2 5h12v12H2zM14 10h4l4 4v3h-8M5 17a2 2 0 1 0 4 0M16 17a2 2 0 1 0 4 0',more:'M4 12h1M11 12h1M18 12h1',pin:'M12 22S4 13 4 9a8 8 0 1 1 16 0c0 4-8 13-8 13zM9 9a3 3 0 1 0 6 0 3 3 0 1 0-6 0',account:'M8 7a4 4 0 1 0 8 0 4 4 0 1 0-8 0M4 22v-3a8 8 0 0 1 16 0v3z',requests:'M6 3h12v19H6zM9 8h6M9 12h6M9 16h4'};
     const icon=name=>window.ZOVRO_ART?.icon(name)||'<svg viewBox="0 0 24 26" aria-hidden="true"><path d="'+iconPaths[name]+'"/></svg>';
@@ -597,7 +597,7 @@
           empty.innerHTML='<span class="z-empty-icon">🛠️</span><b>No requests yet</b><p class="muted">Go to Home to start a new request using Smart Match or the service categories.</p>';
         }else if(text==='Sign in to see jobs.'){
           empty.dataset.zEmptyDone='1';empty.classList.add('z-empty');
-          empty.innerHTML='<span class="z-empty-icon">📋</span><b>Sign in to see your requests</b><p class="muted">Track your requests, chat with your professional and follow the job live.</p><button type="button" class="btn primary" onclick="openAuth()">Sign in</button>';
+          empty.innerHTML='<span class="z-empty-icon">📋</span><b>Sign in to see your requests</b><p class="muted">Open More → My Account to sign in or create an account. Your requests, chat and tracking will appear here.</p>';
         }
       }
     }
