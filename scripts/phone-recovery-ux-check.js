@@ -54,4 +54,5 @@ assert.match(recovery,/el\('phone'\)\.value=el\('recoveryPhone'\)\.value/,'Prefi
 assert.match(assets,/"phone-input-client\.js"/,'Serve helper on deployed website');
 assert.match(mobile,/'phone-input-client\.js'/,'Include helper in iOS/Android bundles');
 assert.match(css,/\.z-forgot-password-link\[hidden\]\{display:none\}/,'Hide forgot-password link during registration');
+assert.match(css,/#passwordRecoveryModal #recoveryCodeFields\[hidden\],[\s\S]*?#passwordRecoveryModal #recoverySubmit\[hidden\]\{display:none!important\}/,'CSS may not reveal verification fields or retry buttons prematurely');
 console.log('Phone and password recovery UX: US +1 default, paste, international numbers, safe reset flow, and mobile parity PASS');
