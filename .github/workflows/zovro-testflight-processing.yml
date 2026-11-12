@@ -111,6 +111,9 @@ jobs:
               groups = api('/v1/betaGroups',{'filter[builds]':latest_id,'fields[betaGroups]':'isInternalGroup,hasAccessToAllBuilds','limit':'50'}).get('data',[])
               print('Latest build linked tester groups:',len(groups))
               print('Latest build linked internal groups:',sum(1 for group in groups if (group.get('attributes') or {}).get('isInternalGroup') is True))
+              for group in groups:
+                  members = api('/v1/betaGroups/'+group['id']+'/betaTesters',{'limit':'200'}).get('data',[])
+                  print('Linked group is_internal='+str((group.get('attributes') or {}).get('isInternalGroup'))+' tester_count='+str(len(members)))
               individual = api('/v1/builds/'+latest_id+'/individualTesters',{'limit':'200'}).get('data',[])
               print('Latest build individually assigned testers:',len(individual))
           print('Read-only verification complete; no Tester or App Store settings modified')
