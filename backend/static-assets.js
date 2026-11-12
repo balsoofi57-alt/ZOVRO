@@ -9,6 +9,8 @@ const PUBLIC_FILES = new Set([
   "consent-client.js",
   "i18n.js",
   "index.html",
+  "home-ux-client.js",
+  "home-ux.css",
   "live-map.js",
   "manifest.webmanifest",
   "password-recovery-client.js",
