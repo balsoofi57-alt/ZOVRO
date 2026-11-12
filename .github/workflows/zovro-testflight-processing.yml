@@ -106,5 +106,12 @@ jobs:
                   a=row.get('attributes') or {}
                   print('Latest beta state: internal='+str(a.get('internalBuildState','?'))+
                         ' external='+str(a.get('externalBuildState','?')))
+          if builds:
+              latest_id = builds[0]['id']
+              groups = api('/v1/betaGroups',{'filter[builds]':latest_id,'fields[betaGroups]':'isInternalGroup,hasAccessToAllBuilds','limit':'50'}).get('data',[])
+              print('Latest build linked tester groups:',len(groups))
+              print('Latest build linked internal groups:',sum(1 for group in groups if (group.get('attributes') or {}).get('isInternalGroup') is True))
+              individual = api('/v1/builds/'+latest_id+'/individualTesters',{'limit':'200'}).get('data',[])
+              print('Latest build individually assigned testers:',len(individual))
           print('Read-only verification complete; no Tester or App Store settings modified')
           PY
