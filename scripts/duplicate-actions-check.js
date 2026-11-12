@@ -42,7 +42,8 @@ assert.ok(request.includes('id="transportDropoff"'),'Destination entry remains')
 assert.ok(request.includes('id="zReqSend"'),'Final send action remains');
 assert.ok(more.includes('id="sosButton"'),'Secondary urgent roadside flow remains');
 assert.ok(js.includes("group('Find nearby providers','zNearbyMenu')"),'Nearby search remains in More');
-assert.ok(js.includes("account.setAttribute('aria-label','More and account')"),'Phone needs one visible More entry when bottom nav is hidden');
+assert.ok(js.includes("account.setAttribute('aria-label','More menu')"),'Phone needs one visible More entry when bottom nav is hidden');
+assert.ok(js.includes("const account=button('',()=>showTab(3),'z-account-shortcut')"),'Mobile shortcut must open More without auto-entering a submenu');
 assert.ok(js.includes("button('My requests  ›',()=>showTab(1)"),'Requests must remain reachable from More on phones');
 assert.ok(css.includes('@media (min-width:701px){.top .z-account-shortcut{display:none!important}}'),'Desktop must use only the web More navigation');
 assert.ok(css.includes('body.z-silver-layout nav.bottom'),'Compact layout hides bottom tabs and needs an alternative');
