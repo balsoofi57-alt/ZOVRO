@@ -1,6 +1,20 @@
 'use strict';
 const fs=require('fs'),path=require('path');const root=path.resolve(__dirname,'..');
-function patchIOS(){const p=path.join(root,'ios','App','App','Info.plist');if(!fs.existsSync(p))return console.log('iOS project not present; skipping plist patch.');let s=fs.readFileSync(p,'utf8');const entries=[['NSLocationWhenInUseUsageDescription','ZOVRO uses your location to match you with nearby service providers and track an active service request.'],['NSCameraUsageDescription','ZOVRO uses the camera to upload provider verification and service photos.'],['NSPhotoLibraryUsageDescription','ZOVRO uses your photo library to upload provider verification and service photos.']];for(const [k,v] of entries)if(!s.includes(`<key>${k}</key>`)){const at=s.lastIndexOf('</dict>');if(at<0)throw new Error('Cannot find the root dict in Info.plist');s=s.slice(0,at)+`\t<key>${k}</key>\n\t<string>${v}</string>\n`+s.slice(at);}for(const [k] of entries)if(!s.includes(`<key>${k}</key>`))throw new Error('Info.plist is missing '+k);fs.writeFileSync(p,s);patchIOSDeploymentTarget();console.log('Patched iOS permissions.')}
+// Apple accepted "usesNonExemptEncryption=false" on earlier ZOVRO builds
+// (e.g. 343.1). This declares only the previously reviewed, exempt use
+// of encryption. Review export compliance again before changing crypto SDKs.
+function ensureIOSExemptionFlag(plist){
+ const name='ITSAppUsesNonExemptEncryption';
+ const marker='<key>'+name+'</key>';
+ if(plist.includes(marker)){
+  if(!/<key>ITSAppUsesNonExemptEncryption<\/key>\s*<false\s*\/>/.test(plist))throw new Error('Existing iOS encryption declaration differs; human compliance review required');
+  return plist;
+ }
+ const at=plist.lastIndexOf('</dict>');
+ if(at<0)throw new Error('Cannot find root Info.plist dictionary for encryption declaration');
+ return plist.slice(0,at)+'\t'+marker+'\n\t<false/>\n'+plist.slice(at);
+}
+function patchIOS(){const p=path.join(root,'ios','App','App','Info.plist');if(!fs.existsSync(p))return console.log('iOS project not present; skipping plist patch.');let s=fs.readFileSync(p,'utf8');const entries=[['NSLocationWhenInUseUsageDescription','ZOVRO uses your location to match you with nearby service providers and track an active service request.'],['NSCameraUsageDescription','ZOVRO uses the camera to upload provider verification and service photos.'],['NSPhotoLibraryUsageDescription','ZOVRO uses your photo library to upload provider verification and service photos.']];for(const [k,v] of entries)if(!s.includes(`<key>${k}</key>`)){const at=s.lastIndexOf('</dict>');if(at<0)throw new Error('Cannot find the root dict in Info.plist');s=s.slice(0,at)+`\t<key>${k}</key>\n\t<string>${v}</string>\n`+s.slice(at);}for(const [k] of entries)if(!s.includes(`<key>${k}</key>`))throw new Error('Info.plist is missing '+k);s=ensureIOSExemptionFlag(s);fs.writeFileSync(p,s);patchIOSDeploymentTarget();console.log('Patched iOS permissions and previously reviewed export-compliance flag.')}
 function patchIOSDeploymentTarget(){const min=15;const pbx=path.join(root,'ios','App','App.xcodeproj','project.pbxproj');if(fs.existsSync(pbx)){const src=fs.readFileSync(pbx,'utf8');const out=src.replace(/IPHONEOS_DEPLOYMENT_TARGET = (\d+(?:\.\d+)?);/g,(m,v)=>Number(v)<min?'IPHONEOS_DEPLOYMENT_TARGET = '+min+'.0;':m);if(out!==src)fs.writeFileSync(pbx,out);}const pod=path.join(root,'ios','App','Podfile');if(fs.existsSync(pod)){const src=fs.readFileSync(pod,'utf8');const out=src.replace(/platform :ios, '(\d+(?:\.\d+)?)'/,(m,v)=>Number(v)<min?"platform :ios, '"+min+".0'":m);if(out!==src)fs.writeFileSync(pod,out);}}
 function patchAndroid(){const p=path.join(root,'android','app','src','main','AndroidManifest.xml');if(!fs.existsSync(p))return console.log('Android project not present; skipping manifest patch.');let s=fs.readFileSync(p,'utf8');const perms=['android.permission.INTERNET','android.permission.ACCESS_NETWORK_STATE','android.permission.ACCESS_FINE_LOCATION','android.permission.ACCESS_COARSE_LOCATION','android.permission.POST_NOTIFICATIONS'];for(const perm of perms)if(!s.includes(perm))s=s.replace('<application',`<uses-permission android:name="${perm}" />\n    <application`);if(!s.includes('android.hardware.camera'))s=s.replace('<application','<uses-feature android:name="android.hardware.camera" android:required="false" />\n    <application');fs.writeFileSync(p,s);console.log('Patched Android permissions.')}
 function patchAndroidBuild(projectRoot=root){
@@ -51,4 +65,4 @@ function patchAndroidWallet(projectRoot=root){
  fs.writeFileSync(p,s);
 }
 if(require.main===module){patchIOS();patchAndroid();patchAndroidWallet();patchAndroidBuild();patchAndroidMinSdk();require('./patch-brand-assets').patchBrandAssets();}
-module.exports={patchAndroidBuild,patchAndroidMinSdk,patchAndroidWallet};
+module.exports={patchAndroidBuild,patchAndroidMinSdk,patchAndroidWallet,ensureIOSExemptionFlag};
