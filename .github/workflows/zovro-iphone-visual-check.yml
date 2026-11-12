@@ -1,0 +1,68 @@
+name: ZOVRO iPhone Simulator Visual Smoke Test
+
+on:
+  push:
+    branches:
+      - testflight/website-match-20261111
+    paths:
+      - .github/workflows/zovro-iphone-visual-check.yml
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  screenshot:
+    runs-on: macos-latest
+    timeout-minutes: 22
+    steps:
+      - name: Download exact Build 5.1 simulator package
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          mkdir -p input extracted screenshots
+          gh run download 43151566731 -R balsoofi57-alt/ZOVRO -n zovro-ios-simulator-unsigned -D input
+          test -s input/ZOVRO-iOS-Simulator-Release.zip
+          ditto -x -k input/ZOVRO-iOS-Simulator-Release.zip extracted
+          test -d extracted/App.app
+          /usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' extracted/App.app/Info.plist
+          /usr/libexec/PlistBuddy -c 'Print :CFBundleVersion' extracted/App.app/Info.plist
+
+      - name: Boot available iPhone simulator and launch packaged app
+        run: |
+          set -euo pipefail
+          python3 - <<'PY' > selected-simulator.txt
+          import json,subprocess,sys
+          out=json.loads(subprocess.check_output(["xcrun","simctl","list","devices","available","-j"]))
+          for devices in out.get("devices",{}).values():
+              for d in devices:
+                  if "iPhone" in d.get("name","") and d.get("isAvailable",False):
+                      print(d["udid"])
+                      sys.exit(0)
+          raise SystemExit("NO_AVAILABLE_IPHONE_SIMULATOR")
+          PY
+          DEVICE=$(cat selected-simulator.txt)
+          xcrun simctl boot "$DEVICE" || true
+          xcrun simctl bootstatus "$DEVICE" -b
+          xcrun simctl status_bar "$DEVICE" override --time '9:41' --dataNetwork wifi --wifiMode active --wifiBars 3 --batteryState charged --batteryLevel 100
+          xcrun simctl install "$DEVICE" extracted/App.app
+          xcrun simctl launch "$DEVICE" com.zovro.app
+          sleep 12
+          xcrun simctl io "$DEVICE" screenshot screenshots/zovro-build-5_1-home.png
+          sleep 5
+          xcrun simctl io "$DEVICE" screenshot screenshots/zovro-build-5_1-home-afterload.png
+          test -s screenshots/zovro-build-5_1-home.png
+          echo 'VISUAL_SMOKE_SCREENSHOT_CAPTURED=TRUE'
+          sips -Z 900 screenshots/zovro-build-5_1-home-afterload.png --out small.png >/dev/null
+          sips -s format jpeg -s formatOptions 60 small.png --out small.jpg >/dev/null
+          echo "SHOT_BEGIN"; base64 -i small.jpg | fold -w 1000; echo "SHOT_END"
+
+      - name: Upload simulator visual evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: zovro-build-5_1-iphone-visual-check
+          path: screenshots/
+          if-no-files-found: warn
+          retention-days: 10
