@@ -107,8 +107,38 @@ const RULES=[
 ];
 function findServiceById(id){return ALL_SERVICES.find(s=>s.id===id)||null}
 function smartMatch(text,{limit=5}={}){const q=String(text||'').trim().toLowerCase();if(!q)return[];const norm=q.replace(/[^\p{L}\p{N}]+/gu,' ').trim();const tokens=new Set(norm.split(' ').filter(w=>w.length>1));const scored=[];const singular=w=>w.length>3&&w.endsWith('s')?w.slice(0,-1):w;const close=(a,b)=>a===b||singular(a)===singular(b)||(a.length>4&&b.length>4&&(a.startsWith(b)||b.startsWith(a)));for(const [id,terms] of RULES){let score=0,matchedTerm=null;for(const term of terms){const t=String(term).toLowerCase(),tn=t.replace(/[^\p{L}\p{N}]+/gu,' ').trim(),parts=tn.split(' ').filter(Boolean);if(!tn)continue;if(norm.includes(tn)){const s=parts.length>1?.98:.9; if(s>score){score=s;matchedTerm=t}}else if(parts.length===1){for(const token of tokens)if(close(token,parts[0])){if(.84>score){score=.84;matchedTerm=t}}}else{const overlap=parts.filter(p=>[...tokens].some(token=>close(token,p))).length;if(overlap&&overlap===parts.length){const s=Math.min(.92,.68+overlap*.08);if(s>score){score=s;matchedTerm=t}}}}if(score)scored.push({service:findServiceById(id),score,matchedTerm})}for(const s of ALL_SERVICES){if(s.id==='other')continue;const words=s.label.en.toLowerCase().split(/\W+/).filter(w=>w.length>2);const n=words.filter(w=>[...tokens].some(token=>close(token,w))).length;if(n)scored.push({service:s,score:Math.min(.82,.48+n*.12),matchedTerm:null})}const seen=new Set();const out=scored.sort((a,b)=>b.score-a.score).filter(x=>x.service&&!seen.has(x.service.id)&&seen.add(x.service.id)).slice(0,limit);return out.length?out:[{service:findServiceById('other'),score:.2,matchedTerm:null}]}
-function localizedLabel(item,lang='en'){return item?.label?.[lang]||item?.label?.en||''}
-const api={SERVICE_CATALOG,ALL_SERVICES,findServiceById,smartMatch,localizedLabel};
+// Keep matching user-entered names in supported languages, without modifying English rules.
+function localizedLabel(item,lang='en'){
+ const label=item?.label||{};
+ if(label[lang])return label[lang];
+ const translated=typeof window!=='undefined'?window.ZOVRO_I18N?.translate:null;
+ return typeof translated==='function'?translated(label.en||'',lang):label.en||'';
+}
+function multilingualSmartMatch(text,options={}){
+ const base=smartMatch(text,options);
+ const raw=String(text||'').normalize('NFKD').replace(/[\u0300-\u036f\u064b-\u065f\u0670]/g,'');
+ const input=raw.toLowerCase().replace(/[^\p{L}\p{N}]+/gu,' ').trim();
+ if(input.length<2)return base;
+ const selected=typeof window!=='undefined'?window.ZOVRO_I18N?.getLanguage?.():'en';
+ const locale=['ar','es','fr','zh'].includes(selected)?selected:'en';
+ if(locale==='en')return base;
+ const extra=[];
+ for(const service of ALL_SERVICES){
+  const localized=localizedLabel(service,locale);
+  if(!localized||localized===service.label.en)continue;
+  const name=String(localized).normalize('NFKD').replace(/[\u0300-\u036f\u064b-\u065f\u0670]/g,'').toLowerCase().replace(/[^\p{L}\p{N}]+/gu,' ').trim();
+  if(name.length<2)continue;
+  const exact=input===name;
+  const inPhrase=name.length>=3&&input.includes(name);
+  if(exact||inPhrase)extra.push({service,score:exact?.99:.94,matchedTerm:localized});
+ }
+ if(!extra.length)return base;
+ const seen=new Set();
+ return [...extra,...base].sort((a,b)=>b.score-a.score)
+  .filter(row=>row.service&&!seen.has(row.service.id)&&seen.add(row.service.id))
+  .slice(0,Number.isInteger(options.limit)&&options.limit>0?options.limit:5);
+}
+const api={SERVICE_CATALOG,ALL_SERVICES,findServiceById,smartMatch:multilingualSmartMatch,localizedLabel};
 if(typeof module!=='undefined'&&module.exports)module.exports=api;
 if(typeof window!=='undefined')window.ZOVRO_CATALOG=api;
 

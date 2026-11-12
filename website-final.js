@@ -6,7 +6,7 @@
     call('startRequestWithLocation',{details:prefill||''});
   }
   function goNearby(){
-    const b=[...document.querySelectorAll('.bottom button')].find(x=>/nearby/i.test(x.textContent));
+    const b=document.querySelector('.bottom button[onclick*="nearby"]');
     if(b){b.click();return}
     document.getElementById('nearby')?.scrollIntoView({behavior:'smooth'});
   }
@@ -233,7 +233,7 @@
     // Links to the provider section now open its menu before scrolling.
     for(const link of document.querySelectorAll('a[href="#providerJoin"]'))link.addEventListener('click',event=>{event.preventDefault();tabs[3].click();const d=document.getElementById('zProviderMenu');if(d)d.open=true;d?.scrollIntoView({block:'start',behavior:'smooth'})});
     const sheet=document.querySelector('#requestModal .sheet');
-    if(sheet){const view=[...sheet.children].find(n=>n.tagName==='BUTTON'&&/View my requests/i.test(n.textContent));if(view){const d=document.createElement('details');d.className='z-menu-group z-request-options';const s=document.createElement('summary');s.textContent='More options';d.appendChild(s);view.replaceWith(d);d.appendChild(view)}}
+    if(sheet){const view=[...sheet.children].find(n=>n.tagName==='BUTTON'&&n.getAttribute('onclick')?.includes("nav('jobs'"));if(view){const d=document.createElement('details');d.className='z-menu-group z-request-options';const s=document.createElement('summary');s.textContent='More options';d.appendChild(s);view.replaceWith(d);d.appendChild(view)}}
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',simplify);else simplify();
 })();
@@ -500,7 +500,7 @@
       }
       const cards=[...list.querySelectorAll(':scope > .card.job')],counts={all:cards.length,active:0,history:0};let shown=0;
       for(const card of cards){
-        const isHistory=/^(completed|cancelled)$/i.test((card.querySelector('.tag')?.textContent||'').trim());
+        const isHistory=['Completed','Cancelled'].includes(card.dataset.jobStatus);
         counts[isHistory?'history':'active']++;
         const visible=selected==='all'||(selected==='history'?isHistory:!isHistory);
         card.classList.toggle('z-request-filtered',!visible);if(visible)shown++;
@@ -784,7 +784,7 @@
       const out=original.apply(this,arguments);
       try{
         const tabs=document.querySelectorAll('#authModal .tabs .btn');
-        const login=document.getElementById('authTitle')?.textContent!=='Create account';
+        const login=!document.getElementById('registerFields')?.querySelector('#role');
         tabs.forEach((t,i)=>{
           const active=login?i===0:i===1;t.classList.toggle('z-tab-active',active);
           t.setAttribute('aria-pressed',String(active));

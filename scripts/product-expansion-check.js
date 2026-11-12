@@ -8,7 +8,7 @@ assert(catalog.ALL_SERVICES.length>=80,'Expected expanded service list');
 assert(catalog.smartMatch("my car won't start")[0].service.id==='jump-start','Smart Match should detect jump start');
 assert(catalog.smartMatch('my basement flooded')[0].service.id==='water-damage','Smart Match should detect water damage');
 assert(features.BRAND.slogan==='ANYWHERE. ANYTIME. NEAR YOU.','Approved slogan missing');
-assert(features.BRAND.defaultLanguage==='en'&&features.BRAND.languages.join(',')==='en,es','Language policy mismatch');
+assert(features.BRAND.defaultLanguage==='en'&&features.BRAND.languages.join(',')==='en,ar,es,fr,zh','Language policy mismatch');
 assert(features.PRODUCT_FEATURES.launchCore.sosDispatch===false,'Retired SOS dispatch must stay disabled');
 const estimate=workflows.createEstimate({requestId:'r1',providerId:'p1',labor:100,parts:25,tax:7.5});
 assert(estimate.total===132.5,'Estimate total mismatch');
