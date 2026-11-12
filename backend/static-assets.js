@@ -14,6 +14,7 @@ const PUBLIC_FILES = new Set([
   "home-ux.css",
   "live-map.js",
   "manifest.webmanifest",
+  "phone-input-client.js",
   "password-recovery-client.js",
   "payment-client.js",
   "payment-ui.js",

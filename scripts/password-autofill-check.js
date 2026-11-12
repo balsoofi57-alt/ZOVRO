@@ -7,7 +7,7 @@ assert.match(html,/<input id="password"[^>]*name="password"[^>]*type="password"[
 assert.match(html,/<button id="authSubmit"[^>]*type="submit"/);
 const nodes=new Map(),storage={},messages=[];let calls=0,settle;
 const $=id=>{if(!nodes.has(id))nodes.set(id,{value:'',disabled:false,textContent:'',innerHTML:'',autocomplete:''});return nodes.get(id)};
-const c=vm.createContext({$,authMode:'login',token:'',me:null,localStorage:storage,setPasswordVisible(){},closeModal(){},renderAccount(){},loadJobs(){},resumeRequestIntent(){},toast:m=>messages.push(m),api:()=>{calls++;return new Promise((resolve,reject)=>settle={resolve,reject})}});
+const c=vm.createContext({$,document:{getElementById:()=>({toggleAttribute(){}})},authMode:'login',token:'',me:null,localStorage:storage,setPasswordVisible(){},closeModal(){},renderAccount(){},loadJobs(){},resumeRequestIntent(){},toast:m=>messages.push(m),api:()=>{calls++;return new Promise((resolve,reject)=>settle={resolve,reject})}});
 vm.runInContext(html.match(/^function openAuth\(\).*$/m)[0]+'\n'+html.match(/^(?:let authBusy=false;)?async function submitAuth\(\).*$/m)[0],c);
 (async()=>{
  $('password').value='previous secret';c.renderAuth();assert.equal($('password').value,'');assert.equal($('password').autocomplete,'current-password');
