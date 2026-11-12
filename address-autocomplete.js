@@ -13,6 +13,13 @@
   // can show similarly named towns in another state (e.g. Dearborn, Missouri).
   const LOCAL_CITIES=new Set(['dearborn','dearborn heights','detroit']);
   const SOUTHEAST_MI_EXTENT='-84.4,41.5,-82.3,43.2';
+  function isLocalCitySuggestion(value,city){
+    const parts=String(value||'').split(',').map(s=>s.trim().toLowerCase());
+    if(parts.length<3)return false;
+    const resultCity=parts[parts.length-2];
+    const state=parts[parts.length-1];
+    return resultCity===city&&(state==='mi'||state.startsWith('mi ')||state==='michigan'||state.startsWith('michigan '));
+  }
   const FIELD_IDS=['reqAddress','transportDropoff','zHomeManualAddress','zPrivAddress'];
   const MIN_CHARS=3,DELAY=220,MAX=6;
   const cache=new Map();
@@ -124,7 +131,7 @@
     if(!res.ok)throw new Error('Address lookup failed');
     const data=await res.json();
     const seen=new Set(),list=[];
-    for(const s of data?.suggestions||[]){if(s?.isCollection)continue;const t=clean(s?.text);if(t&&!seen.has(t)){seen.add(t);list.push(t)}}
+    for(const s of data?.suggestions||[]){if(s?.isCollection)continue;const t=clean(s?.text);if(local&&!isLocalCitySuggestion(t,place))continue;if(t&&!seen.has(t)){seen.add(t);list.push(t)}}
     cache.set(key,list);if(cache.size>80)cache.delete(cache.keys().next().value);
     return list;
   }
@@ -169,5 +176,5 @@
   window.visualViewport?.addEventListener('scroll',position);
   document.addEventListener('scroll',()=>{if(active&&!active.box.hidden)position()},true);
 
-  window.ZOVRO_ADDRESS_AUTOCOMPLETE={fields:FIELD_IDS.slice(),hide,_clean:clean};
+  window.ZOVRO_ADDRESS_AUTOCOMPLETE={fields:FIELD_IDS.slice(),hide,_clean:clean,_isLocalCitySuggestion:isLocalCitySuggestion};
 })();
