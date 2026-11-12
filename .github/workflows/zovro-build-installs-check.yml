@@ -1,0 +1,86 @@
+name: ZOVRO Verify TestFlight Build Installation Counts
+on:
+  push:
+    branches:
+      - testflight/website-match-20261111
+    paths:
+      - .github/workflows/zovro-build-installs-check.yml
+
+permissions:
+  contents: read
+jobs:
+  verify-build-installs:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Install Apple JWT dependency
+        run: python -m pip install --quiet --disable-pip-version-check "PyJWT[crypto]==2.10.1"
+      - name: Read per-build install metrics without tester identity
+        env:
+          APPLE_KEY_ID: ${{ secrets.ZOVRO_APP_STORE_CONNECT_API_KEY_ID }}
+          APPLE_ISSUER_ID: ${{ secrets.ZOVRO_APP_STORE_CONNECT_ISSUER_ID }}
+          APPLE_PRIVATE_KEY_BASE64: ${{ secrets.ZOVRO_APP_STORE_CONNECT_API_PRIVATE_KEY_BASE64 }}
+        run: |
+          python - <<'PY'
+          import base64, datetime, json, os, urllib.error, urllib.parse, urllib.request
+          import jwt
+
+          now=int(datetime.datetime.now(datetime.timezone.utc).timestamp())
+          token=jwt.encode(
+              {"iss":os.environ["APPLE_ISSUER_ID"],"iat":now-20,
+               "exp":now+600,"aud":"appstoreconnect-v1"},
+              base64.b64decode(os.environ["APPLE_PRIVATE_KEY_BASE64"],validate=True),
+              algorithm="ES256",
+              headers={"kid":os.environ["APPLE_KEY_ID"],"typ":"JWT"}
+          )
+          def get(path,params=None):
+              url="https://api.appstoreconnect.apple.com"+path
+              if params:
+                  url+="?"+urllib.parse.urlencode(params)
+              req=urllib.request.Request(url,headers={
+                  "Authorization":"Bearer "+token,"Accept":"application/json"})
+              try:
+                  with urllib.request.urlopen(req,timeout=30) as response:
+                      return response.status,json.load(response)
+              except urllib.error.HTTPError as e:
+                  print("APPLE_METRICS_HTTP_STATUS="+str(e.code))
+                  return e.code,{}
+
+          status,apps=get("/v1/apps",{"filter[bundleId]":"com.zovro.app","limit":"5"})
+          a=[x for x in apps.get("data",[]) if x.get("attributes",{}).get("bundleId")=="com.zovro.app"]
+          if status!=200 or len(a)!=1:
+              raise SystemExit("ZOVRO_APP_LOOKUP_FAILED")
+          status,latest=get("/v1/builds",{"filter[app]":a[0]["id"],"sort":"-uploadedDate","limit":"5","fields[builds]":"version,uploadedDate,processingState,expired"})
+          for x in latest.get("data",[]):
+              at=x.get("attributes",{})
+              print("RECENT_BUILD="+str(at.get("version"))+" uploaded="+str(at.get("uploadedDate"))+" state="+str(at.get("processingState"))+" expired="+str(at.get("expired")))
+          for build_version in ("4.1","5.1"):
+              status,payload=get("/v1/builds",{"filter[app]":a[0]["id"],"filter[version]":build_version,"limit":"10"})
+              builds=payload.get("data",[])
+              if status!=200 or len(builds)!=1:
+                  print("BUILD_"+build_version.replace(".","_")+"_LOOKUP=UNAVAILABLE")
+                  continue
+              b=builds[0]
+              state=b.get("attributes",{}).get("processingState")
+              print("BUILD_"+build_version.replace(".","_")+"_PROCESSING="+str(state)+" EXPIRED="+str(b.get("attributes",{}).get("expired")))
+              status,detail=get("/v1/builds/"+b["id"]+"/buildBetaDetail")
+              if status==200:
+                  print("BUILD_"+build_version.replace(".","_")+"_BETA_STATE="+str(
+                      detail.get("data",{}).get("attributes",{}).get("internalBuildState")
+                  ))
+              code,metric=get("/v1/builds/"+b["id"]+"/metrics/betaBuildUsages")
+              if code!=200:
+                  print("BUILD_"+build_version.replace(".","_")+"_METRICS=NOT_AVAILABLE")
+                  continue
+              totals={}
+              date_ranges=[]
+              for entry in metric.get("data",[]):
+                  for datapoint in entry.get("dataPoints",[]):
+                      date_ranges.append(str(datapoint.get("start",""))+".."+str(datapoint.get("end","")))
+                      for k,v in datapoint.get("values",{}).items():
+                          if isinstance(v,(int,float)) and not isinstance(v,bool):
+                              totals[k]=totals.get(k,0)+v
+              print("BUILD_"+build_version.replace(".","_")+"_METRICS="+json.dumps(totals,sort_keys=True))
+              print("BUILD_"+build_version.replace(".","_")+"_METRIC_PERIODS="+str(len(date_ranges)))
+          print("NOTES=Metrics can be delayed; INSTALLED tester state is not build-specific")
+          PY
