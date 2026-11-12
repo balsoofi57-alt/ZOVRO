@@ -14,6 +14,7 @@ const database=require('./database');
   require('./request-privacy');
   require('./profile-private-api');
   require('./workflow-api');
+  require('./provider-directory');
   require('./html-inject');
   require('./product-expansion');
   require('./server-mobile-payments');

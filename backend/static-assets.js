@@ -10,6 +10,7 @@ const PUBLIC_FILES = new Set([
   "i18n.js",
   "index.html",
   "live-map.js",
+  "provider-directory-client.js",
   "manifest.webmanifest",
   "password-recovery-client.js",
   "payment-client.js",
