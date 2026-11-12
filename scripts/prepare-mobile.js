@@ -9,11 +9,27 @@ const channel=process.env.ZOVRO_BUILD_CHANNEL||'release';
 const oneSignalAppId=String(process.env.ONESIGNAL_APP_ID||'7992b022-6c11-4a66-bad4-8cbd114266d0').trim();
 const mapTileUrl=String(process.env.ZOVRO_MAP_TILE_URL||'https://tile.openstreetmap.org/{z}/{x}/{y}.png').trim();
 html=html.replace('<head>','<head><script>window.ZOVRO_CONFIG={apiBase:'+JSON.stringify(api)+',appVersion:'+JSON.stringify(pkg.version)+',buildChannel:'+JSON.stringify(channel)+',oneSignalAppId:'+JSON.stringify(oneSignalAppId)+',mapTileUrl:'+JSON.stringify(mapTileUrl)+'};<\/script>');
-html=html.replace("const API='https://zovro-api.onrender.com'","const API=(window.ZOVRO_CONFIG?.apiBase||'https://zovro-api-final.onrender.com')");
-html=html.replace("let token=localStorage.zovroToken||''","let token='' ");
-html=html.replaceAll('localStorage.zovroToken=token','ZOVRO_SECURE_SESSION.set(token)');
-html=html.replaceAll("localStorage.removeItem('zovroToken')",'ZOVRO_SECURE_SESSION.remove()');
-html=html.replace('boot();setInterval(()=>{if(me)loadJobs()},10000);',"ZOVRO_SECURE_SESSION.initialize().then(()=>{token=window.ZOVRO_SESSION_TOKEN||'';boot();setInterval(()=>{if(me)loadJobs()},10000)});");
+// The native bundle must track the actual production index.html, not older bootstrap strings.
+function replaceExactly(label, before, after) {
+  const matches = html.split(before).length - 1;
+  if (matches !== 1) throw new Error('Mobile parity: expected one ' + label + ', found ' + matches);
+  html = html.replace(before, after);
+}
+if (!html.includes("const API=(window.ZOVRO_CONFIG?.apiBase||'https://zovro-api-final.onrender.com')")) {
+  throw new Error('Mobile parity: web API configuration changed; review native packaging');
+}
+replaceExactly('session bootstrap',
+  "let token='';try{token=localStorage.getItem('zovroToken')||''}catch(_){token=''}",
+  "let token='';");
+replaceExactly('session save',
+  'try{localStorage.zovroToken=token}catch(_){}',
+  'void window.ZOVRO_SECURE_SESSION?.set?.(token);');
+const tokenClear = "localStorage.removeItem('zovroToken')";
+const clears = html.split(tokenClear).length - 1;
+if (clears !== 3) throw new Error('Mobile parity: expected three session-clear paths, found ' + clears);
+html = html.replaceAll(tokenClear, 'void window.ZOVRO_SECURE_SESSION?.remove?.()');
+// secure-session.js is loaded after the inline app and restores native credentials.
+// Keep the original web boot path, request flow, visuals and all linked client files.
 const state='<div id="state" class="state">Checking API…</div>';
 const chooser='<div style="display:flex;align-items:center;gap:8px"><select id="zovroLanguage" class="state" aria-label="Language" onchange="ZOVRO_I18N.setLanguage(this.value)"><option value="en">English</option><option value="es">Español</option></select><div id="state" class="state">Checking API…</div></div>';
 if(html.includes(state))html=html.replace(state,chooser);
