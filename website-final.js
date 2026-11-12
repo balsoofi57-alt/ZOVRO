@@ -382,7 +382,7 @@
     document.querySelector('#zSupportMenu>summary').textContent='Get help · Support & legal';
     const how=document.getElementById('howItWorks');if(how)document.getElementById('zSupportMenu').appendChild(how);
     const provider=document.querySelector('#zProviderMenu>summary');if(provider)provider.textContent='Work with ZOVRO';
-    const support=document.getElementById('zSupportMenu');const links=document.createElement('div');links.innerHTML='<a class="z-menu-row" href="mailto:support@zovro.work">Contact Support <span>›</span></a>';support.insertBefore(links,support.children[1]);
+    const support=document.getElementById('zSupportMenu');const links=document.createElement('div');links.innerHTML='<a class="z-menu-row" href="#support-chat" data-support-chat>Chat with support <span>›</span></a>';support.insertBefore(links,support.children[1]);
     const manage=document.createElement('section');manage.id='zManageMenu';manage.className='z-menu-group';manage.innerHTML='<h3>Manage</h3>';
     // One route to requests on compact phones, whose bottom tabs are hidden.
     manage.appendChild(button('My requests  ›',()=>showTab(1),'z-menu-row'));
