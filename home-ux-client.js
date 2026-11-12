@@ -50,8 +50,9 @@
     }
     const matching=all.filter(s=>String(s.label?.en||'').toLowerCase().includes(q));
     matching.slice(0,5).forEach(s=>include(s.label.en));
-    const semantic=typeof catalog?.smartMatch==='function'?catalog.smartMatch(query,{limit:5}):[];
-    semantic.filter(x=>x.score>=.43).forEach(x=>include(x.service?.label?.en));
+    let semantic=[];
+    try{semantic=typeof catalog?.smartMatch==='function'?catalog.smartMatch(query,{limit:5}):[]}catch{}
+    (Array.isArray(semantic)?semantic:[]).filter(x=>x?.score>=.43).forEach(x=>include(x.service?.label?.en));
     return ranked.slice(0,5);
   }
   function hideSuggestions(){
@@ -156,6 +157,17 @@
     activeCard=make('section','z-home-active-card');activeCard.id='zHomeActiveRequest';activeCard.hidden=true;
     activeCard.setAttribute('role','status');activeCard.setAttribute('aria-live','polite');wrap.appendChild(activeCard);
     categories.before(wrap);
+    // An address selected before authentication must survive the sign-in step.
+    const resume=window.resumeRequestIntent;
+    if(typeof resume==='function'&&!resume.__zHomeLocation){
+      const restore=function(){const value=resume.apply(this,arguments);
+        if(customerLocation.mode==='manual'&&byId('requestModal')?.classList.contains('open')){
+          const address=byId('reqAddress');if(address){address.value=customerLocation.manual;call('requestAddressTypedManually')}
+        }
+        return value;
+      };
+      restore.__zHomeLocation=true;window.resumeRequestIntent=restore;
+    }
     renderActive();
   }
   function renderActive(){
