@@ -1265,3 +1265,7 @@ body.z-more-subpage-open{overflow:hidden}
  #requestModal .z-route-from-header>label{flex-basis:175px}
  #requestModal .z-pickup-gps-btn{max-width:144px!important;font-size:11px!important}
 }
+
+/* One More entry per viewport: desktop uses the web navigation; the mobile
+   layout hides web and bottom tabs, so it keeps the account icon in the top bar. */
+@media (min-width:701px){.top .z-account-shortcut{display:none!important}}

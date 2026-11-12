@@ -100,16 +100,16 @@
       const eyebrow=hero.querySelector('.eyebrow');if(eyebrow)eyebrow.textContent='Anywhere, Any Time, Near You.';
       const h1=hero.querySelector('h1');if(h1)h1.innerHTML='Everyday problems.<br><span>Nearby solutions.</span>';
       const p=h1?.nextElementSibling;if(p&&p.tagName==='P')p.textContent='From roadside help to home repairs. Find a local professional and keep every update in one place.';
-      const bar=hero.querySelector('.bar');if(bar)bar.innerHTML='<button class="btn primary" id="zHeroHelp">Help Now</button><button class="btn ghost" id="zHeroProvider">Join as a Provider</button>';
-      document.getElementById('zHeroHelp')?.addEventListener('click',()=>openHelp(''));
-      document.getElementById('zHeroProvider')?.addEventListener('click',()=>{document.getElementById('providerJoin')?.scrollIntoView({behavior:'smooth'});setTimeout(()=>call('openAuth'),350)});
+      // The Smart Match form below is the single Home "Help Now" action.
+      // Provider enrollment stays in More > Work with ZOVRO.
+      hero.querySelector('.bar')?.remove();
     }
 
     if(hero&&!document.getElementById('smartMatch')){
       const sm=document.createElement('section');sm.id='smartMatch';sm.className='z-smart-match';
       sm.innerHTML='<div class="z-section-kicker">Smart Match</div><h2>What do you need help with?</h2><p>Describe the problem in your own words. ZOVRO will start the right request flow for you.</p><div class="z-smart-box"><textarea id="zProblem" rows="2" placeholder="Example: My car will not start, or water is leaking under my sink"></textarea><div class="z-smart-actions"><button class="btn primary" id="zSmartGo">Help Now</button><button class="btn ghost" id="zVoice">🎙 Voice</button></div></div><div id="zSmartStatus" class="z-smart-status" role="status" aria-live="polite"></div>';
       hero.insertAdjacentElement('afterend',sm);
-      document.getElementById('zSmartGo').addEventListener('click',()=>{const q=document.getElementById('zProblem').value.trim();if(!q){document.getElementById('zProblem').focus();return}openHelp(q)});
+      document.getElementById('zSmartGo').addEventListener('click',()=>openHelp(document.getElementById('zProblem')?.value.trim()||''));
       document.getElementById('zVoice').addEventListener('click',()=>{
         const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
         if(!SR){document.getElementById('zSmartStatus').textContent='Voice input is not available in this browser. You can type your request instead.';return}
@@ -156,9 +156,7 @@
     if(howSection&&nearbySection)nearbySection.insertAdjacentElement('beforebegin',howSection);
 
     const account=document.getElementById('accountBox');
-    if(account&&!document.getElementById('zSupportStrip')){const s=document.createElement('div');s.id='zSupportStrip';s.className='z-support-strip';s.innerHTML='<div><strong>ZOVRO Support</strong><span>AI-guided help, complaints, payment disputes, safety reports and account support.</span></div><div class="z-support-actions"><a href="support.html">Help Center</a><a href="#support-chat" data-support-chat>Chat with Support</a></div>';account.insertAdjacentElement('afterend',s)}
-
-    if(!document.getElementById('zMobileHelp')){const m=document.createElement('button');m.id='zMobileHelp';m.className='z-mobile-help';m.textContent='Help Now';m.onclick=()=>openHelp('');document.body.appendChild(m)}
+    // Support lives in More; do not add a second support strip or floating Help button.
 
     const shell=document.querySelector('.shell');
     if(shell&&!document.querySelector('.z-site-footer')){const f=document.createElement('footer');f.className='z-site-footer';f.innerHTML='<div>© 2026 ZOVRO LLC · Anywhere, Any Time, Near You.</div><div><a href="privacy.html">Privacy</a><a href="terms.html">Terms</a><a href="support.html">Support</a></div>';shell.appendChild(f)}
@@ -224,16 +222,11 @@
     function collectSupport(){const node=document.getElementById('zovroSupportCenter');if(node&&node.parentElement!==support)support.appendChild(node)}
     collectSupport();new MutationObserver(collectSupport).observe(profile,{childList:true});
     const provider=document.getElementById('providerJoin');if(provider){group('Become a service provider','zProviderMenu').appendChild(provider)}
-    const heroProvider=document.getElementById('zHeroProvider');if(heroProvider){const d=document.getElementById('zProviderMenu')||group('Become a service provider','zProviderMenu');d.appendChild(heroProvider)}
     const nearbyCta=document.getElementById('zAvailableNow');if(nearbyCta)nearbyCta.hidden=true;
-    if(document.getElementById('zHeroHelp'))document.getElementById('nativeMobileHelp')?.classList.add('z-duplicate-help');
-    document.getElementById('zMobileHelp')?.classList.add('z-duplicate-help');
     // Preserve the existing tab order because request flows reference it.
     const oldNav=window.nav;window.nav=function(id,b){const result=oldNav.apply(this,arguments);if(id==='nearby'){tabs[2].classList.remove('active');tabs[3].classList.add('active')}return result};
     // Links to the provider section now open its menu before scrolling.
     for(const link of document.querySelectorAll('a[href="#providerJoin"]'))link.addEventListener('click',event=>{event.preventDefault();tabs[3].click();const d=document.getElementById('zProviderMenu');if(d)d.open=true;d?.scrollIntoView({block:'start',behavior:'smooth'})});
-    const sheet=document.querySelector('#requestModal .sheet');
-    if(sheet){const view=[...sheet.children].find(n=>n.tagName==='BUTTON'&&/View my requests/i.test(n.textContent));if(view){const d=document.createElement('details');d.className='z-menu-group z-request-options';const s=document.createElement('summary');s.textContent='More options';d.appendChild(s);view.replaceWith(d);d.appendChild(view)}}
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',simplify);else simplify();
 })();
@@ -332,9 +325,13 @@
       b.replaceChildren(badge,text);return b;
     };
     const showTab=i=>{tabs[i]?.click();window.scrollTo({top:0,behavior:'smooth'})};
-    const account=button('',()=>{showTab(3);document.getElementById('zAccountMenu').open=true},'z-account-shortcut');account.setAttribute('aria-label','My account');account.innerHTML=icon('account');document.querySelector('.top').appendChild(account);
-    const location=button('⌖  Set your location  ›',()=>window.startRequestWithLocation({details:document.getElementById('zProblem').value.trim(),useLocation:true}));location.id='zLocationShortcut';smart.prepend(location);
-    document.getElementById('zSmartGo').onclick=()=>window.startRequestWithLocation({details:document.getElementById('zProblem').value.trim(),useLocation:false});
+    // The bottom and web nav are hidden on compact silver-layout phones.
+    // Keep exactly one visible More/account entry in the mobile header.
+    const account=button('',()=>showTab(3),'z-account-shortcut');
+    account.setAttribute('aria-label','More menu');
+    account.innerHTML=icon('more');
+    document.querySelector('.top').appendChild(account);
+    // GPS remains opt-in inside the request form, never a second Home shortcut.
     const services=document.getElementById('services');const oldHeading=services.previousElementSibling;if(oldHeading?.classList.contains('sectionHead'))oldHeading.hidden=true;
     const categories=document.createElement('section');categories.id='zCategoryGrid';categories.innerHTML='<div class="z-service-heading"><h2>Services</h2></div><div class="z-category-grid"></div>';
     smart.insertAdjacentElement('afterend',categories);
@@ -378,18 +375,18 @@
       if(!categoryId){for(const group of window.ZOVRO_PROVIDER_SERVICES?.groups||[]){for(const service of group.services){if(seen.has(service.label))continue;seen.add(service.label);const item=styleServiceButton(button(service.label,()=>{window.closeModal(catalog.id);window.startService(service.label)}),service.label,group.id);list.appendChild(item)}}}
       const search=document.getElementById('zCatalogSearch');search.value='';search.oninput=()=>{const q=search.value.trim().toLowerCase();for(const b of list.children)b.hidden=!(b.dataset.searchTerms||b.textContent.toLowerCase()).includes(q)};window.openModal(catalog.id);list.scrollTop=0;document.getElementById('zCatalogBack').focus({preventScroll:true});
     }
-    categories.querySelector('.z-service-heading').appendChild(button('See all  ›',()=>openCatalog()));
+    // "More Services" is the sole way to open the full service directory.
     for(const [label,id,glyph] of [['Roadside Assistance','auto-roadside','car'],['Home Repairs','home-services','home'],['Cleaning','cleaning','clean'],['Outdoor & Tree Care','outdoor-seasonal','tree'],['Moving & Hauling','moving-hauling','truck'],['More Services',null,'more']]){const b=button('',()=>openCatalog(id,label),'z-category');b.innerHTML='<span class="z-icon-badge" aria-hidden="true">'+icon(glyph)+'</span><span class="z-category-label">'+label+'</span>';categories.querySelector('.z-category-grid').appendChild(b)}
-    const quick=document.createElement('div');quick.className='z-home-shortcuts';
-    for(const [label,small,glyph,i] of [['Nearby Providers','See available pros','pin',2],['Track My Request','Live status updates','requests',1]]){const b=button('',()=>showTab(i),'z-quick');b.innerHTML='<span class="z-icon-badge" aria-hidden="true">'+icon(glyph)+'</span><span class="z-quick-label">'+label+'<small>'+small+'</small></span>';quick.appendChild(b)}categories.appendChild(quick);
+    // Nearby providers live in More; request tracking lives in Requests.
     document.querySelector('#zAccountMenu>summary').textContent='My Account · Profile & security';
     document.querySelector('#zSupportMenu>summary').textContent='Get help · Support & legal';
     const how=document.getElementById('howItWorks');if(how)document.getElementById('zSupportMenu').appendChild(how);
     const provider=document.querySelector('#zProviderMenu>summary');if(provider)provider.textContent='Work with ZOVRO';
-    const support=document.getElementById('zSupportMenu');const links=document.createElement('div');links.innerHTML='<a class="z-menu-row" href="support.html">Help Center <span>›</span></a><a class="z-menu-row" href="mailto:support@zovro.work">Contact Support <span>›</span></a>';support.insertBefore(links,support.children[1]);
+    const support=document.getElementById('zSupportMenu');const links=document.createElement('div');links.innerHTML='<a class="z-menu-row" href="mailto:support@zovro.work">Contact Support <span>›</span></a>';support.insertBefore(links,support.children[1]);
     const manage=document.createElement('section');manage.id='zManageMenu';manage.className='z-menu-group';manage.innerHTML='<h3>Manage</h3>';
+    // One route to requests on compact phones, whose bottom tabs are hidden.
+    manage.appendChild(button('My requests  ›',()=>showTab(1),'z-menu-row'));
     manage.appendChild(button('Notifications  ›',()=>{const d=document.getElementById('zAccountMenu');d.open=true;const field=document.getElementById('smsNotifications');if(field){field.scrollIntoView({block:'center'});field.focus()}else{window.toast('Manage ZOVRO notifications in your device settings. Provider SMS preferences are in your account.')}},'z-menu-row'));
-    const payments=document.createElement('a');payments.className='z-menu-row';payments.href='support.html';payments.textContent='Payment help  ›';manage.appendChild(payments);
     document.getElementById('zMoreMenu').insertBefore(manage,support);
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',ready);else ready();
@@ -492,8 +489,7 @@
     }
     list.before(filters);
     const empty=document.createElement('div');empty.id='zFilterEmpty';empty.className='card z-filter-empty';empty.hidden=true;
-    empty.innerHTML='<b>No requests in this view</b><p>Choose All to see your other requests.</p><button type="button" class="btn ghost">Show all requests</button>';
-    empty.querySelector('button').onclick=()=>{selected='all';updateFilters()};list.after(empty);
+    empty.innerHTML='<b>No requests in this view</b><p>Choose All above to see your other requests.</p>';list.after(empty);
     function updateFilters(){
       for(const icon of list.querySelectorAll('.z-empty-icon')){
         if(!icon.querySelector('svg'))icon.innerHTML=window.ZOVRO_ART?.icon('requests')||'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 4H5v17h14V4h-4M9 3h6v4H9zM8 11h8M8 15h6"/></svg>';
@@ -592,7 +588,7 @@
         const text=(empty.textContent||'').trim();
         if(text==='No requests yet.'){
           empty.dataset.zEmptyDone='1';empty.classList.add('z-empty');
-          empty.innerHTML='<span class="z-empty-icon">🛠️</span><b>No requests yet</b><p class="muted">When something breaks, describe the problem and ZOVRO will match you with a nearby professional.</p><button type="button" class="btn primary" onclick="newRequest()">Request help</button>';
+          empty.innerHTML='<span class="z-empty-icon">🛠️</span><b>No requests yet</b><p class="muted">Go to Home to start a new request using Smart Match or the service categories.</p>';
         }else if(text==='Sign in to see jobs.'){
           empty.dataset.zEmptyDone='1';empty.classList.add('z-empty');
           empty.innerHTML='<span class="z-empty-icon">📋</span><b>Sign in to see your requests</b><p class="muted">Track your requests, chat with your professional and follow the job live.</p><button type="button" class="btn primary" onclick="openAuth()">Sign in</button>';
