@@ -36,6 +36,15 @@ const l1=await call('GET','/api/requests',null,p1.token);const seen=l1.requests.
 let blocked=false;try{await call('POST','/api/requests/'+id+'/accept',{},p2.token)}catch{blocked=true}if(!blocked)throw new Error('other provider accepted');
 await call('POST','/api/requests/'+id+'/decline-direct',{reason:'Booked today'},p1.token);
 let cr=(await call('GET','/api/requests',null,c.token)).requests.find(r=>r.id===id);if(cr.status!=='Provider declined')throw new Error('decline status '+cr.status);
+const afterDecline=(await call('GET','/api/requests',null,p2.token)).requests;
+if(afterDecline.some(r=>r.id===id))throw new Error('Declined direct request exposed to other providers');
+for(const [label,token] of [['declining provider',p1.token],['unselected provider',p2.token]]){
+  let accepted=false;try{await call('POST','/api/requests/'+id+'/accept',{},token);accepted=true}catch{}
+  if(accepted)throw new Error(label+' accepted a declined direct request');
+}
+const afterBlocked=(await call('GET','/api/requests',null,c.token)).requests.find(r=>r.id===id);
+if(afterBlocked.status!=='Provider declined')throw new Error('Declined request changed after unauthorized acceptance');
+
 await call('POST','/api/requests/'+id+'/choose-provider',{providerId:p2.user.id},c.token);
 await call('POST','/api/requests/'+id+'/accept',{},p2.token);
 await call('POST','/api/requests/'+id+'/messages',{text:'On my way soon'},p2.token);
