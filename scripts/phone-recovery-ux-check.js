@@ -30,6 +30,7 @@ assert.equal(phone.normalize('+442071838750'),'+442071838750','Do not overwrite 
 assert.equal(phone.normalize(''),'', 'Empty phone must not submit');
 assert.equal(phone.normalize('+1'),'','Country prefix alone is not a phone number');
 assert.equal(phone.normalize('+1+13135551234'),null,'Never accept a double-prefix phone number');
+assert.equal(phone.normalize('+113135551234'),'+13135551234','Correct accidental duplicated +1 from full-number autofill');
 phone.bind(input);
 assert.equal(input.value,'+1','Default +1 should be visible before typing');
 let prevented=false;
@@ -43,6 +44,10 @@ input.value='+442071838750';
 handlers.focus();
 assert.equal(input.value,'+442071838750','Do not overwrite a previously entered international number');
 assert.match(html,/<input id="phone" name="username" type="tel"[^>]+required value="\+1"/);
+assert.match(html,/window\.ZOVRO_PHONE_INPUT\?\.normalize\(rawPhone\)/,'Normalize before login or registration');
+assert.match(html,/phone\.slice\(2\)/,'Fallback for legacy ten-digit accounts');
+assert.match(html,/id="authStatus" role="alert"/,'Keep sign-in errors readable');
+assert.match(recovery,/el\('password'\)\.value=''/,'Clear stale iPhone autofilled password after reset');
 assert.match(html,/<script src="phone-input-client\.js\?v=/);
 assert.match(html,/document\.getElementById\('forgotPasswordButton'\)\?\.toggleAttribute\('hidden',authMode!=='login'\)/);
 assert.match(recovery,/closest\('\.field'\)\.after\(trigger\)/);
