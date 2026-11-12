@@ -2,13 +2,17 @@
   'use strict';
   const PREF='zovroBiometricUnlock';
   const LOGIN_BUTTON_ID='zovroFaceIdLogin';
-  const plugin=()=>window.Capacitor?.Plugins?.BiometricAuthNative||window.Capacitor?.Plugins?.BiometricAuth||null;
+  const plugin=()=>window.Capacitor?.Plugins?.NativeBiometric||window.Capacitor?.Plugins?.BiometricAuthNative||window.Capacitor?.Plugins?.BiometricAuth||null;
   const enabled=()=>localStorage.getItem(PREF)==='1';
   const setEnabled=value=>{if(value)localStorage.setItem(PREF,'1');else localStorage.removeItem(PREF)};
   async function check(){
     const p=plugin();
     if(!p)return {available:false,native:false};
     try{
+      if(typeof p.isAvailable==='function'){
+        const info=await p.isAvailable({useFallback:true});
+        return {available:info?.isAvailable===true,native:true,info};
+      }
       if(typeof p.checkBiometry==='function'){
         const info=await p.checkBiometry();
         return {available:!!info?.isAvailable,native:true,info};
@@ -30,15 +34,19 @@
       androidBiometryStrength:'weak'
     };
     try{
+      if(typeof p.verifyIdentity==='function'){await p.verifyIdentity({reason,title:'ZOVRO secure sign-in',subtitle:reason,description:'Verify your identity to access your saved session',useFallback:true});return true}
       if(typeof p.internalAuthenticate==='function'){await p.internalAuthenticate(options);return true}
       if(typeof p.authenticate==='function'){await p.authenticate(options);return true}
       return false;
     }catch{return false}
   }
   async function enable(){
+    const live=typeof token!=='undefined'?String(token||''):'';
+    if(!live){toastSafe('Sign in with your password once to enable Face ID.');return false}
     const status=await check();
     if(!status.available){toastSafe('Biometric authentication is not available on this device.');return false}
     if(!(await authenticate('Confirm biometrics to protect your ZOVRO account'))){toastSafe('Biometric authentication was not enabled.');return false}
+    try{await window.ZOVRO_SECURE_SESSION?.set?.(live)}catch{toastSafe('Secure device storage is unavailable. Please try again later.');return false}
     setEnabled(true);renderCard();renderLoginShortcut();toastSafe('Face ID / biometric unlock enabled.');return true;
   }
   function disable(){setEnabled(false);renderCard();document.getElementById(LOGIN_BUTTON_ID)?.remove();toastSafe('Biometric unlock disabled.')}
@@ -62,14 +70,15 @@
     if(!enabled())return false;
     const status=await check();
     if(!status.available){toastSafe('Face ID / biometrics are not available on this device.');return false}
-    const saved=await window.ZOVRO_SECURE_SESSION?.get?.();
-    if(!saved){toastSafe('Sign in once with your phone and password, then Face ID can be used next time.');return false}
     if(!(await authenticate('Sign in to ZOVRO with Face ID'))){toastSafe('Face ID sign-in was canceled or could not be verified.');return false}
+    const saved=await window.ZOVRO_SECURE_SESSION?.get?.();
+    if(!saved){toastSafe('Your saved sign-in is no longer available. Please enter your password.');return false}
     try{
       window.ZOVRO_SESSION_TOKEN=String(saved||'');
       try{token=String(saved||'')}catch{}
       if(typeof api==='function'){
         const result=await api('/me');
+        if(!result?.user?.id)throw Object.assign(Error('Session was not confirmed'),{status:401});
         try{me=result.user}catch{}
         if(typeof renderAccount==='function')renderAccount();
         if(typeof loadJobs==='function')loadJobs();
@@ -79,19 +88,24 @@
       if(typeof resumeRequestIntent==='function')resumeRequestIntent();
       toastSafe('Signed in with Face ID.');
       return true;
-    }catch{
-      try{await window.ZOVRO_SECURE_SESSION?.remove?.()}catch{}
+    }catch(e){
       window.ZOVRO_SESSION_TOKEN='';
       try{token=''}catch{}
-      toastSafe('Your saved sign-in has expired. Please sign in with your password once.');
+      try{me=null;if(typeof renderAccount==='function')renderAccount()}catch{}
+      if(Number(e?.status)===401||Number(e?.status)===403){
+        try{await window.ZOVRO_SECURE_SESSION?.remove?.()}catch{}
+        toastSafe('Your saved sign-in has expired. Please sign in with your password once.');
+      }else toastSafe('Network connection unavailable. Your saved sign-in has been kept; try Face ID again.');
       return false;
     }
   }
   async function renderLoginShortcut(){
+    if(document.getElementById('authTitle')?.textContent!=='Sign in'){document.getElementById(LOGIN_BUTTON_ID)?.remove();return;}
     if(document.getElementById(LOGIN_BUTTON_ID)||!enabled())return;
     const status=await check();if(!status.available)return;
     const password=document.querySelector('input[type="password"]');if(!password)return;
-    const saved=await window.ZOVRO_SECURE_SESSION?.get?.();if(!saved)return;
+    // Do not read a saved session just to display the Face ID button.
+    if(document.getElementById(LOGIN_BUTTON_ID)||document.getElementById('authTitle')?.textContent!=='Sign in')return;
     const host=password.closest('.field')||password.parentElement;if(!host)return;
     const btn=document.createElement('button');
     btn.type='button';btn.id=LOGIN_BUTTON_ID;btn.className='btn ghost';btn.style.cssText='width:100%;margin-top:10px;display:flex;align-items:center;justify-content:center;gap:8px';
@@ -99,13 +113,48 @@
     btn.onclick=unlockSavedSession;
     host.insertAdjacentElement('afterend',btn);
   }
+  // Opt in once, on a supported native device, after a successful sign-in.
+  async function renderOptIn(){
+    const form=document.getElementById('signInForm');
+    if(!form||enabled()||document.getElementById('zovroFaceIdOptIn'))return;
+    const status=await check();
+    if(!status.available||enabled()||document.getElementById('zovroFaceIdOptIn'))return;
+    const label=document.createElement('label');
+    label.id='zovroBiometricOptInLabel';
+    label.style.cssText='display:flex;gap:10px;align-items:center;margin-top:12px;color:inherit;cursor:pointer';
+    const checkbox=document.createElement('input');
+    checkbox.id='zovroFaceIdOptIn';checkbox.type='checkbox';
+    checkbox.style.cssText='width:20px;height:20px;flex:0 0 20px';
+    const text=document.createElement('span');text.textContent='Use Face ID for faster sign-in next time';
+    label.append(checkbox,text);form.appendChild(label);
+  }
+  function wrapSuccessfulLogin(){
+    const original=window.submitAuth;
+    if(typeof original!=='function'||original.__zovroBiometricOptIn)return;
+    const wrapped=async function(){
+      const optIn=document.getElementById('zovroFaceIdOptIn')?.checked===true;
+      const before=typeof token!=='undefined'?String(token||''):'';
+      const result=await original.apply(this,arguments);
+      const after=typeof token!=='undefined'?String(token||''):'';
+      if(optIn&&after&&after!==before){
+        try{await window.ZOVRO_SECURE_SESSION?.set?.(after);await enable();}
+        catch{toastSafe('You can enable Face ID later from Profile & Security.')}
+      }
+      return result;
+    };
+    wrapped.__zovroBiometricOptIn=true;
+    window.submitAuth=wrapped;
+  }
   function shouldProtect(){return enabled()}
+  // A successful unlock has already supplied a live bearer token; a failed
+  // biometric prompt must never restore it or silently unlock the account.
   window.ZOVRO_BIOMETRIC={check,authenticate,enable,disable,unlockSavedSession,renderLoginShortcut,shouldProtect,status:()=>({enabled:enabled(),native:!!plugin()})};
-  function boot(){renderCard();setTimeout(renderLoginShortcut,200)}
+  function boot(){renderCard();wrapSuccessfulLogin();renderOptIn();setTimeout(renderLoginShortcut,200)}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
   const observer=new MutationObserver(()=>{
     if(document.getElementById('profile')&&!document.getElementById('biometricCard'))renderCard();
     if(!document.getElementById(LOGIN_BUTTON_ID))renderLoginShortcut();
+    if(!enabled()&&!document.getElementById('zovroFaceIdOptIn'))renderOptIn();
   });
   observer.observe(document.documentElement,{childList:true,subtree:true});
 })();

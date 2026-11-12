@@ -19,7 +19,7 @@
     "mobile:prepare": "node scripts/prepare-mobile.js",
     "mobile:init": "node scripts/init-mobile.js",
     "gps:check": "node scripts/gps-runtime-check.js && node scripts/request-flow-check.js",
-    "qa:all": "npm run session-recovery:check && npm run gps:check && npm run product:check && npm run final:check && npm run production:check && npm run payment:check && npm run payment:webhook-state-check && npm run payment:receipt-storage-check && npm run payment:saved-card-check && npm run push:check && npm run sms:check && npm run mobile-release-workflows:check && npm run cors:check && npm run security:check && npm run privacy:check && npm run store:check && npm run release:check && npm run test:e2e && npm run admin:check && npm run account-session:check && npm run static-assets:check && npm run sos-placement:check && npm run native-memory:check && npm run art:check && npm run pages:check && npm run transport:check && npm run ui:dedupe-check && npm run ios:export-compliance-check",
+    "qa:all": "npm run session-recovery:check && npm run auth:recovery-check && npm run biometric:check && npm run gps:check && npm run product:check && npm run final:check && npm run production:check && npm run payment:check && npm run payment:webhook-state-check && npm run payment:receipt-storage-check && npm run payment:saved-card-check && npm run push:check && npm run sms:check && npm run mobile-release-workflows:check && npm run cors:check && npm run security:check && npm run privacy:check && npm run store:check && npm run release:check && npm run test:e2e && npm run admin:check && npm run account-session:check && npm run static-assets:check && npm run sos-placement:check && npm run native-memory:check && npm run art:check && npm run pages:check && npm run transport:check && npm run ui:dedupe-check && npm run ios:export-compliance-check",
     "pages:check": "node --test scripts/full-page.test.js",
     "art:check": "node --test scripts/service-art.test.js",
     "session-recovery:check": "node scripts/session-recovery-check.js",
@@ -36,14 +36,17 @@
     "sos-placement:check": "node scripts/sos-placement-check.js",
     "transport:check": "node scripts/transport-check.js",
     "ui:dedupe-check": "node scripts/duplicate-actions-check.js",
-    "ios:export-compliance-check": "node scripts/ios-export-compliance-check.js"
+    "ios:export-compliance-check": "node scripts/ios-export-compliance-check.js",
+    "auth:recovery-check": "node scripts/account-recovery-check.js",
+    "biometric:check": "node scripts/biometric-session-check.js"
   },
   "dependencies": {
     "@capacitor/core": "^7.0.0",
     "@capacitor-community/stripe": "7.2.0",
     "@onesignal/capacitor-plugin": "1.1.9",
     "capacitor-secure-storage-plugin": "0.12.0",
-    "leaflet": "1.9.4"
+    "leaflet": "1.9.4",
+    "@capgo/capacitor-native-biometric": "^7.0.0"
   },
   "devDependencies": {
     "@capacitor/cli": "^7.0.0",

@@ -39,6 +39,27 @@ const cleanPhone=v=>String(v||'').replace(/[^0-9+]/g,'').slice(0,30);
 const validPhone=v=>/^\+?[0-9]{7,15}$/.test(v);
 const validEmail=v=>!v||/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
 const validPassword=v=>typeof v==='string'&&v.length>=8&&v.length<=128&&/[A-Za-z]/.test(v)&&/[0-9]/.test(v);
+
+function findAccountByLogin(db, input){
+  const id=String(input||'').trim();
+  if(!id||id.length>150)return null;
+  if(id.includes('@')){
+    const email=id.toLowerCase();
+    if(!validEmail(email))return null;
+    const matches=db.users.filter(u=>String(u.email||'').toLowerCase()===email);
+    // Older accounts may share an email; never choose the wrong account.
+    return matches.length===1?matches[0]:null;
+  }
+  return db.users.find(u=>u.phone===cleanPhone(id))||null;
+}
+const recoveryDigest=(challenge,code)=>crypto.createHmac('sha256',SECRET).update(challenge+':'+code).digest('hex');
+function recoveryPhone(phone){
+  const raw=cleanPhone(phone);
+  if(/^\+[1-9]\d{7,14}$/.test(raw))return raw;
+  if(/^\d{10}$/.test(raw))return '+1'+raw;
+  if(/^1\d{10}$/.test(raw))return '+'+raw;
+  return null;
+}
 const locationFresh=l=>l&&Date.now()-Date.parse(l.updatedAt||0)<=15*60*1000;
 const milesBetween=(a,b,c,d)=>{const rad=x=>x*Math.PI/180,R=3958.8,dl=rad(c-a),dn=rad(d-b),q=Math.sin(dl/2)**2+Math.cos(rad(a))*Math.cos(rad(c))*Math.sin(dn/2)**2;return 2*R*Math.asin(Math.sqrt(q))};
 function eligibleProviders(db,service,location,radiusMiles=25,excludedProviderIds=[]){const excluded=new Set(excludedProviderIds);return db.users.filter(u=>u.role==='provider'&&!excluded.has(u.id)&&(u.accountStatus||'active')==='active'&&u.availability!==false&&matchesService(u,service)).map(u=>{const l=db.providerLocations.find(x=>x.providerId===u.id),stats=providerStats(db,u.id);if(!location)return {user:u,location:l||null,distanceMiles:null,priorityScore:stats.dispatchPriorityScore};if(!locationFresh(l))return null;const d=milesBetween(location.lat,location.lng,l.lat,l.lng);return d<=radiusMiles?{user:u,location:l,distanceMiles:+d.toFixed(1),priorityScore:stats.dispatchPriorityScore}:null}).filter(Boolean).sort((a,b)=>(b.priorityScore-a.priorityScore)||((a.distanceMiles??9999)-(b.distanceMiles??9999)))}
@@ -57,7 +78,66 @@ async function api(req,res,url){
  if(req.method==='POST'&&url.pathname==='/api/sms/twilio/inbound'){const raw=await new Promise((resolve,reject)=>{let s='',bytes=0;req.on('data',x=>{bytes+=x.length;if(bytes<=65536)s+=x});req.on('end',()=>bytes>65536?reject(Object.assign(new Error('Body too large'),{code:'BODY_TOO_LARGE'})):resolve(s));req.on('error',reject)});const p=Object.fromEntries(new URLSearchParams(raw)),sig=String(req.headers['x-twilio-signature']||''),publicUrl=String(process.env.ZOVRO_SMS_INBOUND_URL||'');if(!publicUrl||!smsProvider.validTwilioSignature({signature:sig,url:publicUrl,params:p}))return json(res,403,{error:'Invalid SMS webhook signature'});const phone=cleanPhone(p.From),pref=smsProvider.inboundPreference(p.Body,p.OptOutType),db=readDb(),u=db.users.find(x=>x.role==='provider'&&x.phone===phone);if(u&&pref==='opt_out'){u.smsNotifications=false;u.smsNotificationsOptedOutAt=new Date().toISOString();delete u.smsNotificationsConsentedAt;delete u.smsNotificationsConsentSource;(db.smsOutbox||[]).forEach(x=>{if(x.userId===u.id&&['pending','retry'].includes(x.status))x.status='suppressed'});audit(db,{uid:u.id},'sms.opt_out',{source:'twilio_keyword'});writeDb(db)}else if(u&&pref==='opt_in'){u.smsNotifications=true;u.smsNotificationsConsentedAt=new Date().toISOString();u.smsNotificationsConsentSource='twilio_start';delete u.smsNotificationsOptedOutAt;audit(db,{uid:u.id},'sms.opt_in',{source:'twilio_keyword'});writeDb(db)}res.writeHead(204,BASE_SECURITY_HEADERS);return res.end()}
  if(req.method==='GET'&&url.pathname==='/api/sms/status'){if(!OPS_TOKEN||req.headers['x-zovro-ops-token']!==OPS_TOKEN)return json(res,404,{error:'Not found'});return json(res,200,{sms:smsProvider.safeStatus()})}
  if(req.method==='POST'&&url.pathname==='/api/auth/register'){if(limited(req,'register',8,60000))return throttle(res);if(req.headers['x-zovro-lawful-use-attestation']!=='accepted-v1')return json(res,400,{error:'Lawful-use and personal-responsibility agreement is required'});const b=await body(req),name=String(b.name||'').trim(),phone=cleanPhone(b.phone),email=String(b.email||'').trim().toLowerCase();if(name.length<2||name.length>80||!validPhone(phone)||!validPassword(b.password)||!validEmail(email))return json(res,400,{error:'Valid name, phone, email and strong password required (8+ chars with letters and numbers)'});const db=readDb();if(db.users.some(u=>u.phone===phone))return json(res,409,{error:'Phone already registered'});let selectedServices;if(b.role==='provider'&&b.services!==undefined){try{selectedServices=validateServices(b.services)}catch(e){return json(res,400,{error:e.message})}}const acceptedAt=new Date().toISOString();const u={id:crypto.randomUUID(),name,phone,email:email.slice(0,120),role:b.role==='provider'?'provider':'customer',service:b.service?String(b.service).trim().slice(0,80):null,license:b.license?String(b.license).trim().slice(0,80):null,accountStatus:'active',phoneVerified:false,providerVerified:false,passwordHash:hash(String(b.password)),termsVersion:String(req.headers['x-zovro-terms-version']||'2026-09-27').slice(0,40),privacyVersion:String(req.headers['x-zovro-privacy-version']||'2026-09-22').slice(0,40),lawfulUseAttestation:'accepted-v1',legalAcceptedAt:acceptedAt,createdAt:acceptedAt};if(selectedServices){u.services=selectedServices;u.service=selectedServices[0]}db.users.push(u);audit(db,{uid:u.id},'register',{role:u.role});const accessToken=token(u,db);writeDb(db);return json(res,201,{token:accessToken,user:safeUser(u)})}
- if(req.method==='POST'&&url.pathname==='/api/auth/login'){if(limited(req,'login',10,60000))return throttle(res);const b=await body(req),db=readDb(),u=db.users.find(x=>x.phone===cleanPhone(b.phone));if(!u||!verify(String(b.password||''),u.passwordHash))return json(res,401,{error:'Invalid credentials'});if((u.accountStatus||'active')!=='active')return json(res,403,{error:'Account is not active'});audit(db,{uid:u.id},'login');const accessToken=token(u,db);writeDb(db);return json(res,200,{token:accessToken,user:safeUser(u)})}
+ if(req.method==='POST'&&url.pathname==='/api/auth/login'){if(limited(req,'login',10,60000))return throttle(res);const b=await body(req),db=readDb(),u=findAccountByLogin(db,b.identifier||b.phone);if(!u||!verify(String(b.password||''),u.passwordHash))return json(res,401,{error:'Invalid credentials'});if((u.accountStatus||'active')!=='active')return json(res,403,{error:'Account is not active'});audit(db,{uid:u.id},'login');const accessToken=token(u,db);writeDb(db);return json(res,200,{token:accessToken,user:safeUser(u)})}
+ // Account recovery requires a code delivered to the account's registered phone.
+ if(req.method==='GET'&&url.pathname==='/api/auth/recovery/status')
+  return json(res,200,{available:smsProvider.safeStatus().configured===true,method:'sms'});
+
+ if(req.method==='POST'&&url.pathname==='/api/auth/forgot-password'){
+  if(limited(req,'account-recovery-start',4,10*60*1000))return throttle(res);
+  if(!smsProvider.safeStatus().configured)return json(res,503,{error:'Recovery codes are temporarily unavailable. Please contact support.'});
+  const input=await body(req),identifier=String(input.identifier||input.phone||'').trim();
+  if(!identifier||identifier.length>150)return json(res,400,{error:'Enter your registered phone number or email address.'});
+  const challenge=crypto.randomUUID(),message='If an account matches, a code will be sent to its registered phone number.';
+  const db=readDb(),matches=identifier.includes('@')
+   ?db.users.filter(u=>String(u.email||'').toLowerCase()===identifier.toLowerCase())
+   :db.users.filter(u=>u.phone===cleanPhone(identifier));
+  const user=matches.length===1?matches[0]:null;
+  const phone=user&&user.accountStatus!=='deleted'&&user.accountStatus!=='suspended'?recoveryPhone(user.phone):null;
+  const recent=Boolean(user&&(db.verificationRequests||[]).some(v=>v.type==='account-recovery'&&v.userId===user.id&&v.status==='pending'&&Date.now()-Date.parse(v.createdAt||0)<60000));
+  if(phone&&!recent){
+   const code=String(crypto.randomInt(100000,1000000));
+   const sent=await smsProvider.sendSms({to:phone,body:'ZOVRO sign-in recovery code: '+code+'. Expires in 10 minutes. Never share this code.',idempotencyKey:challenge});
+   if(sent.ok){
+    // Re-read after delivery to avoid losing concurrent writes while waiting for SMS.
+    const latest=readDb();
+    if(latest.users.some(u=>u.id===user.id&&(u.accountStatus||'active')==='active')){
+     latest.verificationRequests=(latest.verificationRequests||[]).filter(v=>v.type!=='account-recovery'||(Date.parse(v.expiresAt||0)>Date.now()&&v.userId!==user.id));
+     latest.verificationRequests.push({id:challenge,type:'account-recovery',userId:user.id,status:'pending',codeHash:recoveryDigest(challenge,code),attempts:0,expiresAt:new Date(Date.now()+10*60*1000).toISOString(),createdAt:new Date().toISOString()});
+     audit(latest,{uid:user.id},'account.recovery.request');
+     writeDb(latest);
+    }
+   }
+  }
+  return json(res,200,{challenge,message});
+ }
+
+ if(req.method==='POST'&&url.pathname==='/api/auth/reset-password'){
+  if(limited(req,'account-recovery-finish',10,10*60*1000))return throttle(res);
+  const input=await body(req),challenge=String(input.challenge||''),code=String(input.code||''),newPassword=input.newPassword;
+  if(!/^[a-f0-9-]{36}$/i.test(challenge)||!/^\d{6}$/.test(code))
+   return json(res,400,{error:'Invalid or expired verification code. Request a new one.'});
+  if(!validPassword(newPassword))return json(res,400,{error:'Use 8–128 characters with letters and numbers.'});
+  const db=readDb(),v=(db.verificationRequests||[]).find(x=>x.type==='account-recovery'&&x.id===challenge&&x.status==='pending');
+  if(!v||Date.parse(v.expiresAt||0)<=Date.now()||Number(v.attempts||0)>=5)
+   return json(res,400,{error:'Invalid or expired verification code. Request a new one.'});
+  const actual=Buffer.from(recoveryDigest(challenge,code),'hex'),expected=Buffer.from(v.codeHash||'','hex');
+  if(actual.length!==expected.length||!crypto.timingSafeEqual(actual,expected)){
+   v.attempts=Number(v.attempts||0)+1;
+   if(v.attempts>=5)v.status='expired';
+   writeDb(db);
+   return json(res,400,{error:'Invalid or expired verification code. Request a new one.'});
+  }
+  const user=db.users.find(x=>x.id===v.userId&&(x.accountStatus||'active')==='active');
+  if(!user)return json(res,400,{error:'Account recovery is unavailable. Contact support.'});
+  user.passwordHash=hash(newPassword);
+  user.phoneVerified=true; // The one-time code was delivered to the registered phone.
+  db.deviceSessions=(db.deviceSessions||[]).filter(x=>x.userId!==user.id);
+  db.verificationRequests=db.verificationRequests.filter(x=>x.type!=='account-recovery'||x.userId!==user.id);
+  audit(db,{uid:user.id},'account.recovery.completed');
+  writeDb(db);
+  return json(res,200,{ok:true,message:'Password updated. Sign in with your phone or email and new password.'});
+ }
  const me=auth(req);if(!me)return json(res,401,{error:'Authentication required'});
  if(req.method==='POST'&&url.pathname==='/api/transport/estimate'){
   if(me.role!=='customer')return json(res,403,{error:'Customer role required'});
@@ -87,8 +167,8 @@ async function api(req,res,url){
 
  if(req.method==='POST'&&url.pathname==='/api/provider/verification'){const db=readDb(),u=requireActive(db,me,res);if(!u)return;if(u.role!=='provider')return json(res,403,{error:'Provider role required'});const b=await body(req);if(!b.licenseNumber&&!b.note)return json(res,400,{error:'License number or verification note required'});const existing=db.verificationRequests.find(v=>v.providerId===u.id&&v.status==='pending');if(existing)return json(res,409,{error:'Verification already pending'});const v={id:crypto.randomUUID(),providerId:u.id,licenseNumber:String(b.licenseNumber||'').slice(0,80),note:String(b.note||'').slice(0,500),status:'pending',createdAt:new Date().toISOString()};db.verificationRequests.unshift(v);audit(db,me,'provider.verification.submit',{verificationId:v.id});writeDb(db);return json(res,201,{verification:v})}
  if(req.method==='GET'&&url.pathname==='/api/provider/verification'){const db=readDb(),u=requireActive(db,me,res);if(!u)return;const rows=db.verificationRequests.filter(v=>v.providerId===u.id);return json(res,200,{verification:rows[0]||null,providerVerified:!!u.providerVerified})}
- if(req.method==='GET'&&url.pathname==='/api/admin/overview'){const db=readDb(),u=requireActive(db,me,res);if(!u)return;if(u.role!=='admin')return json(res,403,{error:'Admin role required'});return json(res,200,{users:db.users.length,customers:db.users.filter(x=>x.role==='customer').length,providers:db.users.filter(x=>x.role==='provider').length,openRequests:db.requests.filter(r=>r.status!=='Completed').length,completedRequests:db.requests.filter(r=>r.status==='Completed').length,pendingVerifications:db.verificationRequests.filter(v=>v.status==='pending').length})}
- if(req.method==='GET'&&url.pathname==='/api/admin/verifications'){const db=readDb(),u=requireActive(db,me,res);if(!u)return;if(u.role!=='admin')return json(res,403,{error:'Admin role required'});return json(res,200,{verifications:db.verificationRequests.map(v=>({...v,provider:safeUser(db.users.find(x=>x.id===v.providerId)||{})}))})}
+ if(req.method==='GET'&&url.pathname==='/api/admin/overview'){const db=readDb(),u=requireActive(db,me,res);if(!u)return;if(u.role!=='admin')return json(res,403,{error:'Admin role required'});return json(res,200,{users:db.users.length,customers:db.users.filter(x=>x.role==='customer').length,providers:db.users.filter(x=>x.role==='provider').length,openRequests:db.requests.filter(r=>r.status!=='Completed').length,completedRequests:db.requests.filter(r=>r.status==='Completed').length,pendingVerifications:db.verificationRequests.filter(v=>v.status==='pending'&&v.type!=='account-recovery').length})}
+ if(req.method==='GET'&&url.pathname==='/api/admin/verifications'){const db=readDb(),u=requireActive(db,me,res);if(!u)return;if(u.role!=='admin')return json(res,403,{error:'Admin role required'});return json(res,200,{verifications:db.verificationRequests.filter(v=>v.type!=='account-recovery').map(v=>({...v,provider:safeUser(db.users.find(x=>x.id===v.providerId)||{})}))})}
  const verifyRoute=url.pathname.match(/^\/api\/admin\/verifications\/([^/]+)$/);if(req.method==='POST'&&verifyRoute){const db=readDb(),u=requireActive(db,me,res);if(!u)return;if(u.role!=='admin')return json(res,403,{error:'Admin role required'});const b=await body(req),v=db.verificationRequests.find(x=>x.id===verifyRoute[1]);if(!v)return json(res,404,{error:'Verification not found'});if(!['approved','rejected'].includes(b.status))return json(res,400,{error:'Status must be approved or rejected'});v.status=b.status;v.reviewedAt=new Date().toISOString();v.reviewedBy=u.id;const provider=db.users.find(x=>x.id===v.providerId);if(provider){provider.providerVerified=b.status==='approved';notify(db,provider.id,'Verification '+b.status,'Your ZOVRO provider verification was '+b.status+'.',{verificationId:v.id})}audit(db,me,'provider.verification.review',{verificationId:v.id,status:v.status});writeDb(db);return json(res,200,{verification:v})}
  if(req.method==='PATCH'&&url.pathname==='/api/provider/availability'){const b=await body(req),db=readDb(),u=requireActive(db,me,res);if(!u)return;if(u.role!=='provider')return json(res,403,{error:'Provider role required'});u.availability=!!b.available;audit(db,me,'provider.availability',{available:u.availability});writeDb(db);return json(res,200,{user:safeUser(u)})}
  if(req.method==='POST'&&url.pathname==='/api/provider/location'){const b=await body(req),db=readDb(),u=requireActive(db,me,res);if(!u)return;if(u.role!=='provider')return json(res,403,{error:'Provider role required'});const lat=+b.lat,lng=+b.lng;if(!Number.isFinite(lat)||!Number.isFinite(lng)||Math.abs(lat)>90||Math.abs(lng)>180)return json(res,400,{error:'Valid coordinates required'});db.providerLocations=db.providerLocations.filter(x=>x.providerId!==u.id);db.providerLocations.push({providerId:u.id,lat,lng,accuracy:Number.isFinite(+b.accuracy)?+b.accuracy:null,updatedAt:new Date().toISOString()});writeDb(db);return json(res,200,{ok:true})}

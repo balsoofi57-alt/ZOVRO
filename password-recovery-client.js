@@ -5,11 +5,11 @@
     if(!login||document.getElementById('forgotPasswordButton'))return;
     const trigger=document.createElement('button');
     trigger.id='forgotPasswordButton';trigger.type='button';trigger.className='btn ghost';
-    trigger.textContent='Forgot password?';
+    trigger.textContent='Forgot password or login?';
     trigger.style.marginTop='14px';login.querySelector('.sheet').appendChild(trigger);
     const modal=document.createElement('div');modal.className='modal';modal.id='passwordRecoveryModal';
     modal.setAttribute('role','dialog');modal.setAttribute('aria-modal','true');modal.setAttribute('aria-labelledby','recoveryTitle');
-    modal.innerHTML='<div class="sheet"><h2 id="recoveryTitle">Reset your password</h2><p>Enter the phone number registered on your account. Your verification code may arrive by text message or at the account email address.</p><form id="recoveryForm"><div class="field"><label for="recoveryPhone">Registered phone number</label><input id="recoveryPhone" type="tel" autocomplete="tel" placeholder="+13135551234" required></div><div id="recoveryCodeFields" hidden><div class="field"><label for="recoveryCode">Verification code</label><input id="recoveryCode" inputmode="numeric" autocomplete="one-time-code" maxlength="10"></div><div class="field"><label for="recoveryPassword">New password</label><input id="recoveryPassword" type="password" autocomplete="new-password" minlength="8" maxlength="128"></div><div class="field"><label for="recoveryConfirm">Confirm new password</label><input id="recoveryConfirm" type="password" autocomplete="new-password" minlength="8" maxlength="128"></div><p>Use 8–128 characters, including letters and numbers.</p></div><p id="recoveryStatus" role="status" aria-live="polite"></p><div class="bar"><button id="recoverySubmit" class="btn primary" type="submit" disabled>Send verification code</button><button id="recoveryRetry" class="btn ghost" type="button">Check again</button><button id="recoveryBack" class="btn ghost" type="button">Back to sign in</button></div></form><p><button type="button" class="btn ghost" data-support-chat>Chat with support</button> if you cannot access your verified phone number.</p></div>';
+    modal.innerHTML="<div class=\"sheet\">\n<h2 id=\"recoveryTitle\">Recover your ZOVRO account</h2>\n<p>Use your registered phone number or email address. Your phone number is your original login; you can also sign in with a registered email. Verification codes go only to your account's registered phone.</p>\n<form id=\"recoveryForm\" autocomplete=\"on\">\n<div class=\"field\"><label for=\"recoveryPhone\">Registered phone or email</label><input id=\"recoveryPhone\" name=\"username\" type=\"text\" autocomplete=\"username\" autocapitalize=\"none\" spellcheck=\"false\" placeholder=\"+13135551234 or email@example.com\" required></div>\n<div id=\"recoveryCodeFields\" hidden>\n<div class=\"field\"><label for=\"recoveryCode\">6-digit verification code</label><input id=\"recoveryCode\" type=\"text\" inputmode=\"numeric\" autocomplete=\"one-time-code\" pattern=\"[0-9]{6}\" maxlength=\"6\"></div>\n<div class=\"field\"><label for=\"recoveryPassword\">New password</label><input id=\"recoveryPassword\" type=\"password\" autocomplete=\"new-password\" minlength=\"8\" maxlength=\"128\"></div>\n<div class=\"field\"><label for=\"recoveryConfirm\">Confirm new password</label><input id=\"recoveryConfirm\" type=\"password\" autocomplete=\"new-password\" minlength=\"8\" maxlength=\"128\"></div>\n<p>Use 8–128 characters, including letters and numbers.</p>\n</div>\n<p id=\"recoveryStatus\" role=\"status\" aria-live=\"polite\"></p>\n<div class=\"bar\"><button id=\"recoverySubmit\" class=\"btn primary\" type=\"submit\" disabled>Send code to my phone</button><button id=\"recoveryRetry\" class=\"btn ghost\" type=\"button\">Start again</button><button id=\"recoveryBack\" class=\"btn ghost\" type=\"button\">Back to sign in</button></div>\n</form>\n<p class=\"muted\">Lost access to the registered phone? <button type=\"button\" class=\"btn ghost\" data-support-chat>Contact support</button> for secure account verification. Support will never ask for your password or one-time code.</p>\n</div>";
     document.body.appendChild(modal);
     const el=id=>document.getElementById(id);let challenge=null,sequence=0,busy=false,available=false;
     async function request(path,data){
@@ -23,16 +23,16 @@
     el('recoveryBack').onclick=close;
     modal.addEventListener('keydown',event=>{if(event.key==='Escape'){event.preventDefault();close();}});
     async function checkAvailability(){
-      const phone=el('recoveryPhone').value;
+      const phone=el('recoveryPhone').value||document.getElementById('phone')?.value||'';
       const current=++sequence;challenge=null;busy=false;available=false;el('recoveryForm').reset();el('recoveryPhone').value=phone;el('recoverySubmit').hidden=false;
       el('recoveryPhone').readOnly=false;el('recoveryCodeFields').hidden=true;
       for(const id of ['recoveryCode','recoveryPassword','recoveryConfirm'])el(id).required=false;
-      el('recoverySubmit').textContent='Send verification code';el('recoverySubmit').disabled=true;
+      el('recoverySubmit').textContent='Send code to my phone';el('recoverySubmit').disabled=true;
       el('recoveryStatus').textContent='Checking recovery availability…';
       login.classList.remove('open');modal.classList.add('open');el('recoveryPhone').focus();
       try{const result=await request('recovery/status');if(current!==sequence)return;
         available=result.available===true;el('recoverySubmit').disabled=!available;
-        el('recoveryStatus').textContent=available?'Request a verification code for your account.':'Password reset is temporarily unavailable. You can chat with support here or check again later.';
+        el('recoveryStatus').textContent=available?'A code is sent to the registered phone if your account is found.':'Password reset is temporarily unavailable. You can chat with support here or check again later.';
       }catch(error){if(current===sequence)el('recoveryStatus').textContent=error.name==='TimeoutError'?'The server took too long. Close and try again.':error.message;}
     };
     trigger.onclick=checkAvailability;
@@ -43,17 +43,22 @@
       if(challenge&&!(/[A-Za-z]/.test(el('recoveryPassword').value)&&/[0-9]/.test(el('recoveryPassword').value))){el('recoveryStatus').textContent='Include letters and numbers in your password.';return;}
       const current=sequence;busy=true;el('recoverySubmit').disabled=true;el('recoveryStatus').textContent='Please wait…';
       try{
-        if(!challenge){let phone=el('recoveryPhone').value.trim().replace(/[\s()-]/g,'');
-          if(/^1[0-9]{10}$/.test(phone))phone='+'+phone;
-          if(!/^\+[1-9][0-9]{7,14}$/.test(phone))throw new Error('Enter the country code, for example +1, followed by your phone number.');
-          const out=await request('forgot-password',{phone});if(current!==sequence)return;
+        if(!challenge){
+          let identifier=el('recoveryPhone').value.trim();
+          if(!identifier.includes('@')){
+            identifier=identifier.replace(/[\s()-]/g,'');
+            if(/^1[0-9]{10}$/.test(identifier))identifier='+'+identifier;
+            if(/^[0-9]{10}$/.test(identifier))identifier='+1'+identifier;
+            if(!/^\+[1-9][0-9]{7,14}$/.test(identifier))throw new Error('Enter a valid phone number with country code or registered email.');
+          }else if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(identifier))throw new Error('Enter a valid email address.');
+          const out=await request('forgot-password',{identifier});if(current!==sequence)return;
           challenge=out.challenge;el('recoveryCodeFields').hidden=false;el('recoveryPhone').readOnly=true;
           for(const id of ['recoveryCode','recoveryPassword','recoveryConfirm'])el(id).required=true;
-          el('recoverySubmit').textContent='Reset password';el('recoveryStatus').textContent=out.message;el('recoveryCode').focus();
+          el('recoverySubmit').textContent='Reset password';el('recoveryStatus').textContent=(out.message||'If this account exists, a code was sent to its registered phone.')+' Check your phone. The code expires in 10 minutes.';el('recoveryCode').focus();
         }else{
           await request('reset-password',{challenge,code:el('recoveryCode').value.trim(),newPassword:el('recoveryPassword').value});if(current!==sequence)return;
           el('recoveryForm').reset();challenge=null;el('recoveryCodeFields').hidden=true;
-          el('recoveryStatus').textContent='Password updated. Return to sign in with your new password.';
+          el('recoveryStatus').textContent='Password updated. Sign in with your phone or email and new password. All old sessions have been signed out.';
           el('recoverySubmit').hidden=true;
         }
       }catch(error){if(current===sequence)el('recoveryStatus').textContent=error.name==='TimeoutError'?'The request timed out. If resetting your password, try signing in before requesting another code.':error.message;}
