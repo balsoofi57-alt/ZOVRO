@@ -1,0 +1,103 @@
+name: ZOVRO TestFlight Processing Status (read-only)
+
+on:
+  push:
+    branches: [ops/verify-testflight-processing-20261112]
+    paths: [.github/workflows/zovro-testflight-processing.yml]
+
+permissions:
+  contents: read
+
+jobs:
+  check-testflight-status:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - name: Read Apple App Store Connect build processing state
+        env:
+          ASC_KEY_ID: ${{ secrets.ZOVRO_APP_STORE_CONNECT_API_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ZOVRO_APP_STORE_CONNECT_ISSUER_ID }}
+          ASC_PRIVATE_KEY_BASE64: ${{ secrets.ZOVRO_APP_STORE_CONNECT_API_PRIVATE_KEY_BASE64 }}
+        run: |
+          python3 - <<'PY'
+          import base64, json, os, subprocess, tempfile, time
+          from urllib.parse import urlencode
+          from urllib.request import Request, urlopen
+          from urllib.error import HTTPError
+
+          needed = ('ASC_KEY_ID', 'ASC_ISSUER_ID', 'ASC_PRIVATE_KEY_BASE64')
+          if any(not os.getenv(key) for key in needed):
+              raise SystemExit('App Store Connect read-only check unavailable: CI API credentials missing.')
+
+          def b64url(blob):
+              return base64.urlsafe_b64encode(blob).rstrip(b'=').decode('ascii')
+
+          def asn1_length(data, i):
+              n = data[i]
+              i += 1
+              if n & 128:
+                  count = n & 127
+                  n = int.from_bytes(data[i:i+count], 'big')
+                  i += count
+              return n, i
+
+          def ecdsa_der_to_raw(blob):
+              i = 0
+              if blob[i] != 48:
+                  raise ValueError('Invalid signature encoding')
+              _, i = asn1_length(blob, i+1)
+              numbers = []
+              for _ in range(2):
+                  if blob[i] != 2:
+                      raise ValueError('Invalid signature component')
+                  n, i = asn1_length(blob, i+1)
+                  numbers.append(int.from_bytes(blob[i:i+n], 'big'))
+                  i += n
+              return b''.join(n.to_bytes(32, 'big') for n in numbers)
+
+          now = int(time.time())
+          header = {'alg':'ES256','kid':os.environ['ASC_KEY_ID'],'typ':'JWT'}
+          claims = {'iss':os.environ['ASC_ISSUER_ID'],'iat':now,'exp':now+600,'aud':'appstoreconnect-v1'}
+          payload = b64url(json.dumps(header,separators=(',',':')).encode())+'.'+b64url(json.dumps(claims,separators=(',',':')).encode())
+          with tempfile.TemporaryDirectory() as tmp:
+              keypath = os.path.join(tmp, 'key.p8')
+              with open(keypath,'wb') as fp:
+                  fp.write(base64.b64decode(os.environ['ASC_PRIVATE_KEY_BASE64'],validate=True))
+              os.chmod(keypath, 0o600)
+              signing = subprocess.run(['openssl','dgst','-sha256','-sign',keypath],input=payload.encode(),capture_output=True,check=True)
+          token = payload+'.'+b64url(ecdsa_der_to_raw(signing.stdout))
+
+          def api(path,params=None):
+              url = 'https://api.appstoreconnect.apple.com'+path
+              if params:
+                  url += '?' + urlencode(params)
+              request = Request(url,headers={'Authorization':'Bearer '+token,'Accept':'application/json'})
+              try:
+                  with urlopen(request,timeout=30) as response:
+                      return json.load(response)
+              except HTTPError as error:
+                  raise RuntimeError('Apple App Store Connect returned HTTP '+str(error.code)+' for a read-only lookup') from None
+
+          apps = api('/v1/apps',{'filter[bundleId]':'com.zovro.app','limit':'2'}).get('data',[])
+          if not apps:
+              raise SystemExit('No App Store Connect app record found for com.zovro.app')
+          print('ZOVRO App Store Connect: app record located')
+          appid = apps[0]['id']
+          fields = 'version,processingState,uploadedDate,buildAudienceType,expired'
+          builds = api('/v1/apps/'+appid+'/builds',{'fields[builds]':fields,'sort':'-uploadedDate','limit':'8'}).get('data',[])
+          print('Build records returned:', len(builds))
+          for item in builds:
+              a=item.get('attributes') or {}
+              print('Build: version='+str(a.get('version','?'))+
+                    ' uploaded='+str(a.get('uploadedDate','?'))+
+                    ' processing='+str(a.get('processingState','?'))+
+                    ' audience='+str(a.get('buildAudienceType','?'))+
+                    ' expired='+str(a.get('expired','?')))
+          if builds:
+              detail=api('/v1/buildBetaDetails',{'filter[build]':builds[0]['id'],'fields[buildBetaDetails]':'internalBuildState,externalBuildState','limit':'2'}).get('data',[])
+              for row in detail:
+                  a=row.get('attributes') or {}
+                  print('Latest beta state: internal='+str(a.get('internalBuildState','?'))+
+                        ' external='+str(a.get('externalBuildState','?')))
+          print('Read-only verification complete; no Tester or App Store settings modified')
+          PY
