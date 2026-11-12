@@ -41,9 +41,12 @@
     }catch{return false}
   }
   async function enable(){
+    const live=typeof token!=='undefined'?String(token||''):'';
+    if(!live){toastSafe('Sign in with your password once to enable Face ID.');return false}
     const status=await check();
     if(!status.available){toastSafe('Biometric authentication is not available on this device.');return false}
     if(!(await authenticate('Confirm biometrics to protect your ZOVRO account'))){toastSafe('Biometric authentication was not enabled.');return false}
+    try{await window.ZOVRO_SECURE_SESSION?.set?.(live)}catch{toastSafe('Secure device storage is unavailable. Please try again later.');return false}
     setEnabled(true);renderCard();renderLoginShortcut();toastSafe('Face ID / biometric unlock enabled.');return true;
   }
   function disable(){setEnabled(false);renderCard();document.getElementById(LOGIN_BUTTON_ID)?.remove();toastSafe('Biometric unlock disabled.')}
@@ -75,6 +78,7 @@
       try{token=String(saved||'')}catch{}
       if(typeof api==='function'){
         const result=await api('/me');
+        if(!result?.user?.id)throw Object.assign(Error('Session was not confirmed'),{status:401});
         try{me=result.user}catch{}
         if(typeof renderAccount==='function')renderAccount();
         if(typeof loadJobs==='function')loadJobs();
@@ -100,7 +104,7 @@
     if(document.getElementById(LOGIN_BUTTON_ID)||!enabled())return;
     const status=await check();if(!status.available)return;
     const password=document.querySelector('input[type="password"]');if(!password)return;
-    const saved=await window.ZOVRO_SECURE_SESSION?.get?.();if(!saved)return;
+    // Do not read a saved session just to display the Face ID button.
     if(document.getElementById(LOGIN_BUTTON_ID)||document.getElementById('authTitle')?.textContent!=='Sign in')return;
     const host=password.closest('.field')||password.parentElement;if(!host)return;
     const btn=document.createElement('button');
