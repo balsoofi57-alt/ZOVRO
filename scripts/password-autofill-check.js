@@ -8,7 +8,10 @@ assert.match(html,/<button id="authSubmit"[^>]*type="submit"/);
 const nodes=new Map(),storage={},messages=[];let calls=0,settle;
 const $=id=>{if(!nodes.has(id))nodes.set(id,{value:'',disabled:false,textContent:'',innerHTML:'',autocomplete:''});return nodes.get(id)};
 const c=vm.createContext({$,window:{ZOVRO_PHONE_INPUT:{normalize:v=>v}},document:{getElementById:()=>({toggleAttribute(){}})},authMode:'login',token:'',me:null,localStorage:storage,setPasswordVisible(){},closeModal(){},renderAccount(){},loadJobs(){},resumeRequestIntent(){},toast:m=>messages.push(m),api:()=>{calls++;return new Promise((resolve,reject)=>settle={resolve,reject})}});
-vm.runInContext(html.match(/^function openAuth\(\).*$/m)[0]+'\n'+html.match(/^(?:let authBusy=false;)?async function submitAuth\(\).*$/m)[0],c);
+const fnStart=html.indexOf('let authBusy=false;async function submitAuth()');
+const fnEnd=html.indexOf('\nfunction nav(id,b)',fnStart);
+assert.ok(fnStart>0&&fnEnd>fnStart,'Authentication handler should be present');
+vm.runInContext(html.match(/^function openAuth\(\).*$/m)[0]+'\n'+html.slice(fnStart,fnEnd),c);
 (async()=>{
  $('password').value='previous secret';c.renderAuth();assert.equal($('password').value,'');assert.equal($('password').autocomplete,'current-password');
  c.authMode='register';c.renderAuth();assert.equal($('password').autocomplete,'new-password');
