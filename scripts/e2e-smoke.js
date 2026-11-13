@@ -22,11 +22,29 @@ for(const file of ['/index.html','/website-final.css','/assets/zovro-icon.svg'])
 const suffix=Date.now();
 const c=await call('POST','/api/auth/register',{name:'ZOVRO Customer',phone:`1313${String(suffix).slice(-7)}`,password:'StrongPass22!',role:'customer',termsAccepted:true,privacyAccepted:true,termsVersion:'2026-09-27',privacyVersion:'2026-09-22'});
 const p=await call('POST','/api/auth/register',{name:'ZOVRO Provider',phone:`2484${String(suffix).slice(-7)}`,password:'StrongPass22!',role:'provider',service:'Roadside Assistance',termsAccepted:true,privacyAccepted:true,termsVersion:'2026-09-27',privacyVersion:'2026-09-22'});
-await call('PATCH','/api/provider/availability',{available:true},p.token);
+const identity=await call('GET','/api/provider/identity',null,p.token);
+if(identity.identity.verified||identity.identity.canWork)throw new Error('New provider must not begin verified');
 await call('POST','/api/provider/location',{lat:42.3223,lng:-83.1763,accuracy:10},p.token);
-const nearby=await call('GET','/api/providers/nearby?lat=42.315&lng=-83.19&service=Roadside%20Assistance',null,c.token);if(!nearby.providers.length)throw new Error('Nearby provider matching failed');
+const unverified=await call('GET','/api/providers/nearby?lat=42.315&lng=-83.19&service=Roadside%20Assistance',null,c.token);
+if(unverified.providers.some(row=>row.provider?.id===p.user.id))throw new Error('Unverified provider was publicly discoverable');
 const created=await call('POST','/api/requests',{service:'Roadside Assistance',details:'ZOVRO 1.0 Final end-to-end smoke test',address:'Dearborn, MI',location:{lat:42.315,lng:-83.19}},c.token);const id=created.request.id;
-await call('POST',`/api/requests/${id}/accept`,{},p.token);
+for(const [method,route,payload] of [['POST','/api/requests/'+id+'/accept',{}],['PATCH','/api/provider/availability',{available:true}]]){
+ const denied=await fetch(base+route,{method,headers:{'content-type':'application/json',authorization:'Bearer '+p.token},body:JSON.stringify(payload)});
+ if(denied.status!==403)throw new Error('Unverified provider must be blocked: '+route+' returned '+denied.status);
+}
+// Test-only isolated SQLite fixture; production has no bypass endpoint.
+const {DatabaseSync}=require('node:sqlite');
+const fixture=new DatabaseSync(path.join(data,'zovro.sqlite'));
+try{
+ const row=fixture.prepare('SELECT data FROM users WHERE id=?').get(p.user.id);
+ const provider=JSON.parse(row.data);
+ provider.identityVerified=true;provider.identityAgeConfirmed=true;provider.identityVerification={status:'verified',provider:'stripe',verifiedAt:new Date().toISOString()};
+ fixture.prepare('UPDATE users SET data=? WHERE id=?').run(JSON.stringify(provider),p.user.id);
+}finally{fixture.close()}
+await call('PATCH','/api/provider/availability',{available:true},p.token);
+const nearby=await call('GET','/api/providers/nearby?lat=42.315&lng=-83.19&service=Roadside%20Assistance',null,c.token);
+if(!nearby.providers.some(row=>row.provider?.id===p.user.id))throw new Error('Verified provider matching failed');
+await call('POST','/api/requests/'+id+'/accept',{},p.token);
 await call('POST',`/api/requests/${id}/messages`,{text:'On my way for ZOVRO 1.0 Final test.'},p.token);
 for(const status of ['On the way','Arrived','In progress','Completed'])await call('POST',`/api/requests/${id}/status`,status==='In progress'?{status,securityCode:created.request.securityCode}:{status},p.token);
 await call('POST',`/api/requests/${id}/rating`,{stars:5},c.token);

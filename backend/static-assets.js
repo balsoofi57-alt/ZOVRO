@@ -22,6 +22,7 @@ const PUBLIC_FILES = new Set([
   "privacy.html",
   "profile-security-client.js",
   "profile-photo-client.js",
+  "provider-identity-client.js",
   "provider-service-picker.js",
   "push-client.js",
   "secure-session.js",
