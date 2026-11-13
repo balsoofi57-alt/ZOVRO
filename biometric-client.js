@@ -43,6 +43,12 @@
   async function enable(){
     const live=typeof token!=='undefined'?String(token||''):'';
     if(!live){toastSafe('Sign in with your password once to enable Face ID.');return false}
+    // Do not opt users into biometric unlock if the native secure token store
+    // is missing: an optional call here would otherwise falsely report success.
+    if(!window.ZOVRO_SECURE_SESSION?.isNativeSecure?.()){
+      toastSafe('Secure device storage is unavailable. Face ID was not enabled.');
+      return false;
+    }
     const status=await check();
     if(!status.available){toastSafe('Biometric authentication is not available on this device.');return false}
     if(!(await authenticate('Confirm biometrics to protect your ZOVRO account'))){toastSafe('Biometric authentication was not enabled.');return false}
