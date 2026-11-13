@@ -12,16 +12,22 @@
   async function set(value){const p=plugin();if(p){await p.set({key:KEY,value:String(value||'')});return}sessionStorage.setItem(KEY,String(value||''))}
   async function remove(){const p=plugin();if(p){try{await p.remove({key:KEY})}catch{}return}sessionStorage.removeItem(KEY)}
   async function restoreAccount(){
+    // A delayed /me response must never restore an account that logged out
+    // or overwrite a different account that signed in while it was pending.
+    const expectedToken=currentToken();
     try{
       // A missing validation API is not a successful login.
       if(typeof api!=='function')throw new Error('Session validation API unavailable');
       const user=(await api('/me')).user;
+      if(currentToken()!==expectedToken)return;
       if(!user?.id)throw new Error('Session validation returned no account');
       try{me=user}catch{}
       if(typeof renderAccount==='function')renderAccount();
       if(typeof loadJobs==='function')loadJobs();
       if(window.ZOVRO_PUSH?.syncUser)window.ZOVRO_PUSH.syncUser();
     }catch(error){
+      // A failed stale request must not clear or revoke the newer account.
+      if(currentToken()!==expectedToken)return;
       // A network outage, timeout, or server failure does not invalidate a
       // valid saved login. Keep the secure token at rest for a later retry,
       // but never leave a token or unverified account active in memory.
