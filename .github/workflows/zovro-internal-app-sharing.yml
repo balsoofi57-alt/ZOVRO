@@ -1,0 +1,94 @@
+name: ZOVRO Google Play Internal App Sharing (one-time)
+on:
+  push:
+    branches: [release/android-internal-sharing-20261113]
+    paths:
+      - '.github/workflows/zovro-internal-app-sharing.yml'
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: zovro-google-play-internal-share-20261113
+  cancel-in-progress: false
+
+jobs:
+  upload-internal-artifact:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - name: Check service-account authorization without printing credentials
+        env:
+          GOOGLE_PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.ZOVRO_GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
+        run: |
+          set -euo pipefail
+          if [[ -z "${GOOGLE_PLAY_SERVICE_ACCOUNT_JSON:-}" ]]; then
+            echo "::error::Google Play service account is not configured for this repository."
+            exit 1
+          fi
+          python3 -c "import json,os;d=json.loads(os.environ['GOOGLE_PLAY_SERVICE_ACCOUNT_JSON']);assert d.get('type')=='service_account';assert d.get('client_email');print('Service account structure present; API permissions still need verification.')"
+
+      - name: Download previously QA-tested Android bundle
+        uses: actions/download-artifact@v4
+        with:
+          name: zovro-android-release-unsigned-aab
+          run-id: 43335486849
+          repository: balsoofi57-alt/ZOVRO
+          github-token: ${{ github.token }}
+          path: release
+
+      - name: Verify exact source artifact before sharing
+        run: |
+          set -euo pipefail
+          test -s release/app-release.aab
+          printf '%s  %s\n' '4c318e5f4293d40a59ba2c78a1eb18f201e77e471718dca6ae6a6e770bab1592' 'release/app-release.aab' | sha256sum --check
+          unzip -tq release/app-release.aab
+          echo 'Verified AAB from successful main-branch Android build 43335486849.'
+          echo 'This is internal app sharing, NOT an update to the internal testing or production release tracks.'
+
+      - name: Authenticate to Google Play Developer API
+        id: google-auth
+        uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093
+        with:
+          credentials_json: ${{ secrets.ZOVRO_GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
+          token_format: access_token
+          access_token_scopes: https://www.googleapis.com/auth/androidpublisher
+
+      - name: Upload test-only bundle to Google Play Internal App Sharing
+        env:
+          GOOGLE_PLAY_ACCESS_TOKEN: ${{ steps.google-auth.outputs.access_token }}
+        run: |
+          set -euo pipefail
+          test -n "${GOOGLE_PLAY_ACCESS_TOKEN:-}"
+          response_file="$RUNNER_TEMP/zovro-internal-app-share-response.json"
+          status=$(curl --silent --show-error --max-time 300 --retry 0 \
+            --output "$response_file" --write-out '%{http_code}' \
+            --request POST \
+            --header "Authorization: Bearer $GOOGLE_PLAY_ACCESS_TOKEN" \
+            --header "Content-Type: application/octet-stream" \
+            --data-binary "@release/app-release.aab" \
+            'https://androidpublisher.googleapis.com/upload/androidpublisher/v3/applications/internalappsharing/com.zovro.app/artifacts/bundle?uploadType=media')
+          if [[ "$status" != '200' && "$status" != '201' ]]; then
+            error_code=$(jq -r '.error.status // .error.code // "UNKNOWN"' "$response_file" 2>/dev/null || echo UNKNOWN)
+            echo "::error::Google Play Internal App Sharing API rejected this request: HTTP $status ($error_code). Check authorized uploader and service-account API permissions."
+            exit 1
+          fi
+          download_url=$(jq -r '.downloadUrl // empty' "$response_file")
+          if [[ ! "$download_url" =~ ^https:// ]]; then
+            echo "::error::Google API returned no internal app sharing download URL."
+            exit 1
+          fi
+          hash=$(jq -r '.sha256 // empty' "$response_file")
+          {
+            echo '### ZOVRO Android test build'
+            echo ''
+            echo 'Google Play **Internal App Sharing** upload completed.'
+            echo ''
+            echo "Test-only download link: $download_url"
+            echo ''
+            echo "Google-signed artifact SHA-256: $hash"
+            echo ''
+            echo 'This does not create or modify a production/internal-testing release.'
+            echo 'Internal app sharing downloads are limited and expire per Google Play policy.'
+          } >> "$GITHUB_STEP_SUMMARY"
