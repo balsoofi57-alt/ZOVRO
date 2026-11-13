@@ -127,7 +127,7 @@ async function route(req,res,next){
      if(checked.verified)return json(res,200,{identity:checked});
      return json(res,409,{error:'Your completed identity check requires review. Check your status or contact support.',identity:checked});
     }
-    if(s.id===old.sessionId&&s.client_reference_id===u.id&&s.status==='requires_input'&&s.options?.document?.require_matching_selfie===true&&s.options?.document?.require_live_capture===true&&Date.now()-Date.parse(old.createdAt||0)<46*60*60*1000&&/^https:\/\/verify\.stripe\.com\//.test(s.url||'')){
+    if(s.id===old.sessionId&&s.client_reference_id===u.id&&s.status==='requires_input'&&!['processing','redacted'].includes(s.redaction?.status)&&s.options?.document?.require_matching_selfie===true&&s.options?.document?.require_live_capture===true&&Date.now()-Date.parse(old.createdAt||0)<46*60*60*1000&&/^https:\/\/verify\.stripe\.com\//.test(s.url||'')){
      return json(res,200,{identity:safeState(u),verificationUrl:s.url});
     }
     if(s.status==='processing')return json(res,409,{error:'Your ID is still being reviewed. Check its status before retrying.'});
