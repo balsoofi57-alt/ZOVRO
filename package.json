@@ -41,7 +41,7 @@
     "address:check": "node scripts/address-autocomplete-check.js",
     "auth:phone-recovery-check": "node scripts/phone-recovery-ux-check.js",
     "support:terms-check": "node scripts/support-terms-check.js",
-    "provider:identity-check": "node scripts/provider-identity-check.js"
+    "provider:identity-check": "node scripts/provider-identity-check.js && node --test scripts/provider-identity-live-flow.test.js"
   },
   "dependencies": {
     "@capacitor/core": "^7.0.0",
