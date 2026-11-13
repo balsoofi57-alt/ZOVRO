@@ -73,6 +73,18 @@ assert.equal(publicUser.phone,undefined);assert.equal(publicUser.licensed,false)
    const customer=await register('13135550301','customer');
    const pro=await register('13135550302','provider',['Tire Change','Jump Start','Vehicle Lockout','Painting','flooring']);
    const replacement=await register('13135550303','provider',['Tire Change','Painting']);
+   // Mock verification only in this isolated QA database.
+   const {DatabaseSync}=require('node:sqlite');
+   const fixture=new DatabaseSync(path.join(temp,'zovro.sqlite'));
+   try{
+    for(const providerId of [pro.user.id,replacement.user.id]){
+     const row=fixture.prepare('SELECT data FROM users WHERE id=?').get(providerId);
+     const user=JSON.parse(row.data);
+     user.identityVerified=true;user.identityAgeConfirmed=true;
+     user.identityVerification={status:'verified',provider:'stripe',verifiedAt:new Date().toISOString()};
+     fixture.prepare('UPDATE users SET data=? WHERE id=?').run(JSON.stringify(user),providerId);
+    }
+   }finally{fixture.close()}
    assert.equal(pro.user.services.length,5);assert.equal(pro.user.service,'Tire Change');
    for(const actor of [pro,replacement])assert.equal((await call('POST','/api/provider/location',{lat:42.32,lng:-83.18},actor.token)).status,200);
    const requests={};

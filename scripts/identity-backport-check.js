@@ -1,0 +1,15 @@
+'use strict';
+const assert=require('node:assert/strict');
+const fs=require('node:fs');
+const vm=require('node:vm');
+const identity=require('../backend/identity-verification-api');
+assert.equal(identity.adultDob({year:2008,month:11,day:12},new Date('2026-11-12T12:00:00Z')),true);
+assert.equal(identity.adultDob({year:2008,month:11,day:13},new Date('2026-11-12T12:00:00Z')),false);
+assert.equal(identity.eligible({role:'provider',identityVerified:true,identityAgeConfirmed:true,identityVerification:{status:'verified'}}),true);
+assert.equal(identity.eligible({role:'provider',identityVerified:true,identityAgeConfirmed:false,identityVerification:{status:'verified'}}),false);
+for(const path of ['backend/server.js','backend/server-core.js','backend/request-privacy.js','backend/identity-verification-api.js','scripts/e2e-smoke.js'])new vm.Script(fs.readFileSync(path,'utf8'),{filename:path});
+const core=fs.readFileSync('backend/server-core.js','utf8');
+assert.match(core,/Government photo ID and 18\+ age verification required before accepting jobs/);
+assert.match(core,/u.identityAgeConfirmed===true&&u.identityVerification\?\.status==='verified'/);
+assert.match(fs.readFileSync('backend/server.js','utf8'),/require\('\.\/identity-verification-api'\)/);
+console.log('Production API ID verification security checks PASS');

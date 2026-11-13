@@ -25,6 +25,21 @@ const missingConsent=await fetch(base+'/api/auth/register',{method:'POST',header
 const c=await call('POST','/api/auth/register',{name:'ZOVRO Customer',phone:`1313${String(suffix).slice(-7)}`,password:'StrongPass22!',role:'customer'});
 const p=await call('POST','/api/auth/register',{name:'ZOVRO Provider',phone:`2484${String(suffix).slice(-7)}`,password:'StrongPass22!',role:'provider',service:'Roadside Assistance'});
 const p2=await call('POST','/api/auth/register',{name:'ZOVRO Replacement Provider',phone:`5864${String(suffix).slice(-7)}`,password:'StrongPass22!',role:'provider',service:'Roadside Assistance'});
+const unverifiedIdentity=await call('GET','/api/provider/identity',null,p.token);
+assert.equal(unverifiedIdentity.identity.canWork,false,'New provider must be unverified');
+const blockedAvailability=await fetch(base+'/api/provider/availability',{method:'PATCH',headers:{'content-type':'application/json',authorization:'Bearer '+p.token},body:JSON.stringify({available:true})});
+assert.equal(blockedAvailability.status,403,'Provider cannot become available before government ID check');
+// Only the isolated e2e database gets a mocked verified Stripe result.
+const {DatabaseSync}=require('node:sqlite');
+const fixture=new DatabaseSync(path.join(data,'zovro.sqlite'));
+try{
+ for(const providerId of [p.user.id,p2.user.id]){
+  const row=fixture.prepare('SELECT data FROM users WHERE id=?').get(providerId);
+  const provider=JSON.parse(row.data);
+  provider.identityVerified=true;provider.identityAgeConfirmed=true;provider.identityVerification={status:'verified',provider:'stripe',verifiedAt:new Date().toISOString()};
+  fixture.prepare('UPDATE users SET data=? WHERE id=?').run(JSON.stringify(provider),providerId);
+ }
+}finally{fixture.close()}
 await call('PATCH','/api/provider/availability',{available:true},p.token);
 await call('PATCH','/api/provider/availability',{available:true},p2.token);
 await call('POST','/api/provider/location',{lat:42.3223,lng:-83.1763,accuracy:10},p.token);
