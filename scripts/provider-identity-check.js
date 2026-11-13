@@ -43,6 +43,7 @@ assert(api.includes('session.options?.document?.require_live_capture!==true'),'v
 assert(api.includes('session.options?.document?.require_matching_selfie!==true'),'verified status is insufficient without face match');
 assert(site.includes('window.ZOVRO_PROVIDER_IDENTITY?.openRegistration?.()'),'registration should immediately start provider verification step');
 assert(read('provider-identity-client.js').includes("status==='verified'?statuses.reverification_required"),'client must not advertise jobs as ready without live-face eligibility');
+assert.match(read('provider-identity-client.js'),/const box=document\.getElementById\('zProviderIdentityCard'\);\s*if\(!box\)return;\s*loading=true;/,'missing Profile card must not leave a permanent refresh lock');
 assert(read('provider-identity-client.js').includes('window.ZOVRO_PROVIDER_IDENTITY={openRegistration}'));
 assert.match(read('provider-identity-client.js'),/Step 2 of 2/);
 console.log('Live selfie and photo ID verification is required at provider signup.');
