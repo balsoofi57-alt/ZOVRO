@@ -5,21 +5,21 @@ const sessionScript=fs.readFileSync(path.join(root,'secure-session.js'),'utf8');
 const biometricScript=fs.readFileSync(path.join(root,'biometric-client.js'),'utf8');
 async function secureStartup(locked){
  const store=new Map([['zovroToken','existing-session']]);
- const local=new Map([['zovroBiometricUnlock',locked?'1':'0']]);
- let apiCalls=0;
+ const local=new Map([['zovroBiometricUnlock',locked?'1':'0'],...(locked?[['zovroToken','legacy-unprotected-session']]:[])]);
+ let apiCalls=0,secureReads=0,legacyReads=0,syncNow=null;
  const w={
   console,
   token:'',
   me:null,
-  localStorage:{getItem:k=>local.get(k)||null,setItem:(k,v)=>local.set(k,v),removeItem:k=>local.delete(k)},
+  localStorage:{getItem:k=>{if(k==='zovroToken')legacyReads++;return local.get(k)||null},setItem:(k,v)=>local.set(k,v),removeItem:k=>local.delete(k)},
   sessionStorage:{getItem:()=>null,setItem(){},removeItem(){}},
   Capacitor:{Plugins:{SecureStoragePlugin:{
-   get:async({key})=>({value:store.get(key)||''}),set:async({key,value})=>store.set(key,value),
+   get:async({key})=>{secureReads++;return {value:store.get(key)||''}},set:async({key,value})=>store.set(key,value),
    remove:async({key})=>store.delete(key)
   }}},
   ZOVRO_BIOMETRIC:{shouldProtect:()=>locked},
   api:async()=>{apiCalls++;return {user:{id:'account-1'}}},
-  renderAccount(){},loadJobs(){},setInterval(){},
+  renderAccount(){},loadJobs(){},setInterval(fn){syncNow=fn;},
  };
  w.window=w;
  vm.runInNewContext(sessionScript,w);
@@ -29,6 +29,13 @@ async function secureStartup(locked){
   assert.equal(w.ZOVRO_SESSION_TOKEN,'');
   assert.equal(apiCalls,0,'No /me call before Face ID verification');
   assert.equal(store.get('zovroToken'),'existing-session','Keep saved session for explicit unlock');
+  assert.equal(secureReads,0,'Do not fetch native secure bearer before biometrics');
+  assert.equal(legacyReads,0,'Do not read unprotected legacy bearer before biometrics');
+  assert(syncNow,'Session interval must be installed');
+  await syncNow();
+  assert.equal(secureReads,0,'Periodic sync must not retrieve saved session before Face ID');
+  assert.equal(legacyReads,0,'Periodic sync must not hydrate legacy login before Face ID');
+  assert.equal(w.token,'','Periodic sync cannot silently unlock a protected account');
  }else{
   assert.equal(w.token,'existing-session','Non-biometric session should continue working');
   assert(apiCalls>0,'Non-biometric session restore validates the account');
