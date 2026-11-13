@@ -64,6 +64,7 @@ assert.match(api,/if\(checked\.verified\)return json\(res,200,\{identity:checked
 assert(api.indexOf("if(s.status==='verified')")<api.indexOf("const session=await stripe('POST'"),'reuse must precede new Stripe session creation');
 assert.match(api,/s\.metadata\?\.zovro_provider_id!==u\.id\|\|s\.livemode!==true/,'stored sessions require provider ownership and live mode');
 assert.match(api,/state.reviewReason='unexpected_status'/,'unknown session statuses must revoke prior eligibility');
+assert(api.includes("s.status==='requires_input'&&!['processing','redacted'].includes(s.redaction?.status)"),'redacted sessions cannot return reusable Stripe links');
 assert.match(api,/session.options\?\.document\?\.require_live_capture!==true\|\|session.options\?\.document\?\.require_matching_selfie!==true/,'reject missing requirements in newly created sessions');
 assert.match(api,/if\(!data\.verified_outputs\?\.dob\)throw new Error/,'no birthdate must never approve provider');
 
