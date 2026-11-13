@@ -72,6 +72,45 @@ async function restoreAfterApiFailure(status){
  assert.equal(result.restored,false,'An unverified account cannot be reported as restored');
  assert.equal(store.has('zovroToken'),![401,403].includes(status),'Only invalid sessions are deleted');
 }
+async function staleSessionRestore(mode){
+ const store=new Map([['zovroToken','old-session']]);
+ let validationStarted,finishValidation;
+ const started=new Promise(resolve=>{validationStarted=resolve});
+ const response=new Promise((resolve,reject)=>{finishValidation={resolve,reject}});
+ let oldRenderCount=0;
+ const w={
+  console,token:'',me:null,
+  localStorage:{getItem:()=>null,setItem(){},removeItem(){}},
+  sessionStorage:{getItem:()=>null,setItem(){},removeItem(){}},
+  Capacitor:{Plugins:{SecureStoragePlugin:{
+   get:async({key})=>({value:store.get(key)||''}),
+   set:async({key,value})=>{store.set(key,value)},
+   remove:async({key})=>{store.delete(key)}
+  }}},
+  ZOVRO_BIOMETRIC:{shouldProtect:()=>false},
+  api:async()=>{validationStarted();return response},
+  renderAccount(){oldRenderCount++},loadJobs(){},setInterval(){}
+ };
+ w.window=w;
+ vm.runInNewContext(sessionScript,w);
+ // One validation is pending; logging out or switching accounts must make
+ // its eventual result irrelevant, even if it is an unauthorized response.
+ await started;
+ if(mode==='logout'){
+  w.token='';w.me=null;store.delete('zovroToken');
+ }else{
+  w.token='new-session';w.me={id:'new-account'};
+  store.set('zovroToken','new-session');
+ }
+ if(mode==='old-401')finishValidation.reject(Object.assign(new Error('Old login revoked'),{status:401}));
+ else finishValidation.resolve({user:{id:'old-account'}});
+ for(let i=0;i<30&&!w.ZOVRO_SECURE_SESSION.status().ready;i++)await Promise.resolve();
+ assert.equal(w.ZOVRO_SECURE_SESSION.status().ready,true,'Initial restore should complete');
+ assert.equal(w.token,mode==='logout'?'':'new-session','Stale response cannot replace runtime login');
+ assert.equal(w.me?.id||null,mode==='logout'?null:'new-account','Stale response cannot replace account');
+ assert.equal(store.get('zovroToken'),mode==='logout'?undefined:'new-session','Old 401 must not remove a new account token');
+ assert.equal(oldRenderCount,0,'Stale account must not render after user change');
+}
 async function biometricUnlock(status){
  let prompted=false,reads=0,removes=0;
  const w={
@@ -162,6 +201,7 @@ async function enableRequiresNativeStorage(mode){
 (async()=>{
  await secureStartup(true);
  await secureStartup(false);
+ for(const change of ['logout','account-switch','old-401'])await staleSessionRestore(change);
  for(const failure of [null,500,401,403,'invalid-shape','missing-api'])await restoreAfterApiFailure(failure);
  await enableRequiresNativeStorage('missing');
  await enableRequiresNativeStorage('missing-writer');
