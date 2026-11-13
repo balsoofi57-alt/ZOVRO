@@ -71,7 +71,8 @@
   parent.appendChild(box);
   box.querySelector('[data-identity-start]').addEventListener('click',begin);
   box.querySelector('[data-identity-check]').addEventListener('click',()=>refreshStatus(true));
-  render({status:stateFromUser(user),verified:!!user.identityVerified,configured:true});
+  // Disable starting a paid hosted identity check until the API confirms it is configured.
+  render({status:stateFromUser(user),verified:!!user.identityVerified,configured:false});
   if(lastUser!==user.id){
    lastUser=user.id;
    const returned=new URLSearchParams(location.search).get('identity_verification')==='return';
