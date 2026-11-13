@@ -13,10 +13,10 @@ assert.match(core,/Government photo ID and 18\+ age verification required before
 assert.match(core,/u.identityAgeConfirmed===true&&u.identityVerification\?\.status==='verified'/);
 assert.match(fs.readFileSync('backend/server.js','utf8'),/require\('\.\/identity-verification-api'\)/);
 const api=fs.readFileSync('backend/identity-verification-api.js','utf8');
-assert.match(api,/'options\\[document\\]\\[require_live_capture\\]':'true'/);
-assert.match(api,/'options\\[document\\]\\[require_matching_selfie\\]':'true'/);
-assert.match(api,/data\\.options\\?\\.document\\?\\.require_live_capture===true/);
-assert.match(api,/data\\.options\\?\\.document\\?\\.require_matching_selfie===true/);
+assert(api.includes("'options[document][require_live_capture]':'true'"));
+assert(api.includes("'options[document][require_matching_selfie]':'true'"));
+assert(api.includes('data.options?.document?.require_live_capture===true'));
+assert(api.includes('data.options?.document?.require_matching_selfie===true'));
 console.log('Live selfie and photo ID capture approval requirement PASS');
 assert.match(api,/faceVerifiedLive===true/);
 assert.match(core,/faceVerifiedLive===true/);
