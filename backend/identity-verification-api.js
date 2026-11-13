@@ -11,14 +11,14 @@ const PROFILE_KEY=String(process.env.ZOVRO_PROFILE_ENCRYPTION_KEY||'');
 const STRIPE_KEY=String(process.env.STRIPE_SECRET_KEY||'');
 const isProduction=process.env.NODE_ENV==='production'||String(process.env.RENDER||'').toLowerCase()==='true'||Boolean(process.env.RENDER_SERVICE_ID);
 const safeState=u=>({
- status:u.identityVerification?.status||'not_started',
+ status:u.identityVerification?.status==='verified'&&!eligible(u)?'reverification_required':u.identityVerification?.status||'not_started',
  verified:eligible(u),
  legalNameProvided:!!u.identityVerification?.legalNameEncrypted,
  verifiedAt:u.identityVerification?.verifiedAt||null,
  canWork:eligible(u),
  configured:/^sk_live_[A-Za-z0-9]+/.test(STRIPE_KEY)
 });
-function eligible(u){return !!(u&&u.role==='provider'&&u.identityVerified===true&&u.identityAgeConfirmed===true&&u.identityVerification?.status==='verified')}
+function eligible(u){return !!(u&&u.role==='provider'&&u.identityVerified===true&&u.identityAgeConfirmed===true&&u.identityVerification?.status==='verified'&&u.identityVerification?.faceVerifiedLive===true)}
 function legalName(v){const name=String(v||'').trim().replace(/\s+/g,' ');return name.length>=5&&name.length<=120&&name.split(' ').length>=2?name:null}
 function normalizedName(s){return String(s||'').normalize('NFKD').replace(/[\u0300-\u036f]/g,'').replace(/[^\p{L}\p{N} ]/gu,' ').toLocaleLowerCase('en').replace(/\s+/g,' ').trim()}
 function nameProof(value){const canonical=normalizedName(value).split(' ').filter(Boolean).sort().join(' ');return crypto.createHmac('sha256',PROFILE_KEY).update(canonical).digest('hex')}
@@ -50,12 +50,12 @@ async function refresh(u,db){
  if(data.livemode!==true)throw new Error('Live identity verification is required');
  if(data.status==='verified'){
   if(data.options?.document?.require_matching_selfie===true&&data.options?.document?.require_live_capture===true&&adultDob(data.verified_outputs?.dob)&&nameMatches(state.legalNameProof,data.verified_outputs)){
-   u.identityVerified=true;u.identityAgeConfirmed=true;state.status='verified';state.verifiedAt=new Date().toISOString();
+   u.identityVerified=true;u.identityAgeConfirmed=true;state.status='verified';state.faceVerifiedLive=true;state.verifiedAt=new Date().toISOString();
   }else{
-   u.identityVerified=false;u.identityAgeConfirmed=false;state.status='manual_review';state.reviewReason='face_capture_or_identity_check_incomplete';
+   u.identityVerified=false;u.identityAgeConfirmed=false;state.status='manual_review';state.faceVerifiedLive=false;state.reviewReason='face_capture_or_identity_check_incomplete';
   }
  }else if(['requires_input','processing','canceled'].includes(data.status)){
-  u.identityVerified=false;u.identityAgeConfirmed=false;state.status=data.status;
+  u.identityVerified=false;u.identityAgeConfirmed=false;state.status=data.status;state.faceVerifiedLive=false;
  }
  state.checkedAt=new Date().toISOString();u.identityVerification=state;
  writeDb(db);
