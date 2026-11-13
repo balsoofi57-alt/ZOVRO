@@ -23,6 +23,7 @@ assert(api.includes('session.options?.document?.require_matching_selfie!==true')
 console.log('Live selfie and photo ID capture approval requirement PASS');
 assert.match(api,/faceVerifiedLive===true/);
 assert.match(core,/faceVerifiedLive===true/);
+assert(core.includes("identityStatus:u.identityVerification?.status==='verified'&&!(u.identityVerified&&u.identityAgeConfirmed&&u.identityVerification?.faceVerifiedLive===true)?'reverification_required'"),'legacy approvals must not appear fully verified');
 
 const crypto=require('node:crypto');
 const proof=crypto.createHmac('sha256','unit-test-only-key').update('provider zovro').digest('hex');
