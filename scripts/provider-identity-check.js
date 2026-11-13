@@ -59,7 +59,7 @@ assert.match(publicAssets,/"provider-identity-client\.js"/);
 assert.match(mobile,/'provider-identity-client\.js'/);
 for(const p of ['terms.html','terms/index.html'])assert.match(read(p),/Mandatory government photo ID verification/);
 for(const p of ['privacy.html','privacy/index.html'])assert.match(read(p),/Stripe Identity/);
-assert(api.includes("'options[document][require_live_capture]':'true'"),'document must be captured live');
+assert(api.includes("if(liveFaceRequired())form['options[document][require_live_capture]']='true'"),'live capture is required only after staged activation');
 assert(api.includes("'options[document][require_matching_selfie]':'true'"),'real face must match ID');
 assert(api.includes('session.options?.document?.require_live_capture!==true'),'verified status is insufficient without live capture');
 assert(api.includes('session.options?.document?.require_matching_selfie!==true'),'verified status is insufficient without face match');
@@ -67,7 +67,7 @@ assert(site.includes('window.ZOVRO_PROVIDER_IDENTITY?.openRegistration?.()'),'re
 assert(read('provider-identity-client.js').includes("status==='verified'?statuses.reverification_required"),'client must not advertise jobs as ready without live-face eligibility');
 assert(read('provider-identity-client.js').includes('verified:!!user.identityVerified,configured:false'),'initial identity CTA must stay disabled until server confirms readiness');
 assert(read('provider-identity-client.js').includes('const rolloutPaused=info?.enforced===false'),'UI must explain when live-face rollout is paused');
-assert(read('provider-identity-client.js').includes('if(form)form.hidden=verified||rolloutPaused'),'paused rollout must not request an unavailable paid identity check');
+assert(read('provider-identity-client.js').includes('if(form)form.hidden=verified;'),'previously available government photo-ID onboarding must remain accessible');
 
 assert.match(read('provider-identity-client.js'),/const box=document\.getElementById\('zProviderIdentityCard'\);\s*if\(!box\)return;\s*loading=true;/,'missing Profile card must not leave a permanent refresh lock');
 assert(read('provider-identity-client.js').includes('window.ZOVRO_PROVIDER_IDENTITY={openRegistration}'));
@@ -102,16 +102,20 @@ assert.equal(identity.assessVerifiedDocument(documentResult,{},new Date('2026-11
 assert.match(api,/ZOVRO_STRIPE_IDENTITY_RESULTS_KEY/,'dedicated restricted results credential is required');
 assert.match(api,/expand\[\]/,'Identity result expansion should be explicit');
 assert.match(api,/verified_outputs\.dob/,'verified birth date expansion is required');
+assert.match(api,/state.faceVerifiedLive=strict\|\|state.faceVerifiedLive===true/,'legacy refresh must not erase previously verified live-face proof');
+
 assert.match(api,/identityReady\(\)/,'fail closed when secure Identity configuration is missing');
 assert.match(api,/enforced:liveFaceRequired\(\)/,'API must report whether live-face rollout is enabled');
-assert.match(api,/if\(!liveFaceRequired\(\)\)return json\(res,503/,'creating paid ID checks must be disabled until rollout activation');
+assert.match(api,/legacyIdentityReady\(\)/,'legacy government ID route must remain usable before face rollout');
+assert.match(api,/strict\?STRIPE_RESULTS_KEY:STRIPE_KEY/,'legacy and strict result reads use their respective Stripe permissions');
 assert.match(api,/if\(s\.status==='verified'\)\{\s*const checked=await refresh\(u,db\)/,'a completed Stripe session is checked instead of creating another paid session');
 assert.match(api,/if\(checked\.verified\)return json\(res,200,\{identity:checked\}\)/,'successful recheck resumes existing verified session');
 assert(api.indexOf("if(s.status==='verified')")<api.indexOf("const session=await stripe('POST'"),'reuse must precede new Stripe session creation');
 assert.match(api,/s\.metadata\?\.zovro_provider_id!==u\.id\|\|s\.livemode!==true/,'stored sessions require provider ownership and live mode');
 assert.match(api,/state.reviewReason='unexpected_status'/,'unknown session statuses must revoke prior eligibility');
 assert(api.includes("s.status==='requires_input'&&!['processing','redacted'].includes(s.redaction?.status)"),'redacted sessions cannot return reusable Stripe links');
-assert.match(api,/session.options\?\.document\?\.require_live_capture!==true\|\|session.options\?\.document\?\.require_matching_selfie!==true/,'reject missing requirements in newly created sessions');
+assert.match(api,/liveFaceRequired\(\)\&\&session.options\?\.document\?\.require_live_capture!==true/,'strict sessions must enforce live document capture');
+assert.match(api,/session.options\?\.document\?\.require_matching_selfie!==true/,'legacy and strict sessions must match the selfie');
 assert.match(api,/if\(!data\.verified_outputs\?\.dob\)throw new Error/,'no birthdate must never approve provider');
 
 console.log('Government ID and 18+ eligibility checks, web/mobile packaging, and privacy disclosures PASS');
