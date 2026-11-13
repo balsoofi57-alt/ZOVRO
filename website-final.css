@@ -1285,3 +1285,8 @@ body.z-more-subpage-open{overflow:hidden}
 #passwordRecoveryModal #recoveryCodeFields[hidden],
 #passwordRecoveryModal #recoveryRetry[hidden],
 #passwordRecoveryModal #recoverySubmit[hidden]{display:none!important}
+
+/* One exit per page (owner decision 2026-11-13): keep the back arrow, hide the duplicate × / Close
+   on full pages, More subpages, the services list and the sign-in page. The buttons stay in the DOM
+   so programmatic dismiss paths and Escape handling keep working. */
+.z-page-close,#zCatalogClose,#zAuthHeader .z-sheet-close{display:none!important}
