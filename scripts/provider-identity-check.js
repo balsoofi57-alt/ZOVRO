@@ -9,8 +9,9 @@ assert.equal(age(2008,11,13,'2026-11-12T12:00:00Z'),false,'one day younger must 
 assert.equal(age(2000,2,29,'2026-11-12T12:00:00Z'),true,'valid leap day');
 assert.equal(age(2001,2,29,'2026-11-12T12:00:00Z'),false,'invalid date');
 assert.equal(age(2015,1,1,'2026-11-12T12:00:00Z'),false,'minor blocked');
-const base={id:'provider-test',role:'provider',identityVerified:true,identityAgeConfirmed:true,identityVerification:{status:'verified'}};
+const base={id:'provider-test',role:'provider',identityVerified:true,identityAgeConfirmed:true,identityVerification:{status:'verified',faceVerifiedLive:true}};
 assert.equal(identity.eligible(base),true);
+assert.equal(identity.eligible({...base,identityVerification:{status:'verified',faceVerifiedLive:false}}),false,'Face matching is mandatory');
 for(const change of [{identityVerified:false},{identityAgeConfirmed:false},{identityVerification:{status:'pending'}},{role:'customer'}])assert.equal(identity.eligible({...base,...change}),false);
 const read=p=>fs.readFileSync(p,'utf8');
 const core=read('backend/server-core.js');
@@ -41,4 +42,7 @@ assert.match(site,/ZOVRO_PROVIDER_IDENTITY\\?\\.openRegistration\\?\\.\\(\\)/,'r
 assert.match(read('provider-identity-client.js'),/window\\.ZOVRO_PROVIDER_IDENTITY=\\{openRegistration\\}/);
 assert.match(read('provider-identity-client.js'),/Step 2 of 2/);
 console.log('Live selfie and photo ID verification is required at provider signup.');
+assert.match(api,/faceVerifiedLive===true/);
+assert.match(core,/faceVerifiedLive===true/);
+assert.match(guard,/faceVerifiedLive===true/);
 console.log('Government ID and 18+ eligibility checks, web/mobile packaging, and privacy disclosures PASS');
