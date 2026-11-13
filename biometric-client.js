@@ -75,22 +75,31 @@
   }
   async function unlockSavedSession(){
     if(!enabled())return false;
+    const secureSession=window.ZOVRO_SECURE_SESSION;
+    // Device authentication cannot substitute for validating the server
+    // session. Refuse to unlock without a native secure token store and API.
+    if(!secureSession?.isNativeSecure?.()||typeof secureSession.get!=='function'||typeof api!=='function'){
+      toastSafe('Secure sign-in is unavailable. Please sign in with your password.');
+      return false;
+    }
     const status=await check();
     if(!status.available){toastSafe('Face ID / biometrics are not available on this device.');return false}
     if(!(await authenticate('Sign in to ZOVRO with Face ID'))){toastSafe('Face ID sign-in was canceled or could not be verified.');return false}
-    const saved=await window.ZOVRO_SECURE_SESSION?.get?.();
+    let saved;
+    try{saved=await secureSession.get()}catch{
+      toastSafe('Saved sign-in could not be read. Please enter your password.');
+      return false;
+    }
     if(!saved){toastSafe('Your saved sign-in is no longer available. Please enter your password.');return false}
     try{
       window.ZOVRO_SESSION_TOKEN=String(saved||'');
       try{token=String(saved||'')}catch{}
-      if(typeof api==='function'){
-        const result=await api('/me');
-        if(!result?.user?.id)throw Object.assign(Error('Session was not confirmed'),{status:401});
-        try{me=result.user}catch{}
-        if(typeof renderAccount==='function')renderAccount();
-        if(typeof loadJobs==='function')loadJobs();
-        if(window.ZOVRO_PUSH?.syncUser)window.ZOVRO_PUSH.syncUser();
-      }
+      const result=await api('/me');
+      if(!result?.user?.id)throw Object.assign(Error('Session was not confirmed'),{status:401});
+      try{me=result.user}catch{}
+      if(typeof renderAccount==='function')renderAccount();
+      if(typeof loadJobs==='function')loadJobs();
+      if(window.ZOVRO_PUSH?.syncUser)window.ZOVRO_PUSH.syncUser();
       if(typeof closeModal==='function')closeModal('authModal');
       if(typeof resumeRequestIntent==='function')resumeRequestIntent();
       toastSafe('Signed in with Face ID.');
