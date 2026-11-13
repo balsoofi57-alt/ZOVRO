@@ -73,9 +73,36 @@ async function biometricUnlock(status){
   assert.equal(removes,0);
  }
 }
+async function enableRequiresNativeStorage(mode){
+ let authCalls=0,writes=0;
+ const local=new Map();
+ const w={
+  console,token:'signed-in-session',me:{id:'account-1'},
+  localStorage:{getItem:k=>local.get(k)||null,setItem:(k,v)=>local.set(k,v),removeItem:k=>local.delete(k)},
+  Capacitor:{Plugins:{NativeBiometric:{
+   isAvailable:async()=>({isAvailable:true}),
+   verifyIdentity:async()=>{authCalls++}
+  }}},
+  ZOVRO_SECURE_SESSION:{
+   isNativeSecure:()=>mode==='write-fails',
+   set:async()=>{writes++;throw new Error('Native secure storage unavailable')}
+  },
+  document:{readyState:'loading',addEventListener(){},documentElement:{},getElementById:()=>null},
+  MutationObserver:class{observe(){}},
+ };
+ w.window=w;
+ vm.runInNewContext(biometricScript,w);
+ const enabled=await w.ZOVRO_BIOMETRIC.enable();
+ assert.equal(enabled,false,'Failed secure storage must never activate Face ID');
+ assert.equal(local.has('zovroBiometricUnlock'),false,'Never persist an unusable Face ID preference');
+ assert.equal(authCalls,mode==='write-fails'?1:0,'Do not prompt when native storage is absent');
+ assert.equal(writes,mode==='write-fails'?1:0,'Never write through an absent secure store');
+}
 (async()=>{
  await secureStartup(true);
  await secureStartup(false);
+ await enableRequiresNativeStorage('missing');
+ await enableRequiresNativeStorage('write-fails');
  await biometricUnlock(null);
  await biometricUnlock(500);
  await biometricUnlock(401);
