@@ -10,7 +10,7 @@ on:
         type: boolean
 
   push:
-    branches: [main, store-release-prep, zovro-final-deploy, release/testflight-20261113-stable]
+    branches: [main, store-release-prep, zovro-final-deploy]
     paths:
       - '*.html'
       - '*.js'
@@ -44,7 +44,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Require credentials for requested store upload
-        if: (github.event_name == 'workflow_dispatch' && inputs.upload_testflight == true) || (github.event_name == 'push' && github.ref == 'refs/heads/release/testflight-20261113-stable')
+        if: github.event_name == 'workflow_dispatch' && inputs.upload_testflight == true
         env:
           ZOVRO_IOS_CERTIFICATE_P12_BASE64: ${{ secrets.ZOVRO_IOS_CERTIFICATE_P12_BASE64 }}
           ZOVRO_IOS_CERTIFICATE_PASSWORD: ${{ secrets.ZOVRO_IOS_CERTIFICATE_PASSWORD }}
@@ -637,7 +637,7 @@ jobs:
 
       - name: Upload signed IPA to TestFlight
         id: testflight
-        if: steps.signing.outputs.available == 'true' && ((github.event_name == 'workflow_dispatch' && inputs.upload_testflight == true) || (github.event_name == 'push' && github.ref == 'refs/heads/release/testflight-20261113-stable'))
+        if: steps.signing.outputs.available == 'true' && github.event_name == 'workflow_dispatch' && inputs.upload_testflight == true
         env:
           IPA_PATH: ${{ steps.ipa.outputs.path }}
           APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.ZOVRO_APP_STORE_CONNECT_API_KEY_ID }}
