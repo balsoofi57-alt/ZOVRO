@@ -52,6 +52,8 @@
     if(!ready)await initialLoad;
     if(!biometricRequested()||!locked)return {ok:false,reason:'inactive'};
     if(!plugin())return {ok:false,reason:'secure-storage-unavailable'};
+    const capacitor=window.Capacitor;
+    if(typeof capacitor?.isNativePlatform==='function'&&!capacitor.isNativePlatform())return {ok:false,reason:'biometrics-unavailable'};
     const biometric=window.ZOVRO_BIOMETRIC;
     const status=await biometric?.check?.();
     if(!status?.native||!status?.available)return {ok:false,reason:'biometrics-unavailable'};
