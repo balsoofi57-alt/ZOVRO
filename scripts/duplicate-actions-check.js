@@ -74,6 +74,7 @@ assert.ok(html.includes('id="requestSuccessModal"')&&html.includes('View my requ
 // Full-page sheets supply their own accessible Close control. The inline
 // Cancel/Close and manual Refresh buttons would be the same function again.
 assert.ok(js.includes("close.className='z-page-close'"),'Full-page modal close must remain');
+assert.ok(css.includes(".z-page-close,#zCatalogClose,#zAuthHeader .z-sheet-close{display:none!important}"),'Each page shows one exit: the back arrow; the duplicate × / Close is hidden');
 assert.ok(js.includes("if(modal.id==='trackingModal'&&typeof window.closeTracking==='function')"),'Tracking Close must stop the polling lifecycle');
 assert.ok(html.includes('setInterval(refreshTracking,5000)'),'Live tracking still updates without manual Refresh');
 for(const redundant of [
