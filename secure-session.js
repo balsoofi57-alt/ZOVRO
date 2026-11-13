@@ -15,13 +15,21 @@
     try{
       if(typeof api!=='function')return;
       const user=(await api('/me')).user;
+      if(!user?.id)throw new Error('Session validation returned no account');
       try{me=user}catch{}
       if(typeof renderAccount==='function')renderAccount();
       if(typeof loadJobs==='function')loadJobs();
       if(window.ZOVRO_PUSH?.syncUser)window.ZOVRO_PUSH.syncUser();
-    }catch{
-      setRuntime('');localStorage.removeItem(KEY);await remove();
+    }catch(error){
+      // A network outage, timeout, or server failure does not invalidate a
+      // valid saved login. Keep the secure token at rest for a later retry,
+      // but never leave a token or unverified account active in memory.
+      setRuntime('');
       try{me=null}catch{}
+      if(Number(error?.status)===401||Number(error?.status)===403){
+        localStorage.removeItem(KEY);
+        await remove();
+      }
       if(typeof renderAccount==='function')renderAccount();
     }
   }
