@@ -83,7 +83,7 @@ async function refresh(u,db){
   if(strict&&!data.verified_outputs?.dob)throw new Error('Restricted access to verified date of birth is required before approval');
   const decision=strict?assessVerifiedDocument(data,state):{ok:adultDob(data.verified_outputs?.dob)&&nameMatches(state.legalNameProof,data.verified_outputs),reason:'legacy_identity_not_matched'};
   if(decision.ok){
-   u.identityVerified=true;u.identityAgeConfirmed=true;state.status='verified';state.faceVerifiedLive=strict;state.verifiedAt=new Date().toISOString();
+   u.identityVerified=true;u.identityAgeConfirmed=true;state.status='verified';state.faceVerifiedLive=strict||state.faceVerifiedLive===true;state.verifiedAt=new Date().toISOString();
   }else{
    u.identityVerified=false;u.identityAgeConfirmed=false;state.status='manual_review';state.faceVerifiedLive=false;state.reviewReason=decision.reason;
   }
