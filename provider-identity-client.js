@@ -22,9 +22,9 @@
  }
  async function refreshStatus(check=false){
   if(loading)return;
-  loading=true;
   const box=document.getElementById('zProviderIdentityCard');
   if(!box)return;
+  loading=true;
   try{
    const data=await apiCall(check?'/provider/identity/check':'/provider/identity',check?{method:'POST',body:'{}'}:{});
    render(data.identity);
