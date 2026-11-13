@@ -2,6 +2,7 @@
 const assert=require('node:assert/strict');
 const fs=require('node:fs');
 const vm=require('node:vm');
+process.env.ZOVRO_PROFILE_ENCRYPTION_KEY='unit-test-only-key';
 const identity=require('../backend/identity-verification-api');
 assert.equal(identity.adultDob({year:2008,month:11,day:12},new Date('2026-11-12T12:00:00Z')),true);
 assert.equal(identity.adultDob({year:2008,month:11,day:13},new Date('2026-11-12T12:00:00Z')),false);
@@ -15,9 +16,28 @@ assert.match(fs.readFileSync('backend/server.js','utf8'),/require\('\.\/identity
 const api=fs.readFileSync('backend/identity-verification-api.js','utf8');
 assert(api.includes("'options[document][require_live_capture]':'true'"));
 assert(api.includes("'options[document][require_matching_selfie]':'true'"));
-assert(api.includes('data.options?.document?.require_live_capture===true'));
-assert(api.includes('data.options?.document?.require_matching_selfie===true'));
+assert(api.includes('session.options?.document?.require_live_capture!==true'));
+assert(api.includes('session.options?.document?.require_matching_selfie!==true'));
 console.log('Live selfie and photo ID capture approval requirement PASS');
 assert.match(api,/faceVerifiedLive===true/);
 assert.match(core,/faceVerifiedLive===true/);
+
+const crypto=require('node:crypto');
+const proof=crypto.createHmac('sha256','unit-test-only-key').update('provider zovro').digest('hex');
+const stored={legalNameProof:proof};
+const documentResult={
+ status:'verified',
+ options:{document:{require_matching_selfie:true,require_live_capture:true}},
+ verified_outputs:{first_name:'ZOVRO',last_name:'Provider',dob:{year:1990,month:1,day:1}}
+};
+const assess=result=>identity.assessVerifiedDocument(result,stored,new Date('2026-11-12T00:00:00Z'));
+assert.equal(assess(documentResult).ok,true,'Live selfie plus 18+ verified government ID should be accepted');
+assert.equal(assess({...documentResult,status:'processing'}).ok,false,'Processing is never approval');
+assert.equal(assess({...documentResult,options:{document:{require_matching_selfie:false,require_live_capture:true}}}).reason,'selfie_required');
+assert.equal(assess({...documentResult,options:{document:{require_matching_selfie:true,require_live_capture:false}}}).reason,'live_capture_required');
+assert.equal(assess({...documentResult,verified_outputs:{...documentResult.verified_outputs,first_name:'Different'}}).reason,'name_not_matched');
+assert.equal(assess({...documentResult,verified_outputs:{...documentResult.verified_outputs,dob:{year:2008,month:11,day:13}}}).reason,'age_not_confirmed');
+assert.equal(assess({...documentResult,verified_outputs:{...documentResult.verified_outputs,dob:null}}).reason,'age_not_confirmed');
+assert.equal(identity.assessVerifiedDocument(documentResult,{},new Date('2026-11-12T00:00:00Z')).reason,'name_not_matched');
+
 console.log('Production API ID verification security checks PASS');
