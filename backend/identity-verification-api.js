@@ -6,6 +6,7 @@ const crypto=require('node:crypto');
 const {readDb,writeDb}=require('./database');
 const {currentUser}=require('./request-privacy');
 const {encryptSensitive}=require('./profile-privacy');
+const {liveFaceRequired,canProviderWork}=require('./provider-live-face-policy');
 const baseCreateServer=http.createServer.bind(http);
 const PROFILE_KEY=String(process.env.ZOVRO_PROFILE_ENCRYPTION_KEY||'');
 const STRIPE_KEY=String(process.env.STRIPE_SECRET_KEY||'');
@@ -32,9 +33,10 @@ const safeState=u=>({
  legalNameProvided:!!u.identityVerification?.legalNameEncrypted,
  verifiedAt:u.identityVerification?.verifiedAt||null,
  canWork:eligible(u),
- configured:identityReady()
+ enforced:liveFaceRequired(),
+ configured:liveFaceRequired()&&identityReady()
 });
-function eligible(u){return !!(u&&u.role==='provider'&&u.identityVerified===true&&u.identityAgeConfirmed===true&&u.identityVerification?.status==='verified'&&u.identityVerification?.faceVerifiedLive===true)}
+function eligible(u){return !!(u&&u.role==='provider'&&canProviderWork(u))}
 function legalName(v){const name=String(v||'').trim().replace(/\s+/g,' ');return name.length>=5&&name.length<=120&&name.split(' ').length>=2?name:null}
 function normalizedName(s){return String(s||'').normalize('NFKD').replace(/[\u0300-\u036f]/g,'').replace(/[^\p{L}\p{N} ]/gu,' ').toLocaleLowerCase('en').replace(/\s+/g,' ').trim()}
 function nameProof(value){const canonical=normalizedName(value).split(' ').filter(Boolean).sort().join(' ');return crypto.createHmac('sha256',PROFILE_KEY).update(canonical).digest('hex')}
@@ -103,12 +105,14 @@ async function route(req,res,next){
  try{
   if(path==='/api/provider/identity'&&req.method==='GET')return json(res,200,{identity:safeState(u)});
   if(path==='/api/provider/identity/check'&&req.method==='POST'){
+   if(!liveFaceRequired())return json(res,200,{identity:safeState(u)});
    if(!u.identityVerification?.sessionId)return json(res,200,{identity:safeState(u)});
    const throttle=allowIdentityCall(u.id,'check');
    if(!throttle.allowed)return json(res,429,{error:'Please wait before checking your ID again',retryAfterSeconds:throttle.retryAfter});
    return json(res,200,{identity:await refresh(u,db)});
   }
   if(path==='/api/provider/identity/start'&&req.method==='POST'){
+   if(!liveFaceRequired())return json(res,503,{error:'Live face verification is not enabled yet'});
    if(eligible(u))return json(res,200,{identity:safeState(u)});
    const b=await requestBody(req);
    if(b.consent!==true)return json(res,400,{error:'Consent to the secure identity check is required'});
