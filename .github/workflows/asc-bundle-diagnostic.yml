@@ -55,6 +55,19 @@ jobs:
             puts "Found #{apps.length} accessible com.zovro.app app record(s)."
             puts "App Store Connect app ID: #{apps.first['id']}"
           else
+            # Report Apple's error classification only. Never print a request
+            # token, key material, or untrusted full HTTP response body.
+            begin
+              body = JSON.parse(response.body)
+              Array(body['errors']).first(3).each do |error|
+                code = error['code'].to_s.gsub(/[^A-Za-z0-9_.-]/, '')[0,80]
+                title = error['title'].to_s.gsub(/[[:cntrl:]]/, ' ')[0,160]
+                detail = error['detail'].to_s.gsub(/[[:cntrl:]]/, ' ')[0,220]
+                puts "Apple API error code: #{code}; title: #{title}; detail: #{detail}"
+              end
+            rescue JSON::ParserError
+              puts 'Apple API returned a non-JSON error response.'
+            end
             abort 'App Store Connect API request was rejected. Check credential permissions and outstanding agreements.'
           end
           RUBY
