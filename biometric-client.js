@@ -4,6 +4,7 @@
   const LOGIN_BUTTON_ID='zovroFaceIdLogin';
   const plugin=()=>window.Capacitor?.Plugins?.NativeBiometric||window.Capacitor?.Plugins?.BiometricAuthNative||window.Capacitor?.Plugins?.BiometricAuth||null;
   const enabled=()=>localStorage.getItem(PREF)==='1';
+  const currentBearer=()=>{try{return typeof token!=='undefined'?String(token||''):''}catch{return ''}};
   const setEnabled=value=>{if(value)localStorage.setItem(PREF,'1');else localStorage.removeItem(PREF)};
   async function check(){
     const p=plugin();
@@ -75,6 +76,9 @@
   }
   async function unlockSavedSession(){
     if(!enabled())return false;
+    // Do not replace an account that is already signed in through password
+    // login or another concurrent authentication flow.
+    if(currentBearer())return false;
     const secureSession=window.ZOVRO_SECURE_SESSION;
     // Device authentication cannot substitute for validating the server
     // session. Refuse to unlock without a native secure token store and API.
@@ -85,16 +89,20 @@
     const status=await check();
     if(!status.available){toastSafe('Face ID / biometrics are not available on this device.');return false}
     if(!(await authenticate('Sign in to ZOVRO with Face ID'))){toastSafe('Face ID sign-in was canceled or could not be verified.');return false}
+    if(currentBearer())return false; // Another login completed during the prompt.
     let saved;
     try{saved=await secureSession.get()}catch{
       toastSafe('Saved sign-in could not be read. Please enter your password.');
       return false;
     }
     if(!saved){toastSafe('Your saved sign-in is no longer available. Please enter your password.');return false}
+    if(currentBearer())return false; // Another login finished while reading storage.
+    const attempted=String(saved);
     try{
-      window.ZOVRO_SESSION_TOKEN=String(saved||'');
-      try{token=String(saved||'')}catch{}
+      window.ZOVRO_SESSION_TOKEN=attempted;
+      try{token=attempted}catch{}
       const result=await api('/me');
+      if(currentBearer()!==attempted)return false; // Stale result from another session.
       if(!result?.user?.id)throw Object.assign(Error('Session was not confirmed'),{status:401});
       try{me=result.user}catch{}
       if(typeof renderAccount==='function')renderAccount();
@@ -105,6 +113,9 @@
       toastSafe('Signed in with Face ID.');
       return true;
     }catch(e){
+      // A delayed failed Face ID request must never sign out or revoke a
+      // newer password login that replaced its bearer in the meantime.
+      if(currentBearer()!==attempted)return false;
       window.ZOVRO_SESSION_TOKEN='';
       try{token=''}catch{}
       try{me=null;if(typeof renderAccount==='function')renderAccount()}catch{}
