@@ -1,0 +1,90 @@
+name: ZOVRO iPhone Simulator Visual Smoke Test
+
+on:
+  push:
+    branches:
+      - testflight/single-exit-20261113
+    paths:
+      - .github/workflows/zovro-iphone-visual-check.yml
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  screenshot:
+    runs-on: macos-latest
+    timeout-minutes: 25
+    steps:
+      - name: Download exact Build 6.1 simulator package
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          mkdir -p input extracted screenshots
+          gh run download 43510293026 -R balsoofi57-alt/ZOVRO -n zovro-ios-simulator-unsigned -D input
+          ditto -x -k input/ZOVRO-iOS-Simulator-Release.zip extracted
+          test -d extracted/App.app
+          /usr/libexec/PlistBuddy -c 'Print :CFBundleVersion' extracted/App.app/Info.plist
+          grep -Fq '.z-page-close,#zCatalogClose,#zAuthHeader .z-sheet-close{display:none!important}' extracted/App.app/public/website-final.css
+
+      - name: Add test-only page driver to the simulator copy
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path("extracted/App.app/public/index.html")
+          h = p.read_text(encoding="utf-8")
+          driver = """<script>/* QA screenshot driver - simulator copy only */
+          (function(){
+            function vis(e){const r=e.getBoundingClientRect(),s=getComputedStyle(e);return r.width>0&&r.height>0&&s.visibility!=='hidden'&&s.display!=='none'}
+            function byText(sel,t){return [...document.querySelectorAll(sel)].find(e=>vis(e)&&(e.innerText||'').trim().startsWith(t))}
+            function byLabel(l){return [...document.querySelectorAll('[aria-label]')].find(e=>vis(e)&&e.getAttribute('aria-label')===l)}
+            function go(fn){try{fn()}catch(e){console.log('driver',e)}window.scrollTo(0,0)}
+            const steps=[
+              [14000,()=>byText('button','More Services')?.click()],
+              [22000,()=>{byLabel('Back to home')?.click();setTimeout(()=>byLabel('My Requests')?.click(),600)}],
+              [30000,()=>byLabel('Account')?.click()],
+              [38000,()=>byText('summary','My Account')?.click()],
+              [46000,()=>{byLabel('Back to More')?.click();setTimeout(()=>window.openAuth&&window.openAuth(),600)}]
+            ];
+            for(const [t,f] of steps)setTimeout(()=>go(f),t);
+          })();</script>"""
+          assert h.count("</body>") == 1
+          p.write_text(h.replace("</body>", driver + "\n</body>"), encoding="utf-8")
+          PY
+
+      - name: Boot iPhone simulator, launch app and capture pages
+        run: |
+          set -euo pipefail
+          DEVICE=$(python3 - <<'PY'
+          import json,subprocess,sys
+          out=json.loads(subprocess.check_output(["xcrun","simctl","list","devices","available","-j"]))
+          c=[d for v in out["devices"].values() for d in v if d.get("isAvailable") and "iPhone" in d["name"]]
+          pref=[d for d in c if "Pro" in d["name"] and "Max" not in d["name"]] or c
+          print(pref[-1]["udid"])
+          PY
+          )
+          xcrun simctl boot "$DEVICE" || true
+          xcrun simctl bootstatus "$DEVICE" -b
+          xcrun simctl status_bar "$DEVICE" override --time '9:41' --dataNetwork wifi --wifiMode active --wifiBars 3 --batteryState charged --batteryLevel 100
+          xcrun simctl install "$DEVICE" extracted/App.app
+          xcrun simctl privacy "$DEVICE" grant location com.zovro.app || true
+          xcrun simctl privacy "$DEVICE" grant location-always com.zovro.app || true
+          xcrun simctl launch "$DEVICE" com.zovro.app
+          shot(){ xcrun simctl io "$DEVICE" screenshot "screenshots/$1.png"; }
+          sleep 12; shot 1-home
+          sleep 7;  shot 2-services
+          sleep 8;  shot 3-my-requests
+          sleep 8;  shot 4-account-more
+          sleep 8;  shot 5-my-account
+          sleep 8;  shot 6-sign-in
+          ls -la screenshots
+
+      - name: Upload simulator screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: zovro-build-6_1-iphone-screens
+          path: screenshots/
+          retention-days: 10
