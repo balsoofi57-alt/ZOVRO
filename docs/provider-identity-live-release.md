@@ -15,6 +15,9 @@ Purpose: Only service providers and shop owners who are at least 18, whose gover
 5. Test the full live hosted flow with a consenting adult test provider before deploying the strict gate: valid passport or ID, live camera selfie, correct age and legal name, processing state, return to profile, genuine verified result, and the ability to receive and accept a nearby request. **Do not** ask real users to submit documents until this passes.
 6. Exercise negative cases with synthetic fixtures without uploading real IDs: age 17, session missing face match, non-live document capture, expired/reused link, name mismatch, unavailable Stripe, and user cancel. Make sure all remain ineligible.
 7. Check that support has a secure appeal/retry flow and appropriate ID retention/redaction policy. Do not store or log raw document images, selfie images, ID numbers, DOB, restricted-key strings, or unredacted Stripe responses in ZOVRO.
+8. Verify that newly returned Stripe session options explicitly retain **both** `require_live_capture=true` and `require_matching_selfie=true`. If either is missing, refuse onboarding (the server now enforces this on session creation).
+9. Verify revoked/redacted verification sessions cannot remain approved when the provider rechecks their status. Stripe redaction can be asynchronous. Provide operational handling (such as a verified Stripe event/webhook or admin revocation path) for immediate revocation without relying solely on a provider-initiated status refresh. Test using synthetic results rather than real identity data.
+10. Confirm all existing providers can reverify without losing ongoing jobs, and communicate the mandatory identity transition before enabling strict acceptance rules; otherwise the new policy can immediately block the entire supply side.
 
 ## Deployment safety
 
