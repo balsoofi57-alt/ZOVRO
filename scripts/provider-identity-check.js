@@ -17,6 +17,8 @@ for(const change of [{identityVerified:false},{identityAgeConfirmed:false},{iden
 const read=p=>fs.readFileSync(p,'utf8');
 const core=read('backend/server-core.js');
 const guard=read('backend/request-privacy.js');
+// Stripe requires a restricted Identity Results key to expose verified date of birth.
+// Without that key, no provider may be marked eligible for work.
 const api=read('backend/identity-verification-api.js');
 const site=read('index.html');
 const publicAssets=read('backend/static-assets.js');
@@ -64,5 +66,11 @@ assert.equal(assess({...documentResult,verified_outputs:{...documentResult.verif
 assert.equal(assess({...documentResult,verified_outputs:{...documentResult.verified_outputs,dob:{year:2008,month:11,day:13}}}).reason,'age_not_confirmed');
 assert.equal(assess({...documentResult,verified_outputs:{...documentResult.verified_outputs,dob:null}}).reason,'age_not_confirmed');
 assert.equal(identity.assessVerifiedDocument(documentResult,{},new Date('2026-11-12T00:00:00Z')).reason,'name_not_matched');
+
+assert.match(api,/ZOVRO_STRIPE_IDENTITY_RESULTS_KEY/,'dedicated restricted results credential is required');
+assert.match(api,/expand\[\]/,'Identity result expansion should be explicit');
+assert.match(api,/verified_outputs\.dob/,'verified birth date expansion is required');
+assert.match(api,/identityReady\(\)/,'fail closed when secure Identity configuration is missing');
+assert.match(api,/if\(!data\.verified_outputs\?\.dob\)throw new Error/,'no birthdate must never approve provider');
 
 console.log('Government ID and 18+ eligibility checks, web/mobile packaging, and privacy disclosures PASS');
