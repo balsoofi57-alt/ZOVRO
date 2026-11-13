@@ -114,10 +114,12 @@ async function enableRequiresNativeStorage(mode){
    isAvailable:async()=>({isAvailable:true}),
    verifyIdentity:async()=>{authCalls++}
   }}},
-  ZOVRO_SECURE_SESSION:{
-   isNativeSecure:()=>mode==='write-fails',
-   set:async()=>{writes++;throw new Error('Native secure storage unavailable')}
-  },
+  ZOVRO_SECURE_SESSION:mode==='missing-writer'
+   ?{isNativeSecure:()=>true}
+   :{
+    isNativeSecure:()=>mode==='write-fails',
+    set:async()=>{writes++;throw new Error('Native secure storage unavailable')}
+   },
   document:{readyState:'loading',addEventListener(){},documentElement:{},getElementById:()=>null},
   MutationObserver:class{observe(){}},
  };
@@ -134,6 +136,7 @@ async function enableRequiresNativeStorage(mode){
  await secureStartup(false);
  for(const failure of [null,500,401,403,'invalid-shape'])await restoreAfterApiFailure(failure);
  await enableRequiresNativeStorage('missing');
+ await enableRequiresNativeStorage('missing-writer');
  await enableRequiresNativeStorage('write-fails');
  await biometricUnlock(null);
  await biometricUnlock(500);
