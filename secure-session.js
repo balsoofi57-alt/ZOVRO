@@ -13,7 +13,8 @@
   async function remove(){const p=plugin();if(p){try{await p.remove({key:KEY})}catch{}return}sessionStorage.removeItem(KEY)}
   async function restoreAccount(){
     try{
-      if(typeof api!=='function')return;
+      // A missing validation API is not a successful login.
+      if(typeof api!=='function')throw new Error('Session validation API unavailable');
       const user=(await api('/me')).user;
       if(!user?.id)throw new Error('Session validation returned no account');
       try{me=user}catch{}
