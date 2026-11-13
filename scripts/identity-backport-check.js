@@ -4,6 +4,16 @@ const fs=require('node:fs');
 const vm=require('node:vm');
 process.env.ZOVRO_PROFILE_ENCRYPTION_KEY='unit-test-only-key';
 const identity=require('../backend/identity-verification-api');
+// The identity provider makes paid/networked calls; never allow per-account rapid retriggering.
+const throttleId='unit-identity-throttle';
+assert.equal(identity.allowIdentityCall(throttleId,'start',1000).allowed,true);
+assert.deepEqual(identity.allowIdentityCall(throttleId,'start',1001),{allowed:false,retryAfter:30});
+assert.equal(identity.allowIdentityCall(throttleId,'check',1001).allowed,true,'status checks have their own cooldown');
+assert.equal(identity.allowIdentityCall(throttleId,'check',5000).allowed,false);
+assert.equal(identity.allowIdentityCall(throttleId+'-other','start',1002).allowed,true,'different providers must not block one another');
+assert.equal(identity.allowIdentityCall(throttleId,'check',11001).allowed,true,'10-second check cooldown must expire');
+assert.equal(identity.allowIdentityCall(throttleId,'start',31000).allowed,true,'30-second start cooldown must expire');
+
 assert.equal(identity.adultDob({year:2008,month:11,day:12},new Date('2026-11-12T12:00:00Z')),true);
 assert.equal(identity.adultDob({year:2008,month:11,day:13},new Date('2026-11-12T12:00:00Z')),false);
 assert.equal(identity.eligible({role:'provider',identityVerified:true,identityAgeConfirmed:true,identityVerification:{status:'verified',faceVerifiedLive:true}}),true);
