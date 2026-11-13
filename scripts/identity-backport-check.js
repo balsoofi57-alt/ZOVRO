@@ -85,6 +85,7 @@ assert.match(api,/state.reviewReason='unexpected_status'/,'unknown session statu
 assert(api.includes("s.status==='requires_input'&&!['processing','redacted'].includes(s.redaction?.status)"),'redacted sessions cannot return reusable Stripe links');
 assert.match(api,/liveFaceRequired\(\)\&\&session.options\?\.document\?\.require_live_capture!==true/,'strict sessions must enforce live document capture');
 assert.match(api,/session.options\?\.document\?\.require_matching_selfie!==true/,'legacy and strict sessions must match the selfie');
-assert.match(api,/if\(!data\.verified_outputs\?\.dob\)throw new Error/,'no birthdate must never approve provider');
+assert.match(api,/if\(strict\&\&!data\.verified_outputs\?\.dob\)throw new Error/,'strict live results require date of birth');
+assert.match(api,/adultDob\(data\.verified_outputs\?\.dob\)/,'legacy identity can never approve without an adult date of birth');
 
 console.log('Production API ID verification security checks PASS');
