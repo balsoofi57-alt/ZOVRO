@@ -9,6 +9,9 @@ const {encryptSensitive}=require('./profile-privacy');
 const baseCreateServer=http.createServer.bind(http);
 const PROFILE_KEY=String(process.env.ZOVRO_PROFILE_ENCRYPTION_KEY||'');
 const STRIPE_KEY=String(process.env.STRIPE_SECRET_KEY||'');
+// Read birth dates only through a restricted live key with Identity verification-results permission.
+const STRIPE_RESULTS_KEY=String(process.env.ZOVRO_STRIPE_IDENTITY_RESULTS_KEY||'');
+const identityReady=()=>/^sk_live_[A-Za-z0-9]+$/.test(STRIPE_KEY)&&/^rk_live_[A-Za-z0-9]+$/.test(STRIPE_RESULTS_KEY)&&Buffer.byteLength(PROFILE_KEY)>=32;
 const isProduction=process.env.NODE_ENV==='production'||String(process.env.RENDER||'').toLowerCase()==='true'||Boolean(process.env.RENDER_SERVICE_ID);
 const safeState=u=>({
  status:u.identityVerification?.status==='verified'&&!eligible(u)?'reverification_required':u.identityVerification?.status||'not_started',
@@ -16,7 +19,7 @@ const safeState=u=>({
  legalNameProvided:!!u.identityVerification?.legalNameEncrypted,
  verifiedAt:u.identityVerification?.verifiedAt||null,
  canWork:eligible(u),
- configured:/^sk_live_[A-Za-z0-9]+/.test(STRIPE_KEY)
+ configured:identityReady()
 });
 function eligible(u){return !!(u&&u.role==='provider'&&u.identityVerified===true&&u.identityAgeConfirmed===true&&u.identityVerification?.status==='verified'&&u.identityVerification?.faceVerifiedLive===true)}
 function legalName(v){const name=String(v||'').trim().replace(/\s+/g,' ');return name.length>=5&&name.length<=120&&name.split(' ').length>=2?name:null}
@@ -34,9 +37,9 @@ function assessVerifiedDocument(session,stored,now=new Date()){
 function adultDob(value,now=new Date()){const year=Number(value?.year),month=Number(value?.month),day=Number(value?.day);if(!Number.isInteger(year)||!Number.isInteger(month)||!Number.isInteger(day)||year<1900||month<1||month>12||day<1||day>31)return false;const birthday=new Date(Date.UTC(year,month-1,day));if(birthday.getUTCFullYear()!==year||birthday.getUTCMonth()!==month-1||birthday.getUTCDate()!==day)return false;let age=now.getUTCFullYear()-year;if((now.getUTCMonth()+1)<month||((now.getUTCMonth()+1)===month&&now.getUTCDate()<day))age--;return age>=18&&age<125}
 function json(res,status,data){if(res.headersSent)return;res.writeHead(status,{'content-type':'application/json; charset=utf-8','cache-control':'no-store','x-content-type-options':'nosniff','referrer-policy':'no-referrer'});res.end(JSON.stringify(data))}
 function requestBody(req){return new Promise((resolve,reject)=>{let data='',bytes=0,done=false;req.on('data',chunk=>{bytes+=chunk.length;if(bytes>5000){done=true;reject(new Error('Request too large'));req.resume();return}if(!done)data+=chunk});req.on('end',()=>{if(done)return;try{resolve(data?JSON.parse(data):{})}catch{reject(new Error('Invalid request'))}});req.on('error',reject)})}
-async function stripe(method,path,params,idempotency){
- if(!/^sk_live_[A-Za-z0-9]+/.test(STRIPE_KEY))throw new Error('Government ID verification is not configured yet');
- const headers={authorization:'Bearer '+STRIPE_KEY};
+async function stripe(method,path,params,idempotency,key=STRIPE_KEY){
+ if(!/^((sk|rk)_live_)[A-Za-z0-9]+$/.test(key)||method==='POST'&&key!==STRIPE_KEY)throw new Error('Government ID verification is not configured yet');
+ const headers={authorization:'Bearer '+key};
  let url='https://api.stripe.com/v1'+path;
  let body;
  if(method==='POST'){
@@ -53,10 +56,11 @@ function latest(db,actor){return(db.users||[]).find(x=>x.id===actor.user.id&&(x.
 async function refresh(u,db){
  const state=u.identityVerification||{},sessionId=state.sessionId;
  if(!/^vs_[A-Za-z0-9]+$/.test(String(sessionId||'')))return safeState(u);
- const data=await stripe('GET','/identity/verification_sessions/'+encodeURIComponent(sessionId),[['expand[]','verified_outputs']]);
+ const data=await stripe('GET','/identity/verification_sessions/'+encodeURIComponent(sessionId),[['expand[]','verified_outputs'],['expand[]','verified_outputs.dob']],undefined,STRIPE_RESULTS_KEY);
  if(data.id!==sessionId||data.type!=='document'||data.client_reference_id!==u.id||data.metadata?.zovro_provider_id!==u.id)throw new Error('Identity verification could not be matched to your account');
  if(data.livemode!==true)throw new Error('Live identity verification is required');
  if(data.status==='verified'){
+  if(!data.verified_outputs?.dob)throw new Error('Restricted access to verified date of birth is required before approval');
   const decision=assessVerifiedDocument(data,state);
   if(decision.ok){
    u.identityVerified=true;u.identityAgeConfirmed=true;state.status='verified';state.faceVerifiedLive=true;state.verifiedAt=new Date().toISOString();
@@ -87,7 +91,7 @@ async function route(req,res,next){
    if(b.consent!==true)return json(res,400,{error:'Consent to the secure identity check is required'});
    const name=legalName(b.legalName);
    if(!name)return json(res,400,{error:'Enter your full legal first and last name exactly as shown on your ID'});
-   if(Buffer.byteLength(PROFILE_KEY)<32)return json(res,503,{error:'Secure verification configuration is unavailable'});
+   if(!identityReady())return json(res,503,{error:'Secure identity and age verification are not configured yet'});
    const old=u.identityVerification||{};
    if(old.sessionId&&['requires_input','processing'].includes(old.status)&&old.legalNameProof===nameProof(name)){
     const s=await stripe('GET','/identity/verification_sessions/'+encodeURIComponent(old.sessionId));
