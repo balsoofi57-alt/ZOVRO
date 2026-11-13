@@ -38,7 +38,7 @@ assert.match(fs.readFileSync('backend/server.js','utf8'),/require\('\.\/identity
 // Stripe requires a restricted Identity Results key to expose verified date of birth.
 // Without that key, no provider may be marked eligible for work.
 const api=fs.readFileSync('backend/identity-verification-api.js','utf8');
-assert(api.includes("'options[document][require_live_capture]':'true'"));
+assert(api.includes("if(liveFaceRequired())form['options[document][require_live_capture]']='true'"));
 assert(api.includes("'options[document][require_matching_selfie]':'true'"));
 assert(api.includes('session.options?.document?.require_live_capture!==true'));
 assert(api.includes('session.options?.document?.require_matching_selfie!==true'));
@@ -71,16 +71,20 @@ assert.equal(identity.assessVerifiedDocument(documentResult,{},new Date('2026-11
 assert.match(api,/ZOVRO_STRIPE_IDENTITY_RESULTS_KEY/,'dedicated restricted results credential is required');
 assert.match(api,/expand\[\]/,'Identity result expansion should be explicit');
 assert.match(api,/verified_outputs\.dob/,'verified birth date expansion is required');
+assert.match(api,/state.faceVerifiedLive=strict\|\|state.faceVerifiedLive===true/,'legacy refresh must not erase previously verified live-face proof');
+
 assert.match(api,/identityReady\(\)/,'fail closed when secure Identity configuration is missing');
 assert.match(api,/enforced:liveFaceRequired\(\)/,'API must report whether live-face rollout is enabled');
-assert.match(api,/if\(!liveFaceRequired\(\)\)return json\(res,503/,'creating paid ID checks must be disabled until rollout activation');
+assert.match(api,/legacyIdentityReady\(\)/,'legacy government ID route must remain usable before face rollout');
+assert.match(api,/strict\?STRIPE_RESULTS_KEY:STRIPE_KEY/,'legacy and strict result reads use their respective Stripe permissions');
 assert.match(api,/if\(s\.status==='verified'\)\{\s*const checked=await refresh\(u,db\)/,'a completed Stripe session is checked instead of creating another paid session');
 assert.match(api,/if\(checked\.verified\)return json\(res,200,\{identity:checked\}\)/,'successful recheck resumes existing verified session');
 assert(api.indexOf("if(s.status==='verified')")<api.indexOf("const session=await stripe('POST'"),'reuse must precede new Stripe session creation');
 assert.match(api,/s\.metadata\?\.zovro_provider_id!==u\.id\|\|s\.livemode!==true/,'stored sessions require provider ownership and live mode');
 assert.match(api,/state.reviewReason='unexpected_status'/,'unknown session statuses must revoke prior eligibility');
 assert(api.includes("s.status==='requires_input'&&!['processing','redacted'].includes(s.redaction?.status)"),'redacted sessions cannot return reusable Stripe links');
-assert.match(api,/session.options\?\.document\?\.require_live_capture!==true\|\|session.options\?\.document\?\.require_matching_selfie!==true/,'reject missing requirements in newly created sessions');
+assert.match(api,/liveFaceRequired\(\)\&\&session.options\?\.document\?\.require_live_capture!==true/,'strict sessions must enforce live document capture');
+assert.match(api,/session.options\?\.document\?\.require_matching_selfie!==true/,'legacy and strict sessions must match the selfie');
 assert.match(api,/if\(!data\.verified_outputs\?\.dob\)throw new Error/,'no birthdate must never approve provider');
 
 console.log('Production API ID verification security checks PASS');
