@@ -164,7 +164,7 @@
       const result=await original.apply(this,arguments);
       const after=typeof token!=='undefined'?String(token||''):'';
       if(optIn&&after&&after!==before){
-        try{await window.ZOVRO_SECURE_SESSION?.set?.(after);await enable();}
+        try{await enable();}
         catch{toastSafe('You can enable Face ID later from Profile & Security.')}
       }
       return result;
