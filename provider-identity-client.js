@@ -75,6 +75,11 @@
   if(lastUser!==user.id){
    lastUser=user.id;
    const returned=new URLSearchParams(location.search).get('identity_verification')==='return';
+   if(returned&&typeof nav==='function'){
+    const profileTab=[...document.querySelectorAll('.bottom button')].find(button=>(button.getAttribute('onclick')||'').includes("'profile'"));
+    nav('profile',profileTab||null);
+    box.scrollIntoView({block:'start'});
+   }
    refreshStatus(returned);
   }
  }
