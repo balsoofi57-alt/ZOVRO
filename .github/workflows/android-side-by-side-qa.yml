@@ -1,10 +1,7 @@
 name: ZOVRO QA side-by-side APK (one-time)
 
 on:
-  push:
-    branches: [qa/android-side-by-side-20261113]
-    paths:
-      - '.github/workflows/android-side-by-side-qa.yml'
+  workflow_dispatch:
 
 permissions:
   contents: read
