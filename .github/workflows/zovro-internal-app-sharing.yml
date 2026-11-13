@@ -1,9 +1,6 @@
 name: ZOVRO Google Play Internal App Sharing (one-time)
 on:
-  push:
-    branches: [release/android-internal-sharing-20261113]
-    paths:
-      - '.github/workflows/zovro-internal-app-sharing.yml'
+  workflow_dispatch:
 
 permissions:
   contents: read
