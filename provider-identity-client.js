@@ -13,15 +13,15 @@
   notice.textContent=rolloutPaused?(verified?'Your government photo ID and age (18+) are verified. Live face checks are being prepared.':'Government photo ID and age (18+) verification are required. Live face checks are being prepared.'):verified?statuses.verified:(status==='verified'?statuses.reverification_required:statuses[status]||statuses.not_started);
   notice.style.color=verified?'#166534':'#92400e';
   const form=box.querySelector('[data-identity-form]');
-  if(form)form.hidden=verified||rolloutPaused;
+  if(form)form.hidden=verified;
   const registrationStep=box.querySelector('[data-registration-step]');
-  if(registrationStep&&rolloutPaused)registrationStep.hidden=true;
+  if(registrationStep&&rolloutPaused)registrationStep.textContent='Step 2 of 2: verify your government photo ID and age (18+) to activate your provider account.';
   const check=box.querySelector('[data-identity-check]');
-  if(check)check.hidden=verified||status==='not_started'||rolloutPaused;
+  if(check)check.hidden=verified||status==='not_started';
   const start=box.querySelector('[data-identity-start]');
-  if(start)start.disabled=rolloutPaused||!info?.configured||status==='processing';
+  if(start){start.disabled=!info?.configured||status==='processing';start.textContent=rolloutPaused?'Verify government ID':'Verify ID & live face';}
   const config=box.querySelector('[data-identity-config]');
-  if(config)config.textContent=rolloutPaused?'Live face capture is not enabled yet. Existing government ID and 18+ rules remain in effect.':info?.configured?'':'Secure identity checks are not yet available. You cannot accept jobs until verification is enabled.';
+  if(config)config.textContent=rolloutPaused?(info?.configured?'Government ID and age (18+) verification remains available; additional live face capture is being prepared.':'Government ID verification is currently unavailable. Please try again later.'):info?.configured?'':'Secure identity checks are not yet available. You cannot accept jobs until verification is enabled.';
  }
  async function refreshStatus(check=false){
   if(loading)return;
@@ -51,7 +51,7 @@
     location.assign(data.verificationUrl);
    }else if(data.identity?.verified)toast('Government ID already verified');
    else toast('Verification is pending; check status in Profile.');
-  }catch(e){toast(e.message||'Verification is unavailable')}finally{btn.disabled=false;btn.textContent='Verify ID & live face'}
+  }catch(e){toast(e.message||'Verification is unavailable')}finally{btn.disabled=false;const current=document.getElementById('zProviderIdentityCard');const mode=current?.querySelector('[data-identity-config]')?.textContent||'';btn.textContent=mode.includes('additional live face capture')?'Verify government ID':'Verify ID & live face'}
  }
  function inject(){
   let user=null;try{user=me}catch(_){}
