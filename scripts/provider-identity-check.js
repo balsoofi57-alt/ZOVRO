@@ -42,11 +42,13 @@ assert(api.includes("'options[document][require_matching_selfie]':'true'"),'real
 assert(api.includes('session.options?.document?.require_live_capture!==true'),'verified status is insufficient without live capture');
 assert(api.includes('session.options?.document?.require_matching_selfie!==true'),'verified status is insufficient without face match');
 assert(site.includes('window.ZOVRO_PROVIDER_IDENTITY?.openRegistration?.()'),'registration should immediately start provider verification step');
+assert(read('provider-identity-client.js').includes("status==='verified'?statuses.reverification_required"),'client must not advertise jobs as ready without live-face eligibility');
 assert(read('provider-identity-client.js').includes('window.ZOVRO_PROVIDER_IDENTITY={openRegistration}'));
 assert.match(read('provider-identity-client.js'),/Step 2 of 2/);
 console.log('Live selfie and photo ID verification is required at provider signup.');
 assert.match(api,/faceVerifiedLive===true/);
 assert.match(core,/faceVerifiedLive===true/);
+assert(core.includes("identityStatus:u.identityVerification?.status==='verified'&&!(u.identityVerified&&u.identityAgeConfirmed&&u.identityVerification?.faceVerifiedLive===true)?'reverification_required'"),'legacy approvals must not appear fully verified');
 assert.match(guard,/faceVerifiedLive===true/);
 
 const crypto=require('node:crypto');
