@@ -1,6 +1,6 @@
 'use strict';
 (function(){
- const statuses={not_started:'Government ID and live face check required before accepting jobs',requires_input:'ID check not completed',processing:'Identity verification is under review',verified:'Government ID, live face, and age verified — ready for jobs',manual_review:'Government ID, face match or age could not be confirmed. Contact support.',canceled:'Verification canceled; start again'};
+ const statuses={not_started:'Government ID and live face check required before accepting jobs',requires_input:'ID check not completed',processing:'Identity verification is under review',reverification_required:'Live face capture is still required. Reverify to accept jobs',verified:'Government ID, live face, and age verified — ready for jobs',manual_review:'Government ID, face match or age could not be confirmed. Contact support.',canceled:'Verification canceled; start again'};
  const apiCall=(path,options)=>api(path,options);
  let lastUser='',loading=false;
  function stateFromUser(user){return user?.identityStatus||'not_started'}
