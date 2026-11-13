@@ -171,6 +171,59 @@ async function biometricPreflight(mode){
  assert.equal(reads,0,'Do not retrieve bearer before the preflight checks succeed');
  assert.equal(w.token,'','Never expose a session token on preflight failure');
 }
+async function biometricAccountSwitch(mode){
+ let reads=0,prompts=0,apiCalls=0,removes=0,rendered=0;
+ let reached,release;
+ const started=new Promise(resolve=>{reached=resolve});
+ const gate=new Promise(resolve=>{release=resolve});
+ const w={
+  console,token:mode==='already-signed-in'?'new-session':'',me:null,
+  localStorage:{getItem:k=>k==='zovroBiometricUnlock'?'1':null},
+  Capacitor:{Plugins:{NativeBiometric:{
+   isAvailable:async()=>({isAvailable:true}),
+   verifyIdentity:async()=>{prompts++;if(mode==='prompt-switch'){reached();await gate}}
+  }}},
+  ZOVRO_SECURE_SESSION:{
+   isNativeSecure:()=>true,
+   get:async()=>{
+    reads++;
+    if(mode==='storage-switch'){reached();await gate}
+    return 'old-session';
+   },
+   remove:async()=>{removes++}
+  },
+  api:async()=>{
+   apiCalls++;
+   if(mode==='stale-success'||mode==='stale-401'){reached();await gate}
+   if(mode==='stale-401')throw Object.assign(new Error('Old account revoked'),{status:401});
+   return {user:{id:'old-account'}};
+  },
+  document:{readyState:'loading',addEventListener(){},documentElement:{},getElementById:()=>null},
+  MutationObserver:class{observe(){}},
+  renderAccount(){rendered++},loadJobs(){},toast(){}
+ };
+ w.window=w;
+ if(mode==='already-signed-in')w.me={id:'new-account'};
+ vm.runInNewContext(biometricScript,w);
+ const attempt=w.ZOVRO_BIOMETRIC.unlockSavedSession();
+ if(mode!=='already-signed-in'){
+  await started;
+  w.token='new-session';
+  w.me={id:'new-account'};
+  release();
+ }
+ const success=await attempt;
+ assert.equal(success,false,'An old Face ID attempt must not log in over a newer account');
+ assert.equal(w.token,'new-session','An old Face ID result cannot clear or replace the new bearer');
+ assert.equal(w.me.id,'new-account','An old Face ID result cannot replace the new account');
+ assert.equal(removes,0,'A stale 401 must not revoke a new session');
+ assert.equal(rendered,0,'Stale Face ID results must not rerender an account');
+ if(mode==='already-signed-in'){
+  assert.equal(prompts,0);assert.equal(reads,0);assert.equal(apiCalls,0);
+ }
+ if(mode==='prompt-switch')assert.equal(reads,0,'No saved token read after concurrent password login');
+ if(mode==='storage-switch')assert.equal(apiCalls,0,'No API call after concurrent password login');
+}
 async function enableRequiresNativeStorage(mode){
  let authCalls=0,writes=0;
  const local=new Map();
@@ -211,5 +264,6 @@ async function enableRequiresNativeStorage(mode){
  await biometricUnlock(401);
  await biometricPreflight('missing-api');
  await biometricPreflight('missing-store');
+ for(const race of ['already-signed-in','prompt-switch','storage-switch','stale-success','stale-401'])await biometricAccountSwitch(race);
  console.log('Biometric security: locked startup, normal startup, Face ID before secret read, offline retry and expired-session cleanup passed.');
 })().catch(e=>{console.error(e);process.exitCode=1});
