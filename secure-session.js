@@ -57,7 +57,7 @@
       await set(currentToken());localStorage.removeItem(KEY);setRuntime(currentToken());
     }else setRuntime('');
     ready=true;
-    return {native:!!native,restored:!!saved&&!biometricLocked(),locked:!!saved&&biometricLocked()};
+    return {native:!!native,restored:!!saved&&!biometricLocked()&&!!currentToken(),locked:!!saved&&biometricLocked()};
   }
   async function sync(){
     if(!ready||busy)return;
