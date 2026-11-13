@@ -28,6 +28,7 @@ function nameProof(value){const canonical=normalizedName(value).split(' ').filte
 function nameMatches(inputProof,output){const name=[output?.first_name,output?.last_name].filter(Boolean).join(' ');if(!/^[a-f0-9]{64}$/.test(String(inputProof||''))||normalizedName(name).split(' ').length<2)return false;const x=Buffer.from(inputProof,'hex'),y=Buffer.from(nameProof(name),'hex');return crypto.timingSafeEqual(x,y)}
 function assessVerifiedDocument(session,stored,now=new Date()){
  if(session?.status!=='verified')return {ok:false,reason:'not_verified'};
+ if(['processing','redacted'].includes(session.redaction?.status))return {ok:false,reason:'verification_redacted'};
  if(session.options?.document?.require_matching_selfie!==true)return {ok:false,reason:'selfie_required'};
  if(session.options?.document?.require_live_capture!==true)return {ok:false,reason:'live_capture_required'};
  if(!adultDob(session.verified_outputs?.dob,now))return {ok:false,reason:'age_not_confirmed'};
@@ -59,7 +60,9 @@ async function refresh(u,db){
  const data=await stripe('GET','/identity/verification_sessions/'+encodeURIComponent(sessionId),[['expand[]','verified_outputs'],['expand[]','verified_outputs.dob']],undefined,STRIPE_RESULTS_KEY);
  if(data.id!==sessionId||data.type!=='document'||data.client_reference_id!==u.id||data.metadata?.zovro_provider_id!==u.id)throw new Error('Identity verification could not be matched to your account');
  if(data.livemode!==true)throw new Error('Live identity verification is required');
- if(data.status==='verified'){
+ if(['processing','redacted'].includes(data.redaction?.status)){
+  u.identityVerified=false;u.identityAgeConfirmed=false;state.status='reverification_required';state.faceVerifiedLive=false;state.reviewReason='verification_redacted';
+ }else if(data.status==='verified'){
   if(!data.verified_outputs?.dob)throw new Error('Restricted access to verified date of birth is required before approval');
   const decision=assessVerifiedDocument(data,state);
   if(decision.ok){
@@ -69,6 +72,8 @@ async function refresh(u,db){
   }
  }else if(['requires_input','processing','canceled'].includes(data.status)){
   u.identityVerified=false;u.identityAgeConfirmed=false;state.status=data.status;state.faceVerifiedLive=false;
+ }else{
+  u.identityVerified=false;u.identityAgeConfirmed=false;state.status='manual_review';state.faceVerifiedLive=false;state.reviewReason='unexpected_status';
  }
  state.checkedAt=new Date().toISOString();u.identityVerification=state;
  writeDb(db);
@@ -113,7 +118,7 @@ async function route(req,res,next){
     return_url:String(process.env.ZOVRO_IDENTITY_RETURN_URL||'https://zovro-web.onrender.com/?identity_verification=return#profile')
    };
    const session=await stripe('POST','/identity/verification_sessions',form,'zovro-identity-'+u.id+'-'+Date.now());
-   if(!/^vs_[A-Za-z0-9]+$/.test(session?.id||'')||session.client_reference_id!==u.id||!/^https:\/\/verify\.stripe\.com\//.test(session.url||''))throw new Error('Secure verification link was not returned');
+   if(!/^vs_[A-Za-z0-9]+$/.test(session?.id||'')||session.client_reference_id!==u.id||!/^https:\/\/verify\.stripe\.com\//.test(session.url||'')||session.options?.document?.require_live_capture!==true||session.options?.document?.require_matching_selfie!==true)throw new Error('Secure verification link or required checks were not returned');
    u.identityVerified=false;u.identityAgeConfirmed=false;
    u.identityVerification={provider:'stripe',sessionId:session.id,status:'requires_input',legalNameEncrypted:encryptSensitive(name,PROFILE_KEY),legalNameProof:nameProof(name),createdAt:new Date().toISOString()};
    writeDb(db);
