@@ -49,10 +49,10 @@ async function refresh(u,db){
  if(data.id!==sessionId||data.type!=='document'||data.client_reference_id!==u.id||data.metadata?.zovro_provider_id!==u.id)throw new Error('Identity verification could not be matched to your account');
  if(data.livemode!==true)throw new Error('Live identity verification is required');
  if(data.status==='verified'){
-  if(adultDob(data.verified_outputs?.dob)&&nameMatches(state.legalNameProof,data.verified_outputs)){
+  if(data.options?.document?.require_matching_selfie===true&&data.options?.document?.require_live_capture===true&&adultDob(data.verified_outputs?.dob)&&nameMatches(state.legalNameProof,data.verified_outputs)){
    u.identityVerified=true;u.identityAgeConfirmed=true;state.status='verified';state.verifiedAt=new Date().toISOString();
   }else{
-   u.identityVerified=false;u.identityAgeConfirmed=false;state.status='manual_review';
+   u.identityVerified=false;u.identityAgeConfirmed=false;state.status='manual_review';state.reviewReason='face_capture_or_identity_check_incomplete';
   }
  }else if(['requires_input','processing','canceled'].includes(data.status)){
   u.identityVerified=false;u.identityAgeConfirmed=false;state.status=data.status;
@@ -93,6 +93,10 @@ async function route(req,res,next){
     client_reference_id:u.id,
     'metadata[zovro_provider_id]':u.id,
     'options[document][require_matching_selfie]':'true',
+    'options[document][require_live_capture]':'true',
+    'options[document][allowed_types][0]':'driving_license',
+    'options[document][allowed_types][1]':'id_card',
+    'options[document][allowed_types][2]':'passport',
     return_url:String(process.env.ZOVRO_IDENTITY_RETURN_URL||'https://zovro-web.onrender.com/?identity_verification=return#profile')
    };
    const session=await stripe('POST','/identity/verification_sessions',form,'zovro-identity-'+u.id+'-'+Date.now());
