@@ -41,6 +41,37 @@ async function secureStartup(locked){
   assert(apiCalls>0,'Non-biometric session restore validates the account');
  }
 }
+async function restoreAfterApiFailure(status){
+ // A temporary API fault must not erase a login, whereas an explicit
+ // unauthorized response must revoke the locally stored session.
+ const store=new Map([['zovroToken','persisted-session']]);
+ let apiCalls=0;
+ const w={
+  console,token:'',me:null,
+  localStorage:{getItem:()=>null,setItem(){},removeItem(){}},
+  sessionStorage:{getItem:()=>null,setItem(){},removeItem(){}},
+  Capacitor:{Plugins:{SecureStoragePlugin:{
+   get:async({key})=>({value:store.get(key)||''}),
+   set:async({key,value})=>{store.set(key,value)},
+   remove:async({key})=>{store.delete(key)}
+  }}},
+  ZOVRO_BIOMETRIC:{shouldProtect:()=>false},
+  api:async()=>{
+   apiCalls++;
+   if(status==='invalid-shape')return {user:null};
+   throw Object.assign(new Error('Simulated response'),status==null?{}:{status});
+  },
+  renderAccount(){},loadJobs(){},setInterval(){}
+ };
+ w.window=w;
+ vm.runInNewContext(sessionScript,w);
+ const result=await w.ZOVRO_SECURE_SESSION.initialize();
+ assert(apiCalls>0,'Restoration must attempt validation');
+ assert.equal(w.token,'','Failed validation cannot expose the bearer');
+ assert.equal(w.ZOVRO_SESSION_TOKEN,'','Failed validation cannot unlock the account');
+ assert.equal(result.restored,false,'An unverified account cannot be reported as restored');
+ assert.equal(store.has('zovroToken'),![401,403].includes(status),'Only invalid sessions are deleted');
+}
 async function biometricUnlock(status){
  let prompted=false,reads=0,removes=0;
  const w={
@@ -101,6 +132,7 @@ async function enableRequiresNativeStorage(mode){
 (async()=>{
  await secureStartup(true);
  await secureStartup(false);
+ for(const failure of [null,500,401,403,'invalid-shape'])await restoreAfterApiFailure(failure);
  await enableRequiresNativeStorage('missing');
  await enableRequiresNativeStorage('write-fails');
  await biometricUnlock(null);
