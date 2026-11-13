@@ -8,17 +8,20 @@
   const box=document.getElementById('zProviderIdentityCard');if(!box)return;
   const status=info?.status||'not_started';
   const verified=status==='verified'&&info?.verified===true;
+  const rolloutPaused=info?.enforced===false;
   const notice=box.querySelector('[data-identity-status]');
-  notice.textContent=verified?statuses.verified:(status==='verified'?statuses.reverification_required:statuses[status]||statuses.not_started);
+  notice.textContent=rolloutPaused?(verified?'Your government photo ID and age (18+) are verified. Live face checks are being prepared.':'Government photo ID and age (18+) verification are required. Live face checks are being prepared.'):verified?statuses.verified:(status==='verified'?statuses.reverification_required:statuses[status]||statuses.not_started);
   notice.style.color=verified?'#166534':'#92400e';
   const form=box.querySelector('[data-identity-form]');
-  if(form)form.hidden=verified;
+  if(form)form.hidden=verified||rolloutPaused;
+  const registrationStep=box.querySelector('[data-registration-step]');
+  if(registrationStep&&rolloutPaused)registrationStep.hidden=true;
   const check=box.querySelector('[data-identity-check]');
-  if(check)check.hidden=verified||status==='not_started';
+  if(check)check.hidden=verified||status==='not_started'||rolloutPaused;
   const start=box.querySelector('[data-identity-start]');
-  if(start)start.disabled=!info?.configured||status==='processing';
+  if(start)start.disabled=rolloutPaused||!info?.configured||status==='processing';
   const config=box.querySelector('[data-identity-config]');
-  if(config)config.textContent=info?.configured?'':'Secure identity checks are not yet available. You cannot accept jobs until verification is enabled.';
+  if(config)config.textContent=rolloutPaused?'Live face capture is not enabled yet. Existing government ID and 18+ rules remain in effect.':info?.configured?'':'Secure identity checks are not yet available. You cannot accept jobs until verification is enabled.';
  }
  async function refreshStatus(check=false){
   if(loading)return;
