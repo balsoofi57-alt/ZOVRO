@@ -38,7 +38,7 @@ const fixture=new DatabaseSync(path.join(data,'zovro.sqlite'));
 try{
  const row=fixture.prepare('SELECT data FROM users WHERE id=?').get(p.user.id);
  const provider=JSON.parse(row.data);
- provider.identityVerified=true;provider.identityAgeConfirmed=true;provider.identityVerification={status:'verified',provider:'stripe',verifiedAt:new Date().toISOString()};
+ provider.identityVerified=true;provider.identityAgeConfirmed=true;provider.identityVerification={status:'verified',faceVerifiedLive:true,provider:'stripe',verifiedAt:new Date().toISOString()};
  fixture.prepare('UPDATE users SET data=? WHERE id=?').run(JSON.stringify(provider),p.user.id);
 }finally{fixture.close()}
 await call('PATCH','/api/provider/availability',{available:true},p.token);
