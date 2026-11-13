@@ -23,6 +23,14 @@ function legalName(v){const name=String(v||'').trim().replace(/\s+/g,' ');return
 function normalizedName(s){return String(s||'').normalize('NFKD').replace(/[\u0300-\u036f]/g,'').replace(/[^\p{L}\p{N} ]/gu,' ').toLocaleLowerCase('en').replace(/\s+/g,' ').trim()}
 function nameProof(value){const canonical=normalizedName(value).split(' ').filter(Boolean).sort().join(' ');return crypto.createHmac('sha256',PROFILE_KEY).update(canonical).digest('hex')}
 function nameMatches(inputProof,output){const name=[output?.first_name,output?.last_name].filter(Boolean).join(' ');if(!/^[a-f0-9]{64}$/.test(String(inputProof||''))||normalizedName(name).split(' ').length<2)return false;const x=Buffer.from(inputProof,'hex'),y=Buffer.from(nameProof(name),'hex');return crypto.timingSafeEqual(x,y)}
+function assessVerifiedDocument(session,stored,now=new Date()){
+ if(session?.status!=='verified')return {ok:false,reason:'not_verified'};
+ if(session.options?.document?.require_matching_selfie!==true)return {ok:false,reason:'selfie_required'};
+ if(session.options?.document?.require_live_capture!==true)return {ok:false,reason:'live_capture_required'};
+ if(!adultDob(session.verified_outputs?.dob,now))return {ok:false,reason:'age_not_confirmed'};
+ if(!nameMatches(stored?.legalNameProof,session.verified_outputs))return {ok:false,reason:'name_not_matched'};
+ return {ok:true};
+}
 function adultDob(value,now=new Date()){const year=Number(value?.year),month=Number(value?.month),day=Number(value?.day);if(!Number.isInteger(year)||!Number.isInteger(month)||!Number.isInteger(day)||year<1900||month<1||month>12||day<1||day>31)return false;const birthday=new Date(Date.UTC(year,month-1,day));if(birthday.getUTCFullYear()!==year||birthday.getUTCMonth()!==month-1||birthday.getUTCDate()!==day)return false;let age=now.getUTCFullYear()-year;if((now.getUTCMonth()+1)<month||((now.getUTCMonth()+1)===month&&now.getUTCDate()<day))age--;return age>=18&&age<125}
 function json(res,status,data){if(res.headersSent)return;res.writeHead(status,{'content-type':'application/json; charset=utf-8','cache-control':'no-store','x-content-type-options':'nosniff','referrer-policy':'no-referrer'});res.end(JSON.stringify(data))}
 function requestBody(req){return new Promise((resolve,reject)=>{let data='',bytes=0,done=false;req.on('data',chunk=>{bytes+=chunk.length;if(bytes>5000){done=true;reject(new Error('Request too large'));req.resume();return}if(!done)data+=chunk});req.on('end',()=>{if(done)return;try{resolve(data?JSON.parse(data):{})}catch{reject(new Error('Invalid request'))}});req.on('error',reject)})}
@@ -49,10 +57,11 @@ async function refresh(u,db){
  if(data.id!==sessionId||data.type!=='document'||data.client_reference_id!==u.id||data.metadata?.zovro_provider_id!==u.id)throw new Error('Identity verification could not be matched to your account');
  if(data.livemode!==true)throw new Error('Live identity verification is required');
  if(data.status==='verified'){
-  if(data.options?.document?.require_matching_selfie===true&&data.options?.document?.require_live_capture===true&&adultDob(data.verified_outputs?.dob)&&nameMatches(state.legalNameProof,data.verified_outputs)){
+  const decision=assessVerifiedDocument(data,state);
+  if(decision.ok){
    u.identityVerified=true;u.identityAgeConfirmed=true;state.status='verified';state.faceVerifiedLive=true;state.verifiedAt=new Date().toISOString();
   }else{
-   u.identityVerified=false;u.identityAgeConfirmed=false;state.status='manual_review';state.faceVerifiedLive=false;state.reviewReason='face_capture_or_identity_check_incomplete';
+   u.identityVerified=false;u.identityAgeConfirmed=false;state.status='manual_review';state.faceVerifiedLive=false;state.reviewReason=decision.reason;
   }
  }else if(['requires_input','processing','canceled'].includes(data.status)){
   u.identityVerified=false;u.identityAgeConfirmed=false;state.status=data.status;state.faceVerifiedLive=false;
@@ -82,7 +91,7 @@ async function route(req,res,next){
    const old=u.identityVerification||{};
    if(old.sessionId&&['requires_input','processing'].includes(old.status)&&old.legalNameProof===nameProof(name)){
     const s=await stripe('GET','/identity/verification_sessions/'+encodeURIComponent(old.sessionId));
-    if(s.id===old.sessionId&&s.client_reference_id===u.id&&s.status==='requires_input'&&/^https:\/\/verify\.stripe\.com\//.test(s.url||'')){
+    if(s.id===old.sessionId&&s.client_reference_id===u.id&&s.status==='requires_input'&&s.options?.document?.require_matching_selfie===true&&s.options?.document?.require_live_capture===true&&Date.now()-Date.parse(old.createdAt||0)<46*60*60*1000&&/^https:\/\/verify\.stripe\.com\//.test(s.url||'')){
      return json(res,200,{identity:safeState(u),verificationUrl:s.url});
     }
     if(s.status==='processing')return json(res,409,{error:'Your ID is still being reviewed. Check its status before retrying.'});
@@ -110,4 +119,4 @@ async function route(req,res,next){
  }catch(e){return json(res,503,{error:e.message==='Invalid request'||e.message==='Request too large'?e.message:'Identity verification is temporarily unavailable. Please try again.'})}
 }
 http.createServer=function(handler,...args){return baseCreateServer((req,res)=>route(req,res,handler),...args)};
-module.exports={eligible,adultDob,nameMatches,safeState};
+module.exports={eligible,adultDob,nameMatches,safeState,assessVerifiedDocument};
