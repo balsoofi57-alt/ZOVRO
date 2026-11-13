@@ -81,7 +81,7 @@ assert.equal(publicUser.phone,undefined);assert.equal(publicUser.licensed,false)
      const row=fixture.prepare('SELECT data FROM users WHERE id=?').get(providerId);
      const user=JSON.parse(row.data);
      user.identityVerified=true;user.identityAgeConfirmed=true;
-     user.identityVerification={status:'verified',provider:'stripe',verifiedAt:new Date().toISOString()};
+     user.identityVerification={status:'verified',faceVerifiedLive:true,provider:'stripe',verifiedAt:new Date().toISOString()};
      fixture.prepare('UPDATE users SET data=? WHERE id=?').run(JSON.stringify(user),providerId);
     }
    }finally{fixture.close()}
