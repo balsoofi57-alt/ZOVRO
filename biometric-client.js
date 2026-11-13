@@ -7,7 +7,8 @@
   const setEnabled=value=>{if(value)localStorage.setItem(PREF,'1');else localStorage.removeItem(PREF)};
   async function check(){
     const p=plugin();
-    if(!p)return {available:false,native:false};
+    if(typeof window.Capacitor?.isNativePlatform==='function'&&!window.Capacitor.isNativePlatform())return {available:false,native:false};
+    if(!p||(typeof p.authenticate!=='function'&&typeof p.internalAuthenticate!=='function'))return {available:false,native:false};
     try{
       if(typeof p.checkBiometry==='function'){
         const info=await p.checkBiometry();
