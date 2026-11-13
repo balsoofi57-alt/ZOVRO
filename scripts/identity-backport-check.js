@@ -4,6 +4,18 @@ const fs=require('node:fs');
 const vm=require('node:vm');
 process.env.ZOVRO_PROFILE_ENCRYPTION_KEY='unit-test-only-key';
 const identity=require('../backend/identity-verification-api');
+const rollout=require('../backend/provider-live-face-policy');
+const previouslyApproved={role:'provider',identityVerified:true,identityAgeConfirmed:true,identityVerification:{status:'verified',faceVerifiedLive:false}};
+delete process.env.ZOVRO_ENFORCE_LIVE_FACE_ID;
+assert.equal(rollout.liveFaceRequired(),false,'face checks are off until explicitly enabled');
+assert.equal(rollout.canProviderWork(previouslyApproved),true,'prior government ID and age approval must remain valid during staged rollout');
+assert.equal(rollout.canProviderWork({...previouslyApproved,identityAgeConfirmed:false}),false,'turning off face rollout must never turn off age rules');
+assert.equal(rollout.canProviderWork({...previouslyApproved,identityVerified:false}),false,'turning off face rollout must never turn off government ID rules');
+process.env.ZOVRO_ENFORCE_LIVE_FACE_ID='true';
+assert.equal(rollout.liveFaceRequired(),true);
+assert.equal(rollout.canProviderWork(previouslyApproved),false,'live face must be required after explicit activation');
+assert.equal(identity.eligible(previouslyApproved),false,'Stripe identity eligibility must share the same rollout policy');
+
 // The identity provider makes paid/networked calls; never allow per-account rapid retriggering.
 const throttleId='unit-identity-throttle';
 assert.equal(identity.allowIdentityCall(throttleId,'start',1000).allowed,true);
@@ -21,7 +33,7 @@ assert.equal(identity.eligible({role:'provider',identityVerified:true,identityAg
 for(const path of ['backend/server.js','backend/server-core.js','backend/request-privacy.js','backend/identity-verification-api.js','scripts/e2e-smoke.js'])new vm.Script(fs.readFileSync(path,'utf8'),{filename:path});
 const core=fs.readFileSync('backend/server-core.js','utf8');
 assert.match(core,/Government photo ID and 18\+ age verification required before accepting jobs/);
-assert.match(core,/u.identityAgeConfirmed===true&&u.identityVerification\?\.status==='verified'/);
+assert.match(fs.readFileSync('backend/provider-live-face-policy.js','utf8'),/u.identityAgeConfirmed===true&&u.identityVerification\?\.status==='verified'/);
 assert.match(fs.readFileSync('backend/server.js','utf8'),/require\('\.\/identity-verification-api'\)/);
 // Stripe requires a restricted Identity Results key to expose verified date of birth.
 // Without that key, no provider may be marked eligible for work.
@@ -31,9 +43,10 @@ assert(api.includes("'options[document][require_matching_selfie]':'true'"));
 assert(api.includes('session.options?.document?.require_live_capture!==true'));
 assert(api.includes('session.options?.document?.require_matching_selfie!==true'));
 console.log('Live selfie and photo ID capture approval requirement PASS');
-assert.match(api,/faceVerifiedLive===true/);
-assert.match(core,/faceVerifiedLive===true/);
-assert(core.includes("identityStatus:u.identityVerification?.status==='verified'&&!(u.identityVerified&&u.identityAgeConfirmed&&u.identityVerification?.faceVerifiedLive===true)?'reverification_required'"),'legacy approvals must not appear fully verified');
+assert.match(api,/canProviderWork\(u\)/);
+assert.match(fs.readFileSync('backend/provider-live-face-policy.js','utf8'),/faceVerifiedLive===true/);
+assert.match(core,/canProviderWork\(u\)/);
+assert(core.includes("identityStatus:u.identityVerification?.status==='verified'&&!canProviderWork(u)?'reverification_required'"),'the flag must control displayed re-verification status');
 
 const crypto=require('node:crypto');
 const proof=crypto.createHmac('sha256','unit-test-only-key').update('provider zovro').digest('hex');
@@ -59,6 +72,8 @@ assert.match(api,/ZOVRO_STRIPE_IDENTITY_RESULTS_KEY/,'dedicated restricted resul
 assert.match(api,/expand\[\]/,'Identity result expansion should be explicit');
 assert.match(api,/verified_outputs\.dob/,'verified birth date expansion is required');
 assert.match(api,/identityReady\(\)/,'fail closed when secure Identity configuration is missing');
+assert.match(api,/enforced:liveFaceRequired\(\)/,'API must report whether live-face rollout is enabled');
+assert.match(api,/if\(!liveFaceRequired\(\)\)return json\(res,503/,'creating paid ID checks must be disabled until rollout activation');
 assert.match(api,/if\(s\.status==='verified'\)\{\s*const checked=await refresh\(u,db\)/,'a completed Stripe session is checked instead of creating another paid session');
 assert.match(api,/if\(checked\.verified\)return json\(res,200,\{identity:checked\}\)/,'successful recheck resumes existing verified session');
 assert(api.indexOf("if(s.status==='verified')")<api.indexOf("const session=await stripe('POST'"),'reuse must precede new Stripe session creation');
