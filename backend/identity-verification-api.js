@@ -12,7 +12,20 @@ const STRIPE_KEY=String(process.env.STRIPE_SECRET_KEY||'');
 // Read birth dates only through a restricted live key with Identity verification-results permission.
 const STRIPE_RESULTS_KEY=String(process.env.ZOVRO_STRIPE_IDENTITY_RESULTS_KEY||'');
 const identityReady=()=>/^sk_live_[A-Za-z0-9]+$/.test(STRIPE_KEY)&&/^rk_live_[A-Za-z0-9]+$/.test(STRIPE_RESULTS_KEY)&&Buffer.byteLength(PROFILE_KEY)>=32;
-const isProduction=process.env.NODE_ENV==='production'||String(process.env.RENDER||'').toLowerCase()==='true'||Boolean(process.env.RENDER_SERVICE_ID);
+const identityThrottle=new Map();
+// Throttle authenticated, outbound Stripe Identity requests without storing user details in logs.
+function allowIdentityCall(userId,kind,now=Date.now()){
+ const windowMs=kind==='start'?30000:10000;
+ const key=kind+':'+userId;
+ const until=identityThrottle.get(key)||0;
+ if(until>now)return {allowed:false,retryAfter:Math.ceil((until-now)/1000)};
+ if(identityThrottle.size>=5000){
+  for(const [k,expires] of identityThrottle)if(expires<=now)identityThrottle.delete(k);
+  if(identityThrottle.size>=5000)return {allowed:false,retryAfter:30};
+ }
+ identityThrottle.set(key,now+windowMs);
+ return {allowed:true,retryAfter:0};
+}
 const safeState=u=>({
  status:u.identityVerification?.status==='verified'&&!eligible(u)?'reverification_required':u.identityVerification?.status||'not_started',
  verified:eligible(u),
@@ -89,7 +102,12 @@ async function route(req,res,next){
  if(!u||u.role!=='provider')return json(res,403,{error:'Provider account required'});
  try{
   if(path==='/api/provider/identity'&&req.method==='GET')return json(res,200,{identity:safeState(u)});
-  if(path==='/api/provider/identity/check'&&req.method==='POST')return json(res,200,{identity:await refresh(u,db)});
+  if(path==='/api/provider/identity/check'&&req.method==='POST'){
+   if(!u.identityVerification?.sessionId)return json(res,200,{identity:safeState(u)});
+   const throttle=allowIdentityCall(u.id,'check');
+   if(!throttle.allowed)return json(res,429,{error:'Please wait before checking your ID again',retryAfterSeconds:throttle.retryAfter});
+   return json(res,200,{identity:await refresh(u,db)});
+  }
   if(path==='/api/provider/identity/start'&&req.method==='POST'){
    if(eligible(u))return json(res,200,{identity:safeState(u)});
    const b=await requestBody(req);
@@ -97,6 +115,8 @@ async function route(req,res,next){
    const name=legalName(b.legalName);
    if(!name)return json(res,400,{error:'Enter your full legal first and last name exactly as shown on your ID'});
    if(!identityReady())return json(res,503,{error:'Secure identity and age verification are not configured yet'});
+   const throttle=allowIdentityCall(u.id,'start');
+   if(!throttle.allowed)return json(res,429,{error:'Please wait before restarting ID verification',retryAfterSeconds:throttle.retryAfter});
    const old=u.identityVerification||{};
    if(old.sessionId&&['requires_input','processing'].includes(old.status)&&old.legalNameProof===nameProof(name)){
     const s=await stripe('GET','/identity/verification_sessions/'+encodeURIComponent(old.sessionId));
@@ -135,4 +155,4 @@ async function route(req,res,next){
  }catch(e){return json(res,503,{error:e.message==='Invalid request'||e.message==='Request too large'?e.message:'Identity verification is temporarily unavailable. Please try again.'})}
 }
 http.createServer=function(handler,...args){return baseCreateServer((req,res)=>route(req,res,handler),...args)};
-module.exports={eligible,adultDob,nameMatches,safeState,assessVerifiedDocument};
+module.exports={eligible,adultDob,nameMatches,safeState,assessVerifiedDocument,allowIdentityCall};
