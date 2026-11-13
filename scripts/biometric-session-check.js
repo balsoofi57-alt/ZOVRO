@@ -56,7 +56,7 @@ async function restoreAfterApiFailure(status){
    remove:async({key})=>{store.delete(key)}
   }}},
   ZOVRO_BIOMETRIC:{shouldProtect:()=>false},
-  api:async()=>{
+  api:status==='missing-api'?undefined:async()=>{
    apiCalls++;
    if(status==='invalid-shape')return {user:null};
    throw Object.assign(new Error('Simulated response'),status==null?{}:{status});
@@ -66,7 +66,7 @@ async function restoreAfterApiFailure(status){
  w.window=w;
  vm.runInNewContext(sessionScript,w);
  const result=await w.ZOVRO_SECURE_SESSION.initialize();
- assert(apiCalls>0,'Restoration must attempt validation');
+ assert.equal(apiCalls,status==='missing-api'?0:1,'Do not claim to validate when the API is absent');
  assert.equal(w.token,'','Failed validation cannot expose the bearer');
  assert.equal(w.ZOVRO_SESSION_TOKEN,'','Failed validation cannot unlock the account');
  assert.equal(result.restored,false,'An unverified account cannot be reported as restored');
@@ -82,6 +82,7 @@ async function biometricUnlock(status){
    verifyIdentity:async()=>{prompted=true}
   }}},
   ZOVRO_SECURE_SESSION:{
+   isNativeSecure:()=>true,
    get:async()=>{assert(prompted,'Saved token must only be retrieved after Face ID');reads++;return 'saved-token'},
    remove:async()=>{removes++}
   },
@@ -103,6 +104,33 @@ async function biometricUnlock(status){
   assert.equal(w.me.id,'account-1');
   assert.equal(removes,0);
  }
+}
+
+async function biometricPreflight(mode){
+ let authCalls=0,reads=0;
+ const w={
+  console,token:'',me:null,
+  localStorage:{getItem:k=>k==='zovroBiometricUnlock'?'1':null},
+  Capacitor:{Plugins:{NativeBiometric:{
+   isAvailable:async()=>({isAvailable:true}),
+   verifyIdentity:async()=>{authCalls++}
+  }}},
+  ZOVRO_SECURE_SESSION:{
+   isNativeSecure:()=>mode!=='missing-store',
+   get:async()=>{reads++;return 'saved-token'}
+  },
+  api:mode==='missing-api'?undefined:async()=>({user:{id:'account-1'}}),
+  document:{readyState:'loading',addEventListener(){},documentElement:{},getElementById:()=>null},
+  MutationObserver:class{observe(){}},
+  renderAccount(){},loadJobs(){},toast(){}
+ };
+ w.window=w;
+ vm.runInNewContext(biometricScript,w);
+ const result=await w.ZOVRO_BIOMETRIC.unlockSavedSession();
+ assert.equal(result,false,'Face ID cannot unlock without trusted storage and a server validator');
+ assert.equal(authCalls,0,'Do not prompt when the required services are missing');
+ assert.equal(reads,0,'Do not retrieve bearer before the preflight checks succeed');
+ assert.equal(w.token,'','Never expose a session token on preflight failure');
 }
 async function enableRequiresNativeStorage(mode){
  let authCalls=0,writes=0;
@@ -134,12 +162,14 @@ async function enableRequiresNativeStorage(mode){
 (async()=>{
  await secureStartup(true);
  await secureStartup(false);
- for(const failure of [null,500,401,403,'invalid-shape'])await restoreAfterApiFailure(failure);
+ for(const failure of [null,500,401,403,'invalid-shape','missing-api'])await restoreAfterApiFailure(failure);
  await enableRequiresNativeStorage('missing');
  await enableRequiresNativeStorage('missing-writer');
  await enableRequiresNativeStorage('write-fails');
  await biometricUnlock(null);
  await biometricUnlock(500);
  await biometricUnlock(401);
+ await biometricPreflight('missing-api');
+ await biometricPreflight('missing-store');
  console.log('Biometric security: locked startup, normal startup, Face ID before secret read, offline retry and expired-session cleanup passed.');
 })().catch(e=>{console.error(e);process.exitCode=1});
