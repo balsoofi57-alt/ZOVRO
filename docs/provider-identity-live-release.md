@@ -19,6 +19,17 @@ Purpose: Only service providers and shop owners who are at least 18, whose gover
 9. Verify revoked/redacted verification sessions cannot remain approved when the provider rechecks their status. Stripe redaction can be asynchronous. Provide operational handling (such as a verified Stripe event/webhook or admin revocation path) for immediate revocation without relying solely on a provider-initiated status refresh. Test using synthetic results rather than real identity data.
 10. Confirm all existing providers can reverify without losing ongoing jobs, and communicate the mandatory identity transition before enabling strict acceptance rules; otherwise the new policy can immediately block the entire supply side.
 
+## Staged rollout switch (default OFF)
+
+The new live-face work gate is intentionally controlled by the server-side environment variable `ZOVRO_ENFORCE_LIVE_FACE_ID`. **Absent or any value other than `true` leaves the existing government-photo-ID and 18+ eligibility requirements in place**, without suddenly blocking all previously approved providers. The flag must not appear in a public web bundle or client configuration.
+
+- With the flag OFF: existing official ID and minimum-age checks stay mandatory. The new live-face onboarding API is unavailable; the provider UI explains that it is being prepared. Do not promise a live selfie is currently available.
+- With the flag ON: only providers with `identityVerification.faceVerifiedLive === true` in addition to official-ID and age confirmation can discover or accept new requests. Existing jobs remain unaffected by the eligibility gate.
+- Always test BOTH modes on all relevant API services and app versions. Validate that no existing approved provider is denied availability, discovery, or job acceptance when the flag is OFF; validate a synthetic no-selfie provider is refused when ON.
+- Keep the flag OFF until Stripe Identity live access, live restricted key (DOB within 48h), legal/security requirements, real-device camera capture and matched-face E2E, support appeal/retry handling, and provider re-verification rollout communications are all verified.
+- Flip the flag only in a coordinated release after enough existing providers are reverified; independently deployed APIs must agree on the setting. Keep a documented, authorized rollback procedure to revert the flag to OFF promptly if demand fulfillment drops. This rollback must **not** disable official ID or age restrictions.
+- **Do not switch the flag automatically or immediately on code merge.** Backend flags control acceptance. iOS TestFlight builds and Android signed release require separate distribution steps.
+
 ## Deployment safety
 
 **Do not merge the web registration PR and production API PR separately.** The API must be ready before showing customers a live onboarding route. Both strict gates affect **all existing providers** without `identityVerification.faceVerifiedLive === true`. Previous providers must complete re-verification before new dispatch or job acceptance; existing assignments should remain unaffected.
