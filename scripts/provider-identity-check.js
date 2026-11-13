@@ -59,6 +59,8 @@ const documentResult={
 };
 const assess=result=>identity.assessVerifiedDocument(result,stored,new Date('2026-11-12T00:00:00Z'));
 assert.equal(assess(documentResult).ok,true,'Live selfie plus 18+ verified government ID should be accepted');
+assert.equal(assess({...documentResult,redaction:{status:'processing'}}).reason,'verification_redacted','revocation in progress cannot approve');
+assert.equal(assess({...documentResult,redaction:{status:'redacted'}}).reason,'verification_redacted','redacted Identity result cannot approve');
 assert.equal(assess({...documentResult,status:'processing'}).ok,false,'Processing is never approval');
 assert.equal(assess({...documentResult,options:{document:{require_matching_selfie:false,require_live_capture:true}}}).reason,'selfie_required');
 assert.equal(assess({...documentResult,options:{document:{require_matching_selfie:true,require_live_capture:false}}}).reason,'live_capture_required');
@@ -71,6 +73,8 @@ assert.match(api,/ZOVRO_STRIPE_IDENTITY_RESULTS_KEY/,'dedicated restricted resul
 assert.match(api,/expand\[\]/,'Identity result expansion should be explicit');
 assert.match(api,/verified_outputs\.dob/,'verified birth date expansion is required');
 assert.match(api,/identityReady\(\)/,'fail closed when secure Identity configuration is missing');
+assert.match(api,/state.reviewReason='unexpected_status'/,'unknown session statuses must revoke prior eligibility');
+assert.match(api,/session.options\?\.document\?\.require_live_capture!==true\|\|session.options\?\.document\?\.require_matching_selfie!==true/,'reject missing requirements in newly created sessions');
 assert.match(api,/if\(!data\.verified_outputs\?\.dob\)throw new Error/,'no birthdate must never approve provider');
 
 console.log('Government ID and 18+ eligibility checks, web/mobile packaging, and privacy disclosures PASS');
