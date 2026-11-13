@@ -1,0 +1,60 @@
+name: ZOVRO App Store Connect bundle visibility (read-only)
+
+on:
+  push:
+    branches: [release/testflight-20261113-stable]
+    paths:
+      - '.github/workflows/asc-bundle-diagnostic.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  app-record-check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check Apple app record visibility for com.zovro.app
+        env:
+          ASC_KEY_ID: ${{ secrets.ZOVRO_APP_STORE_CONNECT_API_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ZOVRO_APP_STORE_CONNECT_ISSUER_ID }}
+          ASC_PRIVATE_KEY: ${{ secrets.ZOVRO_APP_STORE_CONNECT_API_PRIVATE_KEY_BASE64 }}
+        run: |
+          set -euo pipefail
+          ruby <<'RUBY'
+          require 'json'
+          require 'openssl'
+          require 'base64'
+          require 'uri'
+          require 'net/http'
+          missing = %w[ASC_KEY_ID ASC_ISSUER_ID ASC_PRIVATE_KEY].select { |name| ENV[name].to_s.empty? }
+          abort "Credentials unavailable: #{missing.join(', ')}" unless missing.empty?
+          b64url = ->(v) { Base64.urlsafe_encode64(v, padding: false) }
+          now = Time.now.to_i
+          header = { alg: 'ES256', kid: ENV.fetch('ASC_KEY_ID'), typ: 'JWT' }
+          payload = { iss: ENV.fetch('ASC_ISSUER_ID'), iat: now, exp: now + 300, aud: 'appstoreconnect-v1' }
+          signing_input = "#{b64url.call(JSON.generate(header))}.#{b64url.call(JSON.generate(payload))}"
+          key = OpenSSL::PKey.read(Base64.strict_decode64(ENV.fetch('ASC_PRIVATE_KEY')))
+          signature_der = key.sign(OpenSSL::Digest.new('SHA256'), signing_input)
+          pieces = OpenSSL::ASN1.decode(signature_der).value
+          signature_raw = pieces.map { |p| [p.value.to_i.to_s(16).rjust(64, '0')].pack('H*') }.join
+          bearer = "#{signing_input}.#{b64url.call(signature_raw)}"
+          uri = URI('https://api.appstoreconnect.apple.com/v1/apps')
+          uri.query = URI.encode_www_form('filter[bundleId]' => 'com.zovro.app', 'limit' => '10')
+          req = Net::HTTP::Get.new(uri)
+          req['Authorization'] = "Bearer #{bearer}"
+          req['Accept'] = 'application/json'
+          response = Net::HTTP.start(uri.host, uri.port, use_ssl: true, open_timeout: 15, read_timeout: 30) { |http| http.request(req) }
+          puts "App Store Connect response HTTP #{response.code}."
+          if response.code.to_i == 200
+            body = JSON.parse(response.body)
+            apps = Array(body['data']).select { |app| app.dig('attributes', 'bundleId') == 'com.zovro.app' }
+            if apps.empty?
+              abort 'No App Store Connect app record for com.zovro.app is visible to this API key. Check app creation, API key access, and agreements.'
+            end
+            puts "Found #{apps.length} accessible com.zovro.app app record(s)."
+            puts "App Store Connect app ID: #{apps.first['id']}"
+          else
+            abort 'App Store Connect API request was rejected. Check credential permissions and outstanding agreements.'
+          end
+          RUBY
