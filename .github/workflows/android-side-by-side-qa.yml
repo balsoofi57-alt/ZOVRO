@@ -30,7 +30,7 @@ jobs:
           distribution: temurin
           java-version: '21'
       - name: Install reproducible dependencies
-        run: npm ci --no-audit --no-fund
+        run: npm install --no-audit --no-fund
       - name: Build Android native shell from stable source
         env:
           ZOVRO_API_URL: https://zovro-api-final.onrender.com
