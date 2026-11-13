@@ -4,6 +4,9 @@
   let ready=false,lastKnown='',busy=false;
   const plugin=()=>window.Capacitor?.Plugins?.SecureStoragePlugin||null;
   const currentToken=()=>{try{return typeof token!=='undefined'?String(token||''):''}catch{return ''}};
+  // A biometric opt-in is a startup read barrier: do not retrieve a bearer
+  // token, including from legacy localStorage, before the device unlocks.
+  const biometricLocked=()=>window.ZOVRO_BIOMETRIC?.shouldProtect?.()===true;
   const setRuntime=v=>{const value=String(v||'');try{token=value}catch{}window.ZOVRO_SESSION_TOKEN=value;lastKnown=value};
   async function get(){const p=plugin();if(p){try{return String((await p.get({key:KEY}))?.value||'')}catch{return ''}}return String(sessionStorage.getItem(KEY)||'')}
   async function set(value){const p=plugin();if(p){await p.set({key:KEY,value:String(value||'')});return}sessionStorage.setItem(KEY,String(value||''))}
@@ -24,13 +27,19 @@
   }
   async function initialize(){
     const native=plugin();
+    if(biometricLocked()){
+      // Never call get() or read the legacy token at cold start. The user
+      // can explicitly request unlockSavedSession() after native biometrics.
+      setRuntime('');ready=true;
+      return {native:!!native,restored:false,locked:true};
+    }
     const legacy=String(localStorage.getItem(KEY)||'');
     let saved=await get();
     if(legacy){await set(legacy);saved=legacy;localStorage.removeItem(KEY)}
     if(saved&&!currentToken()){
       // A biometric-enabled native app must stay logged out until the user
       // explicitly completes device authentication. Never silently hydrate /me.
-      if(window.ZOVRO_BIOMETRIC?.shouldProtect?.()){
+      if(biometricLocked()){
         setRuntime('');
       }else{
         setRuntime(saved);
@@ -40,10 +49,17 @@
       await set(currentToken());localStorage.removeItem(KEY);setRuntime(currentToken());
     }else setRuntime('');
     ready=true;
-    return {native:!!native,restored:!!saved&&!window.ZOVRO_BIOMETRIC?.shouldProtect?.(),locked:!!saved&&!!window.ZOVRO_BIOMETRIC?.shouldProtect?.()};
+    return {native:!!native,restored:!!saved&&!biometricLocked(),locked:!!saved&&biometricLocked()};
   }
   async function sync(){
-    if(!ready||busy)return;busy=true;
+    if(!ready||busy)return;
+    // The periodic sync must not silently migrate or hydrate a legacy token
+    // while Face ID is enabled and no verified runtime session exists.
+    if(biometricLocked()&&!currentToken()){
+      window.ZOVRO_SESSION_TOKEN='';
+      return;
+    }
+    busy=true;
     try{
       const legacy=String(localStorage.getItem(KEY)||''),runtime=currentToken();
       if(legacy){await set(legacy);localStorage.removeItem(KEY);setRuntime(legacy);return}
