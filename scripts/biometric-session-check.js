@@ -224,6 +224,46 @@ async function biometricAccountSwitch(mode){
  if(mode==='prompt-switch')assert.equal(reads,0,'No saved token read after concurrent password login');
  if(mode==='storage-switch')assert.equal(apiCalls,0,'No API call after concurrent password login');
 }
+async function optInAfterPasswordLogin(mode){
+ // A successful password login should write its bearer only after secure
+ // storage and native biometric availability are validated.
+ let writes=0,prompts=0;
+ const pref=new Map();
+ const w={
+  console,token:'',
+  localStorage:{getItem:k=>pref.get(k)||null,setItem:(k,v)=>pref.set(k,v),removeItem:k=>pref.delete(k)},
+  Capacitor:{Plugins:{NativeBiometric:{
+   isAvailable:async()=>({isAvailable:true}),
+   verifyIdentity:async()=>{prompts++}
+  }}},
+  ZOVRO_SECURE_SESSION:mode==='missing-writer'
+   ?{isNativeSecure:()=>true}
+   :{
+    isNativeSecure:()=>mode!=='missing-native',
+    set:async()=>{
+     writes++;
+     if(mode==='write-fails')throw Error('Native token storage failed');
+    }
+   },
+  document:{
+   readyState:'complete',
+   getElementById:id=>id==='zovroFaceIdOptIn'?{checked:true}:null,
+   documentElement:{},addEventListener(){}
+  },
+  setTimeout(){},
+  MutationObserver:class{observe(){}},
+ };
+ w.window=w;
+ w.submitAuth=async()=>{w.token='new-password-session';return {success:true}};
+ vm.runInNewContext(biometricScript,w);
+ const reply=await w.submitAuth();
+ assert.equal(reply.success,true);
+ const expectsWrite=['write-fails','ok'].includes(mode);
+ assert.equal(writes,expectsWrite?1:0,'No bearer write before native secure-store preflight');
+ assert.equal(prompts,expectsWrite?1:0,'Only eligible devices should prompt biometrics');
+ assert.equal(pref.get('zovroBiometricUnlock')||null,mode==='ok'?'1':null,
+  'Do not persist an unusable biometric preference');
+}
 async function enableRequiresNativeStorage(mode){
  let authCalls=0,writes=0;
  const local=new Map();
@@ -259,6 +299,7 @@ async function enableRequiresNativeStorage(mode){
  await enableRequiresNativeStorage('missing');
  await enableRequiresNativeStorage('missing-writer');
  await enableRequiresNativeStorage('write-fails');
+ for(const optIn of ['missing-native','missing-writer','write-fails','ok'])await optInAfterPasswordLogin(optIn);
  await biometricUnlock(null);
  await biometricUnlock(500);
  await biometricUnlock(401);
