@@ -1,10 +1,7 @@
 name: ZOVRO App Store Connect bundle visibility (read-only)
 
 on:
-  push:
-    branches: [release/testflight-20261113-stable]
-    paths:
-      - '.github/workflows/asc-bundle-diagnostic.yml'
+  workflow_dispatch:
 
 permissions:
   contents: read
