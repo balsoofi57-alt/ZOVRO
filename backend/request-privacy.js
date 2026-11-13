@@ -57,7 +57,7 @@ function isCompatibleProvider(user,r){
   if(user.role!=='provider')return false;
   if((user.accountStatus||'active')!=='active')return false;
   if(user.availability===false)return false;
-  if(!(user.identityVerified===true&&user.identityAgeConfirmed===true&&user.identityVerification?.status==='verified'))return false;
+  if(!(user.identityVerified===true&&user.identityAgeConfirmed===true&&user.identityVerification?.status==='verified'&&user.identityVerification?.faceVerifiedLive===true))return false;
   if(!matchesService(user,r.service))return false;
   return true;
 }
