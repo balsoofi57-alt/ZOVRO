@@ -36,7 +36,7 @@ try{
  for(const providerId of [p.user.id,p2.user.id]){
   const row=fixture.prepare('SELECT data FROM users WHERE id=?').get(providerId);
   const provider=JSON.parse(row.data);
-  provider.identityVerified=true;provider.identityAgeConfirmed=true;provider.identityVerification={status:'verified',provider:'stripe',verifiedAt:new Date().toISOString()};
+  provider.identityVerified=true;provider.identityAgeConfirmed=true;provider.identityVerification={status:'verified',faceVerifiedLive:true,provider:'stripe',verifiedAt:new Date().toISOString()};
   fixture.prepare('UPDATE users SET data=? WHERE id=?').run(JSON.stringify(provider),providerId);
  }
 }finally{fixture.close()}

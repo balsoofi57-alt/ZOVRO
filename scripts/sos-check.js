@@ -56,7 +56,7 @@ try{
  const row=fixture.prepare('SELECT data FROM users WHERE id=?').get(p.user.id);
  const provider=JSON.parse(row.data);
  provider.identityVerified=true;provider.identityAgeConfirmed=true;
- provider.identityVerification={status:'verified',provider:'stripe',verifiedAt:new Date().toISOString()};
+ provider.identityVerification={status:'verified',faceVerifiedLive:true,provider:'stripe',verifiedAt:new Date().toISOString()};
  fixture.prepare('UPDATE users SET data=? WHERE id=?').run(JSON.stringify(provider),provider.id);
 }finally{fixture.close()}
   const payload={source:'sos',clientRequestId:crypto.randomUUID(),service:'Roadside Assistance',details:'SOS test',urgent:true,location:{lat:42.315,lng:-83.19,accuracy:10,capturedAt:new Date().toISOString()}};
