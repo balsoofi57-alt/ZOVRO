@@ -100,6 +100,13 @@ async function route(req,res,next){
    const old=u.identityVerification||{};
    if(old.sessionId&&['requires_input','processing'].includes(old.status)&&old.legalNameProof===nameProof(name)){
     const s=await stripe('GET','/identity/verification_sessions/'+encodeURIComponent(old.sessionId));
+    if(s.id!==old.sessionId||s.client_reference_id!==u.id||s.metadata?.zovro_provider_id!==u.id||s.livemode!==true)throw new Error('Identity verification could not be matched to your account');
+    // A completed hosted check must be rechecked, never silently charged again.
+    if(s.status==='verified'){
+     const checked=await refresh(u,db);
+     if(checked.verified)return json(res,200,{identity:checked});
+     return json(res,409,{error:'Your completed identity check requires review. Check your status or contact support.',identity:checked});
+    }
     if(s.id===old.sessionId&&s.client_reference_id===u.id&&s.status==='requires_input'&&s.options?.document?.require_matching_selfie===true&&s.options?.document?.require_live_capture===true&&Date.now()-Date.parse(old.createdAt||0)<46*60*60*1000&&/^https:\/\/verify\.stripe\.com\//.test(s.url||'')){
      return json(res,200,{identity:safeState(u),verificationUrl:s.url});
     }
