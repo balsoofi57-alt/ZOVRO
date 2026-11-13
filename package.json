@@ -58,7 +58,7 @@
     "public-bundle-secret:check": "node scripts/public-secret-scan.js",
     "privacy:check": "node --test backend/request-privacy.test.js",
     "transport:check": "node scripts/transport-check.js",
-    "identity:check": "node scripts/identity-backport-check.js"
+    "identity:check": "node scripts/identity-backport-check.js && node --test scripts/provider-identity-live-flow.test.js"
   },
   "dependencies": {
     "@capacitor/core": "^7.0.0",
