@@ -49,7 +49,14 @@ test('Apple preflight distinguishes legal agreement blockers', async () => {
     status: 403,
     json: async () => ({ errors: [{ code: 'FORBIDDEN.REQUIRED_AGREEMENTS_MISSING_OR_EXPIRED' }] })
   });
-  await assert.rejects(checkAppleRelease({ env: appleEnv, fetchImpl }), /APPLE_AGREEMENT_REQUIRED/);
+  await assert.rejects(checkAppleRelease({ env: appleEnv, fetchImpl }), error => {
+    assert.match(error.message, /APPLE_AGREEMENT_REQUIRED/);
+    assert.match(error.message, /same ZOVRO LLC team/);
+    assert.match(error.message, /App Store Connect/);
+    assert.match(error.message, /No build or upload was started/);
+    assert.doesNotMatch(error.message, /must review the latest/);
+    return true;
+  });
 });
 
 test('Apple preflight rejects unrelated authorization errors', () => {
