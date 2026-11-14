@@ -17,7 +17,7 @@ concurrency:
 jobs:
   launch-internal-testflight:
     name: Check Apple app access and request one internal TestFlight upload
-    if: ${{ github.ref == 'refs/heads/main' && startsWith(github.event.head_commit.message, 'ZOVRO: one-time internal TestFlight upload after Apple clearance') }}
+    if: "${{ github.ref == 'refs/heads/main' && startsWith(github.event.head_commit.message, 'ZOVRO: one-time internal TestFlight upload after Apple clearance') }}"
     runs-on: ubuntu-latest
     timeout-minutes: 8
     steps:

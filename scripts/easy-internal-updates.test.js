@@ -128,6 +128,7 @@ test('One-time TestFlight upload is restricted to one named main commit and inte
   assert.match(workflow, /branches: \[main\]/);
   assert.match(workflow, /paths:/);
   assert.match(workflow, /github\.event\.head_commit\.message/);
+  assert.ok(workflow.includes('if: "${{ github.ref =='), 'YAML expression with colon in commit title must be quoted');
   assert.match(workflow, /ZOVRO: one-time internal TestFlight upload after Apple clearance/);
   assert.match(workflow, /node scripts\/apple-release-preflight\.js/);
   assert.match(workflow, /ZOVRO_RELEASE_PLATFORM: ios/);
