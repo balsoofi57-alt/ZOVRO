@@ -103,6 +103,35 @@ async function checkTestFlight({ env = process.env, fetchImpl = globalThis.fetch
       internalGroups.membershipChecks.push(summary);
     }
   }
+  // Count feedback on this exact build, never log tester identity, screenshots or crash details.
+  // A denied or paginated response is not proof that there are zero reports.
+  const feedback = {
+    crashReports: null,
+    screenshotReports: null,
+    crashError: null,
+    screenshotError: null,
+    crashReportsIncomplete: false,
+    screenshotReportsIncomplete: false
+  };
+  if (targetBuild?.id) {
+    const appId = encodeURIComponent(app.id);
+    const buildFilter = encodeURIComponent(targetBuild.id);
+    for (const [name, endpoint, countKey, errorKey, incompleteKey] of [
+      ['crash', 'betaFeedbackCrashSubmissions', 'crashReports', 'crashError', 'crashReportsIncomplete'],
+      ['screenshot', 'betaFeedbackScreenshotSubmissions', 'screenshotReports', 'screenshotError', 'screenshotReportsIncomplete']
+    ]) {
+      try {
+        const path = '/apps/' + appId + '/' + endpoint +
+          '?filter%5Bbuild%5D=' + buildFilter + '&limit=200';
+        const response = await get(path);
+        feedback[countKey] = (response.data || []).length;
+        feedback[incompleteKey] = Boolean(response.links?.next);
+      } catch (error) {
+        feedback[errorKey] = String(error.message).slice(0, 170);
+      }
+    }
+  }
+
   let internalState = null, linkedBetaGroups = null, detailError = null;
   if (targetBuild?.id) {
     const id = encodeURIComponent(targetBuild.id);
@@ -123,7 +152,7 @@ async function checkTestFlight({ env = process.env, fetchImpl = globalThis.fetch
   }
   return {
     bundleId: BUNDLE,
-    buildError, uploadError, detailError, groupListError, internalGroups,
+    buildError, uploadError, detailError, groupListError, internalGroups, feedback,
     recentBuilds: builds.map(b => ({
       version: statusText(b.attributes?.version),
       uploadedDate: b.attributes?.uploadedDate || null,
