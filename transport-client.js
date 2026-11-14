@@ -28,12 +28,20 @@
       destination.setAttribute('aria-required',active?'true':'false');
       destination.placeholder=active?'Drop-off street address, city, state':'Destination (optional), street and city';
     }
+    // A single service address is sufficient unless the selected service transports goods or vehicles.
+    // Hide the entire destination field and route arrow for fixed-location services.
+    const destinationField=destination?.closest('.z-route-point');
+    if(destinationField){destinationField.hidden=!active;destinationField.style.display=active?'':'none';}
+    const route=$('routeAddresses');
+    if(route){
+      route.querySelectorAll('.z-route-arrow, .z-route-direction, .z-route-connector').forEach(el=>{el.hidden=!active;el.style.display=active?'':'none';});
+    }
     const startLabel=$('routeFromLabelText'),endLabel=$('routeToLabelText');
-    if(startLabel)startLabel.textContent=active?'From — pickup / starting address':'From — starting / service address';
+    if(startLabel)startLabel.textContent=active?'From — pickup / starting address':'Service location — address';
     if(endLabel)endLabel.textContent=active?'To — drop-off / destination (required)':'To — destination (optional)';
     const heading=$('routeStepHeading'),subheading=$('routeStepSubheading'),hint=$('routeDestinationHint');
-    if(heading)heading.textContent=active?'From pickup to destination':'Where are you going?';
-    if(subheading)subheading.textContent=active?'Enter both addresses (A → B). Road miles and a single all-inclusive estimate can be calculated below.':'Enter a starting address (A). Add a destination (B) when this service involves transportation.';
+    if(heading)heading.textContent=active?'From pickup to destination':'Where is the service needed?';
+    if(subheading)subheading.textContent=active?'Enter both addresses (A → B). Road miles and a single all-inclusive estimate can be calculated below.':'Enter only the address where the service will be performed.';
     if(hint)hint.textContent=active?'Required: complete destination street and city. Pickup must be a different place.':'Optional for other services. Choose Moving, Vehicle Transport, or Towing to request mileage-based transport.';
     const currentGps=window.ZOVRO_ACTIVE_PICKUP_LOCATION?.();
     const addressInput=$('reqAddress'),fromHint=$('routeFromHint');
