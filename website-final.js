@@ -507,7 +507,9 @@
         const visible=selected==='all'||(selected==='history'?isHistory:!isHistory);
         card.classList.toggle('z-request-filtered',!visible);if(visible)shown++;
       }
-      filters.hidden=!cards.length;
+      // Keep Active / All / History visible even for an empty or signed-out request list.
+      // Selected Active is reset each time My Requests is reopened below.
+      filters.hidden=false;
       for(const button of filters.children){
         const value=button.dataset.zRequestFilter;
         button.setAttribute('aria-pressed',String(selected===value));button.querySelector('.z-filter-count').textContent=String(counts[value]);
