@@ -1,0 +1,37 @@
+name: ZOVRO TestFlight Processing Read Only
+
+on:
+  push:
+    branches:
+      - diagnostics/testflight-processing-readonly-20261114
+    paths:
+      - '.github/workflows/testflight-processing-readonly.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  apple-build-processing:
+    name: Read App Store Connect Build Upload and TestFlight Processing State
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Prove status checker is read-only
+        run: node --test scripts/testflight-processing-status.test.js
+      - name: Check Apple ZOVRO build uploads and internal TestFlight state
+        env:
+          ZOVRO_APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.ZOVRO_APP_STORE_CONNECT_API_KEY_ID }}
+          ZOVRO_APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.ZOVRO_APP_STORE_CONNECT_ISSUER_ID }}
+          ZOVRO_APP_STORE_CONNECT_API_PRIVATE_KEY_BASE64: ${{ secrets.ZOVRO_APP_STORE_CONNECT_API_PRIVATE_KEY_BASE64 }}
+        run: node scripts/testflight-processing-status.js
+      - name: Declare read-only scope
+        if: always()
+        run: |
+          echo "No upload, TestFlight tester change, store release, signing or agreement acceptance was performed by this check." >> "$GITHUB_STEP_SUMMARY"
