@@ -26,6 +26,13 @@ const position=()=>({lat:42,lng:-83,accuracy:12,capturedAt:new Date().toISOStrin
  h=harness();h.c.newRequest();p=h.c.createRequest();h.post().resolve({});await p;assert(!h.$('requestSuccessModal').classList.open,'malformed response is not success');assert.match(h.$('requestStatus').textContent,/not confirmed/);
  h=harness();h.c.newRequest();p=h.c.createRequest();h.post().reject(Object.assign(Error('Details invalid'),{status:400}));await p;assert.equal(h.$('reqDetails').disabled,false);assert.equal(h.run('requestAttempt'),null);
  h=harness();h.c.newRequest();h.$('reqDetails').value='';p=h.c.createRequest();assert.equal(h.posts.length,1,'blank description is allowed when a service is selected');assert.equal(h.posts[0].details,'','omit the problem description rather than inventing customer text');h.post().resolve({request:{id:'service-only'}});await p;
+ h=harness();h.c.newRequest();h.$('reqDetails').value='';h.$('transportDropoff').value='400 Old Dropoff Lane, Detroit, MI';
+ p=h.c.createRequest();
+ assert.equal(h.posts.length,1,'fixed-location request is still sent with one service address');
+ assert.equal(h.posts[0].address,'123 Main St, Detroit','service address remains authoritative');
+ assert.equal(h.posts[0].details,'','hidden destination from earlier transport selection must never enter fixed-location details');
+ assert.equal(h.posts[0].transport,undefined,'fixed-location request has no transport payload');
+ h.post().resolve({request:{id:'single-address'}});await p;
  h=harness();h.c.newRequest();h.$('reqDetails').value='';h.$('reqService').value='';await h.c.createRequest();assert.equal(h.posts.length,0,'service selection is still required');assert.match(h.$('requestStatus').textContent,/Choose a service/);
  h=harness();h.c.newRequest();h.$('reqDetails').value='plumbing and electrical';await h.c.createRequest();assert.equal(h.posts.length,0,'multiple trades require a manual service choice');assert.match(h.$('requestStatus').textContent,/select the service/);h.run('requestServiceManual=true');p=h.c.createRequest();assert.equal(h.posts[0].serviceSelectionManual,true);h.post().resolve({request:{id:'selected'}});await p;
  h=harness();h.c.newRequest();p=h.c.createRequest();h.c.me={id:'other',role:'customer'};h.post().resolve({request:{id:'old-account'}});await p;assert(!h.$('requestSuccessModal').classList.open,'no cross-account success');
