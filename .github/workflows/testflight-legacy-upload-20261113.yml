@@ -26,16 +26,16 @@ jobs:
           name: zovro-ios-app-store-signed
           run-id: 43532842071
           repository: balsoofi57-alt/ZOVRO
-          github-token: \${{ github.token }}
+          github-token: ${{ github.token }}
           path: signed-384
 
       - name: Verify exact signed artifact checksum and locate IPA
         id: source
         run: |
           set -euo pipefail
-          mapfile -t files < <(find signed-384 -type f -name '*.ipa')
-          test "\${#files[@]}" -eq 1 || { echo "::error::Expected one signed IPA from run 384."; exit 1; }
-          ipa="\${files[0]}"
+          ipa="$(find signed-384 -type f -name '*.ipa' -print -quit)"
+          count="$(find signed-384 -type f -name '*.ipa' | wc -l | tr -d ' ')"
+          test "$count" = 1 && test -s "$ipa" || { echo "::error::Expected one signed IPA from run 384."; exit 1; }
           check="$(find signed-384 -type f -name 'ZOVRO-iOS-Release.sha256' -print -quit)"
           test -n "$check" && test -s "$check" || { echo "::error::Missing signed build checksum."; exit 1; }
           expected="$(awk 'NR==1{print $1}' "$check")"
@@ -46,15 +46,15 @@ jobs:
 
       - name: Validate and upload the same signed IPA to TestFlight using legacy altool
         env:
-          IPA_PATH: \${{ steps.source.outputs.path }}
-          ASC_KEY_ID: \${{ secrets.ZOVRO_APP_STORE_CONNECT_API_KEY_ID }}
-          ASC_ISSUER_ID: \${{ secrets.ZOVRO_APP_STORE_CONNECT_ISSUER_ID }}
-          ASC_KEY_BASE64: \${{ secrets.ZOVRO_APP_STORE_CONNECT_API_PRIVATE_KEY_BASE64 }}
+          IPA_PATH: ${{ steps.source.outputs.path }}
+          ASC_KEY_ID: ${{ secrets.ZOVRO_APP_STORE_CONNECT_API_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ZOVRO_APP_STORE_CONNECT_ISSUER_ID }}
+          ASC_KEY_BASE64: ${{ secrets.ZOVRO_APP_STORE_CONNECT_API_PRIVATE_KEY_BASE64 }}
         run: |
           set -euo pipefail
           umask 077
           for name in ASC_KEY_ID ASC_ISSUER_ID ASC_KEY_BASE64; do
-            if [[ -z "\${!name:-}" ]]; then echo "::error::Missing Apple credential: $name"; exit 1; fi
+            if [[ -z "${!name:-}" ]]; then echo "::error::Missing Apple credential: $name"; exit 1; fi
           done
           test -s "$IPA_PATH"
           xcrun --find altool >/dev/null
