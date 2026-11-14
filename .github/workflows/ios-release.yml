@@ -10,7 +10,7 @@ on:
         type: boolean
 
   push:
-    branches: [main, store-release-prep, zovro-final-deploy]
+    branches: [main, store-release-prep, zovro-final-deploy, release/ios-signing-preflight-2026-11-13]
     paths:
       - '*.html'
       - '*.js'
