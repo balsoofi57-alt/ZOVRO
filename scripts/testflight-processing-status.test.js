@@ -12,7 +12,8 @@ const env = {
     Buffer.from(keys.privateKey.export({ type: 'pkcs8', format: 'pem' })).toString('base64')
 };
 function ok(data) { return { ok: true, status: 200, json: async () => ({ data }) }; }
-function fakeApi({ builds = [], uploads = [], groups = [], beta = null, blockBuilds = false } = {}) {
+function fakeApi({ builds = [], uploads = [], groups = [], beta = null, blockBuilds = false,
+  groupTesters = [{ id: 'tester-one' }], groupBuilds = [{ id: 'new' }], blockGroupAccess = false } = {}) {
   const seen = [];
   const fetchImpl = async (url, options) => {
     seen.push({ url, method: options.method });
@@ -20,6 +21,11 @@ function fakeApi({ builds = [], uploads = [], groups = [], beta = null, blockBui
     assert.match(options.headers.Authorization, /^Bearer /);
     if (url.includes('/apps?')) return ok([{ id: 'app-test', attributes: { bundleId: 'com.zovro.app' } }]);
     if (url.includes('/betaGroups?')) return ok([{ id: 'g1', attributes: { isInternalGroup: true, hasAccessToAllBuilds: true } }]);
+    if (url.includes('/betaGroups/g1/relationships/betaTesters')) {
+      if (blockGroupAccess) return { ok: false, status: 403, json: async () => ({ errors: [{ code: 'FORBIDDEN' }] }) };
+      return ok(groupTesters);
+    }
+    if (url.includes('/betaGroups/g1/relationships/builds')) return ok(groupBuilds);
     if (url.includes('/apps/app-test/buildUploads')) return ok(uploads);
     if (url.includes('/apps/app-test/builds')) {
       if (blockBuilds) return { ok: false, status: 403, json: async () => ({ errors: [{ code: 'FORBIDDEN' }] }) };
@@ -43,6 +49,12 @@ test('Apple build status selects newly uploaded ZOVRO build, with internal group
   assert.equal(result.target.linkedBetaGroups, 1);
   assert.equal(result.internalGroups.count, 1);
   assert.equal(result.internalGroups.automaticAllBuilds, 1);
+  assert.equal(result.internalGroups.membershipChecks.length, 1);
+  assert.equal(result.internalGroups.membershipChecks[0].testerCount, 1);
+  assert.equal(result.internalGroups.membershipChecks[0].targetBuildExplicitlyLinked, true);
+  assert.equal(result.internalGroups.membershipChecks[0].automaticAllBuilds, true);
+  assert.equal(result.internalGroups.membershipChecks[0].testerCountError, null);
+  assert.ok(!JSON.stringify(result).includes('tester-one'), 'Do not print tester IDs or personal data');
   assert.equal(result.recentBuilds[0].version, '202.2');
   assert.ok(api.seen.every(x => x.method === 'GET'));
 });
@@ -65,4 +77,11 @@ test('Older builds and failed build access are never reported as newly ready', a
 test('Apple status helpers safely order dates and represent states', () => {
   assert.equal(recent([{ attributes: { uploadedDate: '2020-01-01' } }, { attributes: { uploadedDate: '2021-01-01' } }], 'uploadedDate')[0].attributes.uploadedDate, '2021-01-01');
   assert.equal(statusText({ state: 'PROCESSING' }), 'PROCESSING');
+});
+
+test('Restricted beta tester membership is marked unknown, never zero', async () => {
+  const api = fakeApi({ blockGroupAccess: true });
+  const result = await checkTestFlight({ env, fetchImpl: api.fetchImpl });
+  assert.equal(result.internalGroups.membershipChecks[0].testerCount, null);
+  assert.match(result.internalGroups.membershipChecks[0].testerCountError, /APPLE_ACCESS_FORBIDDEN/);
 });
