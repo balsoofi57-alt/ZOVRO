@@ -69,6 +69,8 @@ async function checkTestFlight({ env = process.env, fetchImpl = globalThis.fetch
         testerCount: null,
         testersTruncated: false,
         testerCountError: null,
+        testerStates: null,
+        testerStateError: null,
         targetBuildExplicitlyLinked: null,
         buildLinkError: null
       };
@@ -77,6 +79,17 @@ async function checkTestFlight({ env = process.env, fetchImpl = globalThis.fetch
         summary.testerCount = (testers.data || []).length;
         summary.testersTruncated = Boolean(testers.links?.next);
       } catch (error) { summary.testerCountError = String(error.message).slice(0, 150); }
+      // Request only the state field; never read/log tester email, name or ID.
+      try {
+        const testers = await get('/betaGroups/' + id + '/betaTesters?fields%5BbetaTesters%5D=state&limit=200');
+        const counts = { NOT_INVITED: 0, INVITED: 0, ACCEPTED: 0, INSTALLED: 0, REVOKED: 0, UNKNOWN: 0 };
+        for (const tester of testers.data || []) {
+          const state = String(tester.attributes?.state || 'UNKNOWN');
+          counts[Object.prototype.hasOwnProperty.call(counts, state) ? state : 'UNKNOWN']++;
+        }
+        summary.testerStates = counts;
+        if (testers.links?.next) summary.testerStateError = 'More than 200 testers; status counts are incomplete.';
+      } catch (error) { summary.testerStateError = String(error.message).slice(0, 150); }
       if (targetBuild?.id) {
         try {
           const buildLinks = await get('/betaGroups/' + id + '/relationships/builds?limit=200');
