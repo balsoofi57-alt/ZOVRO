@@ -21,6 +21,7 @@ function fakeApi({ builds = [], uploads = [], groups = [], beta = null, blockBui
     assert.match(options.headers.Authorization, /^Bearer /);
     if (url.includes('/apps?')) return ok([{ id: 'app-test', attributes: { bundleId: 'com.zovro.app' } }]);
     if (url.includes('/betaGroups?')) return ok([{ id: 'g1', attributes: { isInternalGroup: true, hasAccessToAllBuilds: true } }]);
+    if (url.includes('/betaGroups/g1/betaTesters?')) return ok([{ id: 'tester-one', attributes: { state: 'ACCEPTED' } }]);
     if (url.includes('/betaGroups/g1/relationships/betaTesters')) {
       if (blockGroupAccess) return { ok: false, status: 403, json: async () => ({ errors: [{ code: 'FORBIDDEN' }] }) };
       return ok(groupTesters);
@@ -51,6 +52,8 @@ test('Apple build status selects newly uploaded ZOVRO build, with internal group
   assert.equal(result.internalGroups.automaticAllBuilds, 1);
   assert.equal(result.internalGroups.membershipChecks.length, 1);
   assert.equal(result.internalGroups.membershipChecks[0].testerCount, 1);
+  assert.equal(result.internalGroups.membershipChecks[0].testerStates.ACCEPTED, 1);
+  assert.equal(result.internalGroups.membershipChecks[0].testerStateError, null);
   assert.equal(result.internalGroups.membershipChecks[0].targetBuildExplicitlyLinked, true);
   assert.equal(result.internalGroups.membershipChecks[0].automaticAllBuilds, true);
   assert.equal(result.internalGroups.membershipChecks[0].testerCountError, null);
