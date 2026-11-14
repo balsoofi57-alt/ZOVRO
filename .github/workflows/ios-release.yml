@@ -685,12 +685,20 @@ jobs:
           test -s "$API_KEY_PATH"
           openssl pkey -in "$API_KEY_PATH" -noout >/dev/null
 
-          xcrun altool \
+          ALTOOL_LOG="$(mktemp)"
+          if ! xcrun altool \
             --validate-app \
             -f "$IPA_PATH" \
             -t ios \
             --apiKey "$APP_STORE_CONNECT_API_KEY_ID" \
-            --apiIssuer "$APP_STORE_CONNECT_ISSUER_ID"
+            --apiIssuer "$APP_STORE_CONNECT_ISSUER_ID" 2>&1 | tee "$ALTOOL_LOG"; then
+            if grep -q "Cannot determine the Apple ID from Bundle ID" "$ALTOOL_LOG"; then
+              echo "::error::No App Store Connect app record exists for com.zovro.app under the team that owns the API key. Create the app (My Apps > New App, bundle ID com.zovro.app) and verify the ZOVRO_APP_STORE_CONNECT_* secrets belong to the same team, then re-run."
+            fi
+            rm -f "$ALTOOL_LOG"
+            exit 1
+          fi
+          rm -f "$ALTOOL_LOG"
 
           xcrun altool \
             --upload-app \
