@@ -10,7 +10,7 @@ on:
         type: boolean
 
   push:
-    branches: [main, store-release-prep, zovro-final-deploy]
+    branches: [main, store-release-prep, zovro-final-deploy, release/biometric-rebased-ios-signing-test-20261113]
     paths:
       - '*.html'
       - '*.js'
