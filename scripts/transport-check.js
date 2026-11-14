@@ -76,7 +76,8 @@ async function main(){
  assert(html.includes('details:requestDetails'));
  assert(html.includes("routeLines.join('\\n')"));
  assert(html.includes('details:requestDetails'));
- assert(html.includes('optionalDestination'));
+ assert(html.includes('const routeLines=transportLines;'),'Only selected transport services may add pickup/drop-off route details');
+ assert(!html.includes('optionalDestination')&&!html.includes('extraDirections'),'Hidden old destination must not leak into fixed-location request details');
  assert(html.includes('ZOVRO_TRANSPORT?.restore?.(j)'));
  assert(client.includes('destination.required=active'));
  assert(client.includes("route.insertAdjacentElement('afterend',wrap)"));
