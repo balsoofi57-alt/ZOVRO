@@ -27,6 +27,8 @@ function fakeApi({ builds = [], uploads = [], groups = [], beta = null, blockBui
       return ok(groupTesters);
     }
     if (url.includes('/betaGroups/g1/relationships/builds')) return ok(groupBuilds);
+    if (url.includes('/apps/app-test/betaFeedbackCrashSubmissions')) return ok([]);
+    if (url.includes('/apps/app-test/betaFeedbackScreenshotSubmissions')) return ok([]);
     if (url.includes('/apps/app-test/buildUploads')) return ok(uploads);
     if (url.includes('/apps/app-test/builds')) {
       if (blockBuilds) return { ok: false, status: 403, json: async () => ({ errors: [{ code: 'FORBIDDEN' }] }) };
@@ -46,6 +48,11 @@ test('Apple build status selects newly uploaded ZOVRO build, with internal group
   const result = await checkTestFlight({ env, fetchImpl: api.fetchImpl });
   assert.equal(result.target.build, '202.2');
   assert.equal(result.target.processingState, 'VALID');
+  assert.equal(result.feedback.crashReports, 0, 'zero reports means successful Apple response for exact build');
+  assert.equal(result.feedback.screenshotReports, 0);
+  assert.equal(result.feedback.crashError, null);
+  assert.ok(api.seen.some(x => x.url.includes('filter%5Bbuild%5D=new')));
+  assert.ok(!JSON.stringify(result).includes('tester-one'), 'Never expose tester identifiers');
   assert.equal(result.target.internalState, 'READY_FOR_BETA_TESTING');
   assert.equal(result.target.linkedBetaGroups, 1);
   assert.equal(result.internalGroups.count, 1);
@@ -87,4 +94,23 @@ test('Restricted beta tester membership is marked unknown, never zero', async ()
   const result = await checkTestFlight({ env, fetchImpl: api.fetchImpl });
   assert.equal(result.internalGroups.membershipChecks[0].testerCount, null);
   assert.match(result.internalGroups.membershipChecks[0].testerCountError, /APPLE_ACCESS_FORBIDDEN/);
+});
+
+test('No build or inaccessible feedback is unknown, never a false zero', async () => {
+  const absent = await checkTestFlight({ env, fetchImpl: fakeApi().fetchImpl });
+  assert.equal(absent.feedback.crashReports, null);
+  assert.equal(absent.feedback.screenshotReports, null);
+  const base = fakeApi({ builds: [{
+    id: 'new', attributes: { version: '395.2', uploadedDate: '2026-11-14T19:52:28Z' }
+  }] });
+  const fetchImpl = async (url, options) => {
+    if (url.includes('/betaFeedbackCrashSubmissions')) {
+      return { ok: false, status: 403, json: async () => ({ errors: [{ code: 'FORBIDDEN' }] }) };
+    }
+    return base.fetchImpl(url, options);
+  };
+  const result = await checkTestFlight({ env, fetchImpl });
+  assert.equal(result.feedback.crashReports, null);
+  assert.match(result.feedback.crashError, /APPLE_ACCESS_FORBIDDEN/);
+  assert.equal(result.feedback.screenshotReports, 0);
 });
