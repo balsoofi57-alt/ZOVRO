@@ -253,14 +253,9 @@ async function createRequest(){
       ?'Loading/unloading included: '+transport.value.workers+' workers for '+transport.value.hours+' hours.'
       :'One all-inclusive transport quote, including road miles.'
   ]:[];
-  // For ordinary service requests, keep an optional destination in the message
-  // without changing their service category or enabling transport pricing.
-  const optionalDestination=!transport?.value?String($('transportDropoff')?.value||'').trim():'';
-  const extraDirections=optionalDestination?[
-    'From: '+(address||'Current location shared in app'),
-    'To: '+optionalDestination
-  ]:[];
-  const routeLines=transportLines.length?transportLines:extraDirections;
+  // Fixed-location jobs have a single service address. Never include a stale
+  // destination left in the hidden transport input after switching service.
+  const routeLines=transportLines;
   const requestDetails=routeLines.length?routeLines.join('\n')+'\n'+details:details;
   const clientRequestId=window.crypto?.randomUUID?.()||`${Date.now()}-${Math.random().toString(36).slice(2)}-${Math.random().toString(36).slice(2)}`;
   requestAttempt={owner,payload:{service,details:requestDetails,serviceSelectionManual:requestServiceManual,address,time:'As soon as possible',urgent:$('reqUrgent').checked,location:loc,transport:transport?.value||undefined,transportEstimateToken:transport?.quoteToken||undefined,clientRequestId}};
