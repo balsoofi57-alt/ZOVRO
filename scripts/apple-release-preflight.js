@@ -40,7 +40,7 @@ function makeToken(env, now = Date.now()) {
 function apiFailure(status, payload) {
   const code = String(payload?.errors?.[0]?.code || '');
   if (status === 403 && code === 'FORBIDDEN.REQUIRED_AGREEMENTS_MISSING_OR_EXPIRED') {
-    return new Error('APPLE_AGREEMENT_REQUIRED: The Account Holder must review the latest Apple Developer agreement at https://developer.apple.com/account (Review agreement). No build or upload was started.');
+    return new Error('APPLE_AGREEMENT_REQUIRED: Apple reports a required agreement missing or expired for the App Store Connect API key issuer. If the Account Holder already signed, verify the API key belongs to the same ZOVRO LLC team, check outstanding agreements in Apple Developer and App Store Connect, and rerun this read-only check after Apple updates account access. No build or upload was started.');
   }
   if (status === 401) {
     return new Error('APPLE_API_KEY_INVALID: Review App Store Connect API key ID, issuer, and permissions.');
