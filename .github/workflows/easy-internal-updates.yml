@@ -23,7 +23,7 @@ permissions:
   actions: write
 
 concurrency:
-  group: zovro-easy-internal-update-${ github.ref }}
+  group: zovro-easy-internal-update-${{ github.ref }}
   cancel-in-progress: false
 
 jobs:
