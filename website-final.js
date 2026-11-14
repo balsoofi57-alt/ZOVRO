@@ -507,7 +507,8 @@
         const visible=selected==='all'||(selected==='history'?isHistory:!isHistory);
         card.classList.toggle('z-request-filtered',!visible);if(visible)shown++;
       }
-      filters.hidden=!cards.length;
+      // Keep the Active default visible (and green) for signed-out and zero-request states.
+      filters.hidden=false;
       for(const button of filters.children){
         const value=button.dataset.zRequestFilter;
         button.setAttribute('aria-pressed',String(selected===value));button.querySelector('.z-filter-count').textContent=String(counts[value]);
