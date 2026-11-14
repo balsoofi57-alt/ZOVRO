@@ -1,0 +1,37 @@
+name: ZOVRO Apple Account Read-Only Preflight
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/apple-account-preflight.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  verify-app-store-connect:
+    name: Verify ZOVRO App Store Connect access (no build or upload)
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Read-only Apple agreement, API key and app-access check
+        env:
+          ZOVRO_APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.ZOVRO_APP_STORE_CONNECT_API_KEY_ID }}
+          ZOVRO_APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.ZOVRO_APP_STORE_CONNECT_ISSUER_ID }}
+          ZOVRO_APP_STORE_CONNECT_API_PRIVATE_KEY_BASE64: ${{ secrets.ZOVRO_APP_STORE_CONNECT_API_PRIVATE_KEY_BASE64 }}
+        run: |
+          set -euo pipefail
+          node scripts/apple-release-preflight.js
+      - name: Report read-only scope
+        if: always()
+        run: |
+          echo "This workflow only reads Apple's App Store Connect API." >> "$GITHUB_STEP_SUMMARY"
+          echo "It does not accept agreements, sign applications, build IPAs, or upload to TestFlight." >> "$GITHUB_STEP_SUMMARY"
