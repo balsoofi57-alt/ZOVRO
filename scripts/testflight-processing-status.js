@@ -31,13 +31,15 @@ async function checkTestFlight({ env = process.env, fetchImpl = globalThis.fetch
   const app = (apps.data || []).find(a => a.attributes?.bundleId === BUNDLE);
   if (!app?.id) throw new Error('APPLE_APP_NOT_FOUND: No App Store Connect ZOVRO app record.');
 
-  let internalGroups = null, groupListError = null;
+  let internalGroups = null, groupListError = null, internalGroupRefs = [];
   try {
     const groupListing = await get('/betaGroups?filter%5Bapp%5D=' + encodeURIComponent(app.id) + '&limit=100');
     const allGroups = groupListing.data || [];
+    internalGroupRefs = allGroups.filter(g => g.attributes?.isInternalGroup === true && g.id);
     internalGroups = {
-      count: allGroups.filter(g => g.attributes?.isInternalGroup === true).length,
-      automaticAllBuilds: allGroups.filter(g => g.attributes?.isInternalGroup === true && g.attributes?.hasAccessToAllBuilds === true).length
+      count: internalGroupRefs.length,
+      automaticAllBuilds: internalGroupRefs.filter(g => g.attributes?.hasAccessToAllBuilds === true).length,
+      membershipChecks: []
     };
   } catch (error) { groupListError = String(error.message).slice(0, 170); }
 
@@ -57,6 +59,37 @@ async function checkTestFlight({ env = process.env, fetchImpl = globalThis.fetch
   const targetBuild = builds.find(b => (Date.parse(b.attributes?.uploadedDate || '') || 0) >= cutoff);
   const targetUpload = uploads.find(b => (
     (Date.parse(b.attributes?.uploadedDate || b.attributes?.createdDate || '') || 0) >= cutoff));
+  // Do not fetch or print tester names, emails, group IDs or tester resource IDs.
+  // A denied GET means "unknown", not zero testers or zero linked builds.
+  if (internalGroups) {
+    for (const group of internalGroupRefs) {
+      const id = encodeURIComponent(group.id);
+      const summary = {
+        automaticAllBuilds: group.attributes?.hasAccessToAllBuilds === true,
+        testerCount: null,
+        testersTruncated: false,
+        testerCountError: null,
+        targetBuildExplicitlyLinked: null,
+        buildLinkError: null
+      };
+      try {
+        const testers = await get('/betaGroups/' + id + '/relationships/betaTesters?limit=200');
+        summary.testerCount = (testers.data || []).length;
+        summary.testersTruncated = Boolean(testers.links?.next);
+      } catch (error) { summary.testerCountError = String(error.message).slice(0, 150); }
+      if (targetBuild?.id) {
+        try {
+          const buildLinks = await get('/betaGroups/' + id + '/relationships/builds?limit=200');
+          summary.targetBuildExplicitlyLinked = (buildLinks.data || []).some(b => b.id === targetBuild.id);
+          if (buildLinks.links?.next && !summary.targetBuildExplicitlyLinked) {
+            summary.buildLinkError = 'The build-link result is paginated; explicit membership is unknown.';
+            summary.targetBuildExplicitlyLinked = null;
+          }
+        } catch (error) { summary.buildLinkError = String(error.message).slice(0, 150); }
+      }
+      internalGroups.membershipChecks.push(summary);
+    }
+  }
   let internalState = null, linkedBetaGroups = null, detailError = null;
   if (targetBuild?.id) {
     const id = encodeURIComponent(targetBuild.id);
