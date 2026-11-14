@@ -122,3 +122,16 @@ test('Unified workflow is opt-in, requires Apple preflight, and never publishes 
   assert.match(workflow, /node scripts\/dispatch-internal-update\.js/);
   assert.doesNotMatch(workflow, /tracks\/production|automaticRelease|--submit-for-review/);
 });
+
+test('One-time TestFlight upload is restricted to one named main commit and internal-only', () => {
+  const workflow = fs.readFileSync(path.resolve(__dirname, '../.github/workflows/testflight-once-20261114.yml'), 'utf8');
+  assert.match(workflow, /branches: \[main\]/);
+  assert.match(workflow, /paths:/);
+  assert.match(workflow, /github\.event\.head_commit\.message/);
+  assert.match(workflow, /ZOVRO: one-time internal TestFlight upload after Apple clearance/);
+  assert.match(workflow, /node scripts\/apple-release-preflight\.js/);
+  assert.match(workflow, /ZOVRO_RELEASE_PLATFORM: ios/);
+  assert.match(workflow, /ZOVRO_RELEASE_UPLOAD: 'true'/);
+  assert.match(workflow, /node scripts\/dispatch-internal-update\.js/);
+  assert.doesNotMatch(workflow, /workflow_dispatch:|ZOVRO_RELEASE_PLATFORM: both|ZOVRO_RELEASE_PLATFORM: android/);
+});
