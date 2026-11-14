@@ -79,6 +79,14 @@ jobs:
         with:
           node-version: '22'
 
+      - name: Confirm Apple agreement before expensive iOS build
+        if: github.event_name == 'workflow_dispatch' && inputs.upload_testflight == true
+        env:
+          ZOVRO_APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.ZOVRO_APP_STORE_CONNECT_API_KEY_ID }}
+          ZOVRO_APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.ZOVRO_APP_STORE_CONNECT_ISSUER_ID }}
+          ZOVRO_APP_STORE_CONNECT_API_PRIVATE_KEY_BASE64: ${{ secrets.ZOVRO_APP_STORE_CONNECT_API_PRIVATE_KEY_BASE64 }}
+        run: node scripts/apple-release-preflight.js
+
       - name: Require supported Xcode for App Store submission
         run: |
           set -euo pipefail
