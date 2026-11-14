@@ -693,12 +693,24 @@ jobs:
           test -s "$API_KEY_PATH"
           openssl pkey -in "$API_KEY_PATH" -noout >/dev/null
 
-          xcrun altool \
+          # Keep transport output for a targeted diagnosis without exposing credentials.
+          VALIDATION_LOG="$RUNNER_TEMP/zovro-altool-validation.log"
+          if ! xcrun altool \
             --validate-app \
             -f "$IPA_PATH" \
             -t ios \
             --apiKey "$APP_STORE_CONNECT_API_KEY_ID" \
-            --apiIssuer "$APP_STORE_CONNECT_ISSUER_ID"
+            --apiIssuer "$APP_STORE_CONNECT_ISSUER_ID" 2>&1 | tee "$VALIDATION_LOG"; then
+            if grep -q "Cannot determine the Apple ID from Bundle ID" "$VALIDATION_LOG"; then
+              echo "::error::App Store Connect could not resolve com.zovro.app for this API key. Verify that the app record exists under the API key's App Store Connect team and that the key has access to that app. Do not retry uploads until this is resolved."
+              {
+                echo "### TestFlight upload blocked"
+                echo "App Store Connect cannot resolve the app record for \`com.zovro.app\` using the configured API key."
+                echo "Check the app record, team, and API key app access before retrying."
+              } >> "$GITHUB_STEP_SUMMARY"
+            fi
+            exit 1
+          fi
 
           xcrun altool \
             --upload-app \
