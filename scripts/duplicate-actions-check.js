@@ -40,6 +40,11 @@ assert.ok(!jobs.includes('onclick="loadJobs()"'), 'Manual Refresh duplicates aut
 assert.ok(jobs.includes('id="availabilityBtn"')&&jobs.includes('id="locationBtn"'),'Provider availability and live location remain');
 assert.ok(!request.includes('View my requests</button>'),'Request sheet must not add a second Requests shortcut');
 assert.ok(js.includes("['all','All'],['active','Active'],['history','History']"),'Request filters remain');
+assert.ok(js.includes("let selected='active'"),'My Requests must default to Active');
+assert.ok(js.includes('filters.hidden=false;'),'Active and other request filters remain visible without requests or sign-in');
+assert.ok(!js.includes('filters.hidden=!cards.length'),'Empty states must not hide the selected Active tab');
+assert.ok(js.includes("if(wasHidden&&!hidden){selected='active';updateFilters()}"),'Reopening My Requests returns to Active');
+assert.ok(css.includes('button[data-z-request-filter="active"][aria-pressed="true"]{background:linear-gradient(135deg,#20d54d,#12ac39)'),'Selected Active filter stays green and bold');
 assert.ok(!js.includes('>Show all requests</button>'),'The All filter must be the only Show All control');
 
 // Critical flows cannot be merged merely because they share similar words.
