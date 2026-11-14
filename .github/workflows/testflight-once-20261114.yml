@@ -1,0 +1,49 @@
+name: ZOVRO One-Time Internal TestFlight Upload After Apple Clearance
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/testflight-once-20261114.yml'
+
+permissions:
+  contents: read
+  actions: write
+
+concurrency:
+  group: zovro-testflight-once-20261114
+  cancel-in-progress: false
+
+jobs:
+  launch-internal-testflight:
+    name: Check Apple app access and request one internal TestFlight upload
+    if: ${{ github.ref == 'refs/heads/main' && startsWith(github.event.head_commit.message, 'ZOVRO: one-time internal TestFlight upload after Apple clearance') }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - name: Checkout approved main branch
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify current Apple agreement and ZOVRO App Store Connect app access
+        env:
+          ZOVRO_APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.ZOVRO_APP_STORE_CONNECT_API_KEY_ID }}
+          ZOVRO_APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.ZOVRO_APP_STORE_CONNECT_ISSUER_ID }}
+          ZOVRO_APP_STORE_CONNECT_API_PRIVATE_KEY_BASE64: ${{ secrets.ZOVRO_APP_STORE_CONNECT_API_PRIVATE_KEY_BASE64 }}
+        run: node scripts/apple-release-preflight.js
+      - name: Dispatch existing iOS release workflow with TestFlight upload enabled
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ZOVRO_RELEASE_PLATFORM: ios
+          ZOVRO_RELEASE_UPLOAD: 'true'
+          GITHUB_REF_NAME: ${{ github.ref_name }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+        run: node scripts/dispatch-internal-update.js
+      - name: Explain scope
+        if: always()
+        run: |
+          echo "This one-time workflow attempts to queue an iOS internal TestFlight upload only." >> "$GITHUB_STEP_SUMMARY"
+          echo "The existing iOS release workflow still enforces signing, app validation and upload checks." >> "$GITHUB_STEP_SUMMARY"
+          echo "Success here does not mean Apple has processed or accepted the build." >> "$GITHUB_STEP_SUMMARY"
