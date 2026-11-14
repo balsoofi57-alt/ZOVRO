@@ -31,6 +31,16 @@ async function checkTestFlight({ env = process.env, fetchImpl = globalThis.fetch
   const app = (apps.data || []).find(a => a.attributes?.bundleId === BUNDLE);
   if (!app?.id) throw new Error('APPLE_APP_NOT_FOUND: No App Store Connect ZOVRO app record.');
 
+  let internalGroups = null, groupListError = null;
+  try {
+    const groupListing = await get('/betaGroups?filter%5Bapp%5D=' + encodeURIComponent(app.id) + '&limit=100');
+    const allGroups = groupListing.data || [];
+    internalGroups = {
+      count: allGroups.filter(g => g.attributes?.isInternalGroup === true).length,
+      automaticAllBuilds: allGroups.filter(g => g.attributes?.isInternalGroup === true && g.attributes?.hasAccessToAllBuilds === true).length
+    };
+  } catch (error) { groupListError = String(error.message).slice(0, 170); }
+
   let uploads = [], uploadError = null;
   try {
     const payload = await get('/apps/' + encodeURIComponent(app.id) + '/buildUploads?limit=50');
@@ -67,7 +77,7 @@ async function checkTestFlight({ env = process.env, fetchImpl = globalThis.fetch
   }
   return {
     bundleId: BUNDLE,
-    buildError, uploadError, detailError,
+    buildError, uploadError, detailError, groupListError, internalGroups,
     recentBuilds: builds.map(b => ({
       version: statusText(b.attributes?.version),
       uploadedDate: b.attributes?.uploadedDate || null,
