@@ -19,6 +19,7 @@ function fakeApi({ builds = [], uploads = [], groups = [], beta = null, blockBui
     assert.equal(options.method, 'GET', 'Never mutate Apple via TestFlight status check');
     assert.match(options.headers.Authorization, /^Bearer /);
     if (url.includes('/apps?')) return ok([{ id: 'app-test', attributes: { bundleId: 'com.zovro.app' } }]);
+    if (url.includes('/betaGroups?')) return ok([{ id: 'g1', attributes: { isInternalGroup: true, hasAccessToAllBuilds: true } }]);
     if (url.includes('/apps/app-test/buildUploads')) return ok(uploads);
     if (url.includes('/apps/app-test/builds')) {
       if (blockBuilds) return { ok: false, status: 403, json: async () => ({ errors: [{ code: 'FORBIDDEN' }] }) };
@@ -40,6 +41,8 @@ test('Apple build status selects newly uploaded ZOVRO build, with internal group
   assert.equal(result.target.processingState, 'VALID');
   assert.equal(result.target.internalState, 'READY_FOR_BETA_TESTING');
   assert.equal(result.target.linkedBetaGroups, 1);
+  assert.equal(result.internalGroups.count, 1);
+  assert.equal(result.internalGroups.automaticAllBuilds, 1);
   assert.equal(result.recentBuilds[0].version, '202.2');
   assert.ok(api.seen.every(x => x.method === 'GET'));
 });
