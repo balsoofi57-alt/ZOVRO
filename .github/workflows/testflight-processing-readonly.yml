@@ -6,6 +6,8 @@ on:
       - diagnostics/testflight-processing-readonly-20261114
     paths:
       - '.github/workflows/testflight-processing-readonly.yml'
+      - 'scripts/testflight-processing-status.js'
+      - 'scripts/testflight-processing-status.test.js'
   workflow_dispatch:
 
 permissions:
