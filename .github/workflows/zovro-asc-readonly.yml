@@ -19,6 +19,7 @@ jobs:
           APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.ZOVRO_APP_STORE_CONNECT_API_KEY_ID }}
           APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.ZOVRO_APP_STORE_CONNECT_ISSUER_ID }}
           APP_STORE_CONNECT_API_PRIVATE_KEY_BASE64: ${{ secrets.ZOVRO_APP_STORE_CONNECT_API_PRIVATE_KEY_BASE64 }}
+        # Agreement recheck after prior FORBIDDEN.REQUIRED_AGREEMENTS_MISSING_OR_EXPIRED
         shell: bash
         run: |
           set -euo pipefail
