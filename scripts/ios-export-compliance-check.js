@@ -17,6 +17,9 @@ assert.deepEqual(packageJson.dependencies,{
   '@capacitor-community/stripe':'7.2.0',
   '@onesignal/capacitor-plugin':'1.1.9',
   'capacitor-secure-storage-plugin':'0.12.0',
-  'leaflet':'1.9.4'
+  'leaflet':'1.9.4',
+  '@aparajita/capacitor-biometric-auth':'9.1.2'
 },'Native dependency changes require a fresh export compliance review');
+const biometricReview=fs.readFileSync('docs/ios-biometric-export-review.md','utf8');
+assert.match(biometricReview,/@aparajita\/capacitor-biometric-auth 9\.1\.2/,'Native plugin addition must have a documented export review');
 console.log('iOS export compliance: existing exempt declaration preserved, idempotent, and gated for SDK changes');
