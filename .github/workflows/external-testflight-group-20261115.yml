@@ -1,6 +1,12 @@
 name: ZOVRO External TestFlight Group for 395.2
 
 on:
+  push:
+    branches:
+      - diagnostics/external-testflight-group-20261115
+    paths:
+      - '.github/workflows/external-testflight-group-20261115.yml'
+      - 'scripts/external-testflight-group.js'
   workflow_dispatch:
 
 permissions:
