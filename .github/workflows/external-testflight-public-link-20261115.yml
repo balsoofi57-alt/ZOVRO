@@ -1,0 +1,36 @@
+name: ZOVRO External TestFlight Public Link
+
+on:
+  push:
+    branches:
+      - diagnostics/external-public-link-20261115
+    paths:
+      - '.github/workflows/external-testflight-public-link-20261115.yml'
+      - 'scripts/external-testflight-public-link.js'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  public-link:
+    name: Enable public TestFlight join link on External Testers
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Enable public link on the external group
+        env:
+          ZOVRO_APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.ZOVRO_APP_STORE_CONNECT_API_KEY_ID }}
+          ZOVRO_APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.ZOVRO_APP_STORE_CONNECT_ISSUER_ID }}
+          ZOVRO_APP_STORE_CONNECT_API_PRIVATE_KEY_BASE64: ${{ secrets.ZOVRO_APP_STORE_CONNECT_API_PRIVATE_KEY_BASE64 }}
+        run: node scripts/external-testflight-public-link.js
+      - name: Declare action scope
+        if: always()
+        run: |
+          echo "Enabled the public TestFlight join link on the External Testers group. No email testers were added and no public App Store release was performed." >> "$GITHUB_STEP_SUMMARY"
