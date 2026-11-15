@@ -48,11 +48,14 @@ async function sendInvitations({ env = process.env, fetchImpl = globalThis.fetch
   for (const email of emails) {
     const record = { email, sent: false, alreadyAccepted: false, error: null };
     try {
+      const found = await call('GET', '/betaTesters?filter%5Bemail%5D=' + encodeURIComponent(email) + '&limit=5');
+      const tester = (found.data || []).find(t => t.attributes?.email === email);
+      if (!tester?.id) throw new Error('TESTER_NOT_FOUND: ' + email + ' is not a beta tester for this team yet.');
       await call('POST', '/betaTesterInvitations', {
         data: {
           type: 'betaTesterInvitations',
-          attributes: { email },
           relationships: {
+            betaTester: { data: { type: 'betaTesters', id: tester.id } },
             app: { data: { type: 'apps', id: app.id } }
           }
         }
@@ -63,7 +66,7 @@ async function sendInvitations({ env = process.env, fetchImpl = globalThis.fetch
       if (/ALREADY_ACCEPTED/.test(code)) {
         record.alreadyAccepted = true;
       } else {
-        record.error = error.message.slice(0, 200);
+        record.error = (error.message || String(error)).slice(0, 200);
       }
     }
     results.push(record);
