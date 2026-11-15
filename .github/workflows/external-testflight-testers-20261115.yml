@@ -1,0 +1,37 @@
+name: ZOVRO External TestFlight Testers
+
+on:
+  push:
+    branches:
+      - diagnostics/external-testers-20261115
+    paths:
+      - '.github/workflows/external-testflight-testers-20261115.yml'
+      - 'scripts/external-testflight-testers.js'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  external-testers:
+    name: Invite external testers to External Testers group
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Invite external testers by email
+        env:
+          ZOVRO_APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.ZOVRO_APP_STORE_CONNECT_API_KEY_ID }}
+          ZOVRO_APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.ZOVRO_APP_STORE_CONNECT_ISSUER_ID }}
+          ZOVRO_APP_STORE_CONNECT_API_PRIVATE_KEY_BASE64: ${{ secrets.ZOVRO_APP_STORE_CONNECT_API_PRIVATE_KEY_BASE64 }}
+          ZOVRO_EXTERNAL_TESTER_EMAILS: ${{ secrets.ZOVRO_EXTERNAL_TESTER_EMAILS }}
+        run: node scripts/external-testflight-testers.js
+      - name: Declare action scope
+        if: always()
+        run: |
+          echo "Invited external testers by email to the External Testers group linked to build 395.2. No build was uploaded and no public App Store release was performed." >> "$GITHUB_STEP_SUMMARY"
