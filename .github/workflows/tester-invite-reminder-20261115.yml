@@ -1,0 +1,37 @@
+name: ZOVRO TestFlight Invite Reminder
+
+on:
+  push:
+    branches:
+      - diagnostics/tester-invite-reminder-20261115
+    paths:
+      - '.github/workflows/tester-invite-reminder-20261115.yml'
+      - 'scripts/tester-invite-reminder.js'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  invite-reminder:
+    name: Resend TestFlight invitation to external testers
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Send or resend invitation emails
+        env:
+          ZOVRO_APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.ZOVRO_APP_STORE_CONNECT_API_KEY_ID }}
+          ZOVRO_APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.ZOVRO_APP_STORE_CONNECT_ISSUER_ID }}
+          ZOVRO_APP_STORE_CONNECT_API_PRIVATE_KEY_BASE64: ${{ secrets.ZOVRO_APP_STORE_CONNECT_API_PRIVATE_KEY_BASE64 }}
+          ZOVRO_EXTERNAL_TESTER_EMAILS: ${{ secrets.ZOVRO_EXTERNAL_TESTER_EMAILS }}
+        run: node scripts/tester-invite-reminder.js
+      - name: Declare action scope
+        if: always()
+        run: |
+          echo "Sent or resent TestFlight invitation emails to the external testers. No build was uploaded and no public App Store release was performed." >> "$GITHUB_STEP_SUMMARY"
