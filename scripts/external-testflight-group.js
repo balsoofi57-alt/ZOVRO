@@ -70,10 +70,24 @@ async function addExternalGroup({ env = process.env, fetchImpl = globalThis.fetc
     throw new Error('TARGET_BUILD_NOT_FOUND: No VALID build ' + TARGET_BUILD + ' for ' + BUNDLE + '.');
   }
 
-  const linked = await call('POST', '/betaGroups/' + encodeURIComponent(group.id) + '/builds', {
-    data: [{ type: 'builds', id: build.id }]
-  });
-  
+  let linkPath = null;
+  let linkError = null;
+  for (const [path, body] of [
+    ['/builds/' + encodeURIComponent(build.id) + '/relationships/betaGroups',
+      { data: [{ type: 'betaGroups', id: group.id }] }],
+    ['/betaGroups/' + encodeURIComponent(group.id) + '/builds',
+      { data: [{ type: 'builds', id: build.id }] }]
+  ]) {
+    try {
+      await call('POST', path, body);
+      linkPath = path;
+      linkError = null;
+      break;
+    } catch (error) {
+      linkError = error;
+    }
+  }
+  if (!linkPath) throw linkError;
 
   return {
     bundleId: BUNDLE,
@@ -91,6 +105,7 @@ async function addExternalGroup({ env = process.env, fetchImpl = globalThis.fetc
       expired: Boolean(build.attributes?.expired)
     },
     linked: true,
+    linkedVia: linkPath,
     note: 'Build linked to the external group. Apple runs Beta App Review before external testers receive it. No testers were added and no public link was enabled by this action.'
   };
 }
