@@ -26,17 +26,22 @@ async function addExternalGroup({ env = process.env, fetchImpl = globalThis.fetc
   const call = async (method, path, body) => {
     const response = await request(fetchImpl, jwt, method, path, body);
     const payload = await response.json().catch(() => ({}));
-    if (!response.ok) return { ok: false, status: response.status, payload };
+    if (!response.ok) {
+      const base = apiFailure(response.status, payload);
+      const wrapped = new Error(method + ' ' + path + ' -> ' + base.message);
+      wrapped.cause = base;
+      throw wrapped;
+    }
     return { ok: true, status: response.status, payload };
   };
 
   const apps = await call('GET', '/apps?filter%5BbundleId%5D=' + encodeURIComponent(BUNDLE) + '&limit=5');
-  if (!apps.ok) throw apiFailure(apps.status, apps.payload);
+  
   const app = (apps.payload.data || []).find(a => a.attributes?.bundleId === BUNDLE);
   if (!app?.id) throw new Error('APPLE_APP_NOT_FOUND: No App Store Connect ZOVRO app record.');
 
   const groups = await call('GET', '/betaGroups?filter%5Bapp%5D=' + encodeURIComponent(app.id) + '&limit=100');
-  if (!groups.ok) throw apiFailure(groups.status, groups.payload);
+  
   const existing = (groups.payload.data || []).find(
     g => g.attributes?.name === GROUP_NAME && g.attributes?.isInternalGroup === false
   );
@@ -51,13 +56,13 @@ async function addExternalGroup({ env = process.env, fetchImpl = globalThis.fetc
         relationships: { app: { data: { type: 'apps', id: app.id } } }
       }
     });
-    if (!created.ok) throw apiFailure(created.status, created.payload);
+    
     group = created.payload.data;
     groupAction = 'created';
   }
 
   const builds = await call('GET', '/apps/' + encodeURIComponent(app.id) + '/builds?limit=100');
-  if (!builds.ok) throw apiFailure(builds.status, builds.payload);
+  
   const build = (builds.payload.data || []).find(
     b => b.attributes?.version === TARGET_BUILD && b.attributes?.processingState === 'VALID'
   );
@@ -68,7 +73,7 @@ async function addExternalGroup({ env = process.env, fetchImpl = globalThis.fetc
   const linked = await call('POST', '/betaGroups/' + encodeURIComponent(group.id) + '/builds', {
     data: [{ type: 'builds', id: build.id }]
   });
-  if (!linked.ok) throw apiFailure(linked.status, linked.payload);
+  
 
   return {
     bundleId: BUNDLE,
