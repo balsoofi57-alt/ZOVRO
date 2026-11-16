@@ -244,8 +244,12 @@
     activeCard.replaceChildren();
     activeCard.hidden=!item;
     if(item){
-      activeCard.append(make('strong','','Current request'),
-        make('p','',String(item.service||'Service')+' · '+String(item.status||'Pending')));
+      const rawStatus=String(item.status||'Pending');
+      const stages={Pending:{label:'Request sent',hint:'Waiting for a professional to accept.'},Accepted:{label:'Professional assigned',hint:'Open your request for provider details.'},'In Progress':{label:'Service in progress',hint:'Check your request for the latest updates.'},EnRoute:{label:'Professional on the way',hint:'Open your request for arrival details.'},'On The Way':{label:'Professional on the way',hint:'Open your request for arrival details.'}};
+      const stage=stages[rawStatus]||{label:rawStatus,hint:'View your request for details.'};
+      const heading=make('div','z-home-active-heading');
+      heading.append(make('strong','','Current request'),make('span','z-home-active-status',stage.label));
+      activeCard.append(heading,make('p','',String(item.service||'Service')),make('small','z-home-active-hint',stage.hint));
       const go=make('button','z-home-track','View request');
       go.type='button';go.onclick=requestNav;activeCard.appendChild(go);
     }

@@ -24,6 +24,8 @@ assert.match(client,/recognition\.onresult/,'Speech transcript becomes editable 
 assert.match(client,/again\.onclick=\(\)=>draft\(\{service:last\.service\}\)/,'Rebook opens a new draft without reusing private history');
 assert.match(client,/j\.status==='Completed'/,'Rebooking shows only completed services');
 assert.match(client,/go\.onclick=requestNav/,'Active request provides direct navigation');
+assert.match(client,/const stages=\{Pending:/,'Request summary describes actual known states');
+assert.match(client,/View your request for details/,'Unknown statuses fall back safely without fake arrival time');
 assert.match(css,/\.z-home-rebook-card\[hidden\]/,'Rebooking is not displayed before user-specific data exists');
 assert.match(css,/\.z-home-voice/,'Voice button is styled only when supported');
 
