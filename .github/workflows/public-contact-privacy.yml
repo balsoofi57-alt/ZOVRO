@@ -1,0 +1,31 @@
+name: Public contact privacy guardrail
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'backend/static-assets.js'
+      - 'scripts/check-public-contact-privacy.js'
+      - 'support.html'
+      - 'privacy.html'
+      - 'delete-account.html'
+      - 'store/listing.en-US.json'
+      - 'store/brand/email-signature.html'
+      - '.github/workflows/public-contact-privacy.yml'
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  public-contact-privacy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify public support contact and private-mailbox exclusion
+        run: node scripts/check-public-contact-privacy.js
