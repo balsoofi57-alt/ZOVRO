@@ -35,7 +35,8 @@ assert.match(client,/call\('api','\/notifications\/read',\{method:'POST'/,'Mark 
 assert.match(css,/nav\.bottom\.z-simple-nav\.z-home-bottom-nav/,'Mobile bottom tabs override old hidden CSS');
 assert.match(css,/grid-template-columns:repeat\(4,minmax\(0,1fr\)\)/,'Exactly four bottom destinations');
 assert.match(css,/#zHomeTools #zStartRequest/,'Urgent button is visible and high contrast');
-assert.match(website,/if\(permission\.state!=='granted'\)return/,'Opening the home page cannot newly prompt for location');
+assert.match(website,/if\(permission\.state!=='granted'\)\{stopWatch\(\);return\}/,'Opening home cannot newly prompt for GPS; automatic city watch requires prior permission');
+assert.match(website,/if\(document\.visibilityState==='hidden'\)\{stopWatch\(\);return\}/,'City tracking pauses while the app is not visible');
 
 let callback;
 vm.runInNewContext(client,{document:{readyState:'loading',addEventListener:(event,fn)=>{if(event==='DOMContentLoaded')callback=fn}}});
