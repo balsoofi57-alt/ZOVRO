@@ -160,7 +160,7 @@ function gpsRead(options){return new Promise((resolve,reject)=>{
 })}
 async function geo({maxAccuracy=Infinity}={}){
  window.__zovroGeoDiagnostic={secureContext:window.isSecureContext,geolocationSupported:'geolocation' in navigator,startedAt:new Date().toISOString()};
- const attempts=[{enableHighAccuracy:false,timeout:8000,maximumAge:30000},{enableHighAccuracy:true,timeout:15000,maximumAge:0}];let lastError=null;
+ const attempts=[{enableHighAccuracy:true,timeout:15000,maximumAge:0},{enableHighAccuracy:true,timeout:20000,maximumAge:0}];let lastError=null;
  for(let i=0;i<attempts.length;i++){try{
   const loc=await gpsRead(attempts[i]);
   if(Number.isFinite(maxAccuracy)&&(!Number.isFinite(loc.accuracy)||loc.accuracy>maxAccuracy))throw Object.assign(new Error('Your location is not precise enough. Enable Precise Location and try again.'),{code:2,reason:'imprecise-position'});
@@ -192,7 +192,7 @@ async function detectRequestLocation(showToast=false){
  status.hidden=false;status.value='Finding your current location…';help.textContent='Allow location access when prompted. Keep this screen open.';
  button.disabled=true;button.textContent='Locating…';
  requestLocationPromise=(async()=>{try{
-  const loc=await geo({maxAccuracy:1000});if(!current())return null;
+  const loc=await geo({maxAccuracy:100});if(!current())return null;
   requestLocation=loc;requestLocationMode='gps';
   // Clearing the previous address is intentional: GPS is now the selected origin.
   // Entering any address again switches safely back to manual mode.
@@ -204,7 +204,7 @@ async function detectRequestLocation(showToast=false){
   if(showToast)toast('✓ Location ready');return loc;
  }catch(error){if(!current())return null;
   const reason=gpsErrorReason(error);requestLocationMode='manual';status.value='Location unavailable — type an address instead';
-  help.textContent=reason==='permission-denied'?'Allow location for this site in your browser settings and enable device Location Services. If you opened ZOVRO inside another app, open zovro.work directly in Safari or Chrome, then try again.':reason==='insecure-context'?'Open https://zovro.work to share your location.':reason==='imprecise-position'?'Location is too approximate. Enable Precise Location, move to a clearer signal, then try again.':reason==='timeout'?'Finding your location timed out. Try again with a clearer signal, or enter your complete address below.':'Location could not be determined. Check device Location Services, or enter your complete address below.';
+  help.textContent=reason==='permission-denied'?'Allow location for this site in your browser settings and enable device Location Services. If you opened ZOVRO inside another app, open zovro.work directly in Safari or Chrome, then try again.':reason==='insecure-context'?'Open https://zovro.work to share your location.':reason==='imprecise-position'?'GPS accuracy is over 100 meters, so the location was not accepted. On iPhone, enable Settings > Privacy & Security > Location Services > Safari Websites (or ZOVRO) > Precise Location. Move outdoors and retry, or enter the exact address.':reason==='timeout'?'Finding your location timed out. Try again with a clearer signal, or enter your complete address below.':'Location could not be determined. Check device Location Services, or enter your complete address below.';
   if(showToast)toast('Location unavailable — see the instructions below');return null;
  }finally{if(current()){requestLocationBusy=false;requestLocationPromise=null;button.disabled=false;button.textContent=requestLocationMode==='gps'?'Refresh GPS':'Use My Location'}}})();
  return requestLocationPromise;
