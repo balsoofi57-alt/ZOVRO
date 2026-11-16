@@ -197,3 +197,107 @@ body.z-inner-standalone :is(a,button,input):focus-visible {
   outline: 3px solid #198f96 !important;
   outline-offset: 2px;
 }
+
+/* Approved ZOVRO metallic-blue / pearl-silver visual system, 2026-11-16.
+   Includes Home and all secondary views; leaves urgent/danger semantics intact. */
+:root {
+  --z-metal-navy:#082b55;
+  --z-metal-blue:#1266a8;
+  --z-metal-sky:#278cc5;
+  --z-metal-pearl:#f4f9fd;
+  --z-metal-silver:#dbe9f4;
+  --z-metal-aqua:#0caaa9;
+  --z-metal-ink:#102b4b;
+  --z-inner-pearl:#e5f2fb;
+  --z-inner-mist:#dbe9f4;
+  --z-inner-accent:#0caaa9;
+  --z-inner-deep:#087b88;
+  --z-inner-ink:#102b4b;
+  --z-inner-stroke:#a4c3d8;
+}
+body,
+body:has(#home.hidden),
+body.z-document,
+body.z-inner-standalone {
+  background:linear-gradient(155deg,#0a376b 0%,#1269a6 48%,#318fc2 100%) !important;
+  color:#f8fcff !important;
+}
+.top,body:has(#home.hidden) .top,
+.z-page-modal .z-full-page-header,
+#profile #zMoreMenu>details.z-more-subpage>.z-more-subpage-header,
+body.z-document :is(.z-doc-header,.z-full-page-header),
+body.z-inner-standalone :is(.z-doc-header,.admin-head) {
+  background:linear-gradient(125deg,#062a56 0%,#1269aa 64%,#2aa4d4 100%) !important;
+  border-bottom:1px solid #6ac7e3 !important;
+  color:#fff !important;
+}
+.top :is(.logo,.state),.z-page-sheet .z-full-page-header>h2,
+#profile #zMoreMenu>details.z-more-subpage h2,
+body.z-document :is(h1,.z-doc-title),
+body.z-inner-standalone :is(h1,.z-doc-title) {color:#fff !important}
+#home .hero {
+  background:radial-gradient(ellipse at 85% 10%,rgba(74,196,241,.30),transparent 42%),
+    linear-gradient(125deg,#06294f,#105d9b 65%,#258fc5) !important;
+  border:1px solid rgba(187,231,252,.55) !important;
+}
+#home .hero h1 span,#home .eyebrow {color:#9ff4f2 !important}
+#home :is(.trustItem,.svc,.card,.feature),
+body:has(#home.hidden) :is(#jobs,#nearby,#profile) :is(.card,.feature,.trustItem,.job,.z-home-thread,.z-home-empty,.z-menu-group),
+.z-page-modal :is(.card,.z-service-option,.z-catalog-list button,.z-menu-group,.feature,.z-notification-item),
+body.z-document :is(.card,article,main .panel),
+body.z-inner-standalone :is(.card,article,.admin-row) {
+  background:linear-gradient(145deg,#fff 0%,#eef6fc 56%,#dbe9f4 100%) !important;
+  color:var(--z-metal-ink) !important;
+  border:1px solid #a6c4d9 !important;
+  box-shadow:0 5px 18px rgba(0,26,57,.16) !important;
+}
+#home :is(.sectionHead h2,.sectionHead p),body:has(#home.hidden) .sectionHead,
+body:has(#home.hidden) .sectionHead :is(h2,p) {color:#fff !important}
+#home :is(.svc,.card,.feature,.trustItem) :is(b,strong,h2,h3) {color:#102b4b !important}
+#home :is(.svc,.card,.feature,.trustItem) :is(p,small,span:not(.mark)) {color:#48627a}
+:is(.modal.z-page-modal,.z-private-modal.z-page-modal,#authModal.z-page-modal,#zSilverCatalog.z-page-modal) {
+  background:#082b55 !important;
+}
+:is(.modal.z-page-modal,.z-private-modal.z-page-modal,#authModal.z-page-modal,#zSilverCatalog.z-page-modal)>.z-page-sheet,
+#profile #zMoreMenu>details.z-more-subpage,
+.modal.open:not(.z-page-modal) .sheet {
+  background:linear-gradient(155deg,#0b3c73,#1670ad 60%,#2a8fc2) !important;
+  color:#fff !important;
+}
+.z-page-modal .z-full-page-body,
+.z-page-modal .z-full-page-body :is(h2,h3,h4,label,b,strong),
+.z-page-modal .z-req-step-title b {color:#fff !important}
+.z-page-modal .z-full-page-body :is(.muted,small,.z-req-progress-label),
+.z-page-modal .z-private-note {color:#d9eaf5 !important}
+.z-page-modal :is(input:not([type=checkbox]):not([type=radio]),select,textarea),
+.z-page-modal .z-private-field :is(input,textarea),
+body:has(#home.hidden) :is(#jobs,#nearby,#profile) :is(input,select,textarea),
+body.z-inner-standalone :is(input,select,textarea) {
+  background:#f8fcff !important;color:#102b4b !important;border-color:#a5c9df !important;
+}
+.z-page-modal :is(.btn.primary,.primary,.btn.z-next,#zReqNext),
+.z-page-modal .z-req-step-num,
+#home .btn.primary,body .btn.primary:not(.danger) {
+  background:linear-gradient(135deg,#22d5d1,#087c91) !important;
+  color:#fff !important;border:1px solid #63e4e1 !important;
+}
+body:has(#home.hidden) nav.bottom,nav.bottom.z-home-bottom-nav,nav.bottom {
+  background:linear-gradient(120deg,#eaf5fc,#cbdfee) !important;
+  border-color:#98bcd4 !important;
+}
+nav.bottom button,body:has(#home.hidden) nav.bottom button {color:#294f73 !important}
+nav.bottom button.active,body:has(#home.hidden) nav.bottom button.active {
+  background:#c0e8f0 !important;color:#075c7e !important;
+}
+.z-page-modal .z-full-page-header :is(.z-page-back,.z-page-close),
+body.z-document :is(.z-doc-back,.z-page-back),
+body.z-inner-standalone :is(.z-doc-back,.z-page-back) {
+  background:#d9eef9 !important;color:#0d416d !important;border-color:#85b6d1 !important;
+}
+body.z-document :is(p,li,small),body.z-inner-standalone :is(p,li,small) {color:#eaf4fc !important}
+body.z-document :is(.card,article,main .panel) :is(p,li,small),
+body.z-inner-standalone :is(.card,article,.admin-row) :is(p,li,small) {color:#425e77 !important}
+body.z-document a,body.z-inner-standalone a {color:#48e3dc !important}
+body.z-document :is(.card,article,main .panel) a,
+body.z-inner-standalone :is(.card,article,.admin-row) a {color:#076e87 !important}
+@media(prefers-reduced-motion:reduce){.btn,.svc{transition:none !important}}
