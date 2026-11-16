@@ -72,7 +72,8 @@
     const autoService=!danger&&first?.score>=.96&&first.score-(second?.score||0)>=.12?first.service.label.en:null;
     return {
       warning:danger?'Possible immediate danger: move to safety and call 911 if anyone is at risk. ZOVRO is not an emergency dispatch service.':'',
-      hint,autoService,topName:first?.service?.label?.en||null
+      hint:danger?'Do not rely on ZOVRO for emergency dispatch. Use local emergency services first.':hint,
+      autoService,topName:danger?null:(first?.service?.label?.en||null)
     };
   }
   if(typeof window!=='undefined')window.ZOVRO_REQUEST_GUIDE=problemGuide;
@@ -103,7 +104,7 @@
     const query=searchInput.value.trim();
     results.replaceChildren();
     if(query.length<2){hideSuggestions();return}
-    const guide=problemGuide(query),matches=serviceMatches(query);
+    const guide=problemGuide(query),matches=guide.warning?[]:serviceMatches(query);
     if(guide.warning){
       const warning=make('p','z-home-guide-alert',guide.warning);
       warning.setAttribute('role','alert');results.appendChild(warning);
@@ -118,7 +119,7 @@
         b.onclick=()=>draft({details:query,service:name});
         results.appendChild(b);
       }
-    }else{
+    }else if(!guide.warning){
       results.appendChild(make('p','z-home-guide-empty','No clear match yet. Press Enter to describe the issue and choose a service in the request form.'));
     }
     results.appendChild(make('p','z-home-guide-hint',guide.hint+' Suggestions are not a diagnosis or a provider availability promise.'));
