@@ -27,6 +27,9 @@
     if(locationPanel)locationPanel.hidden=true;
     const toggle=byId('zHomeLocationToggle');if(toggle)toggle.setAttribute('aria-expanded','false');
     if(noticePanel)noticePanel.hidden=true;
+    // Clear notification text and cached account state on logout/account switch.
+    if(noticeList)noticeList.replaceChildren();
+    notifAccount=null;notifLast=0;
     if(bell)bell.dataset.unread='';
     if(threads)threads.replaceChildren();
     if(activeCard){activeCard.hidden=true;activeCard.replaceChildren()}
