@@ -107,10 +107,23 @@ jobs:
             android/app/build/outputs/bundle/release/app-release.aab
             android/app/build/outputs/bundle/release/app-release.aab.sha256
 
-      - name: Upload standalone Play bundle
+      - name: Upload signed Play-ready bundle artifact (GitHub only)
+        if: steps.signing.outputs.available == 'true'
         uses: actions/upload-artifact@v4
         with:
           name: zovro-play-aab
           retention-days: 14
           if-no-files-found: error
           path: android/app/build/outputs/bundle/release/app-release.aab
+
+      - name: Explain release verification scope
+        if: always()
+        env:
+          SIGNING_AVAILABLE: ${{ steps.signing.outputs.available }}
+        run: |
+          echo "This workflow verifies Android builds and stores artifacts in GitHub Actions only; it does not upload to Google Play." >> "$GITHUB_STEP_SUMMARY"
+          if [[ "$SIGNING_AVAILABLE" != "true" ]]; then
+            echo "Signing was unavailable. The release candidate is unsigned and must not be submitted to Google Play." >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "The signed AAB artifact is available in GitHub Actions; Google Play acceptance is a separate step." >> "$GITHUB_STEP_SUMMARY"
+          fi

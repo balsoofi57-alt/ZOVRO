@@ -57,8 +57,24 @@ requireTokens('Android verification workflow', androidVerification, [
   'branches: [main, store-release-prep, zovro-final-deploy]',
   'ZOVRO_ANDROID_KEYSTORE_BASE64',
   'jarsigner -verify',
-  'app-release.aab.sha256'
+  'app-release.aab.sha256',
+  'Signing was unavailable. The release candidate is unsigned',
+  'it does not upload to Google Play'
 ]);
+
+// A GitHub artifact called "Play" must never contain an unsigned release.
+const playArtifact = androidVerification.match(
+  /      - name: Upload signed Play-ready bundle artifact \(GitHub only\)\n([\s\S]*?)(?=\n      - name: |$)/
+);
+if (!playArtifact) {
+  fail('Android verification must have a signed-only Google Play-ready artifact step');
+} else {
+  requireTokens('Android signed-only artifact step', playArtifact[1], [
+    "if: steps.signing.outputs.available == 'true'",
+    'uses: actions/upload-artifact@v4',
+    'name: zovro-play-aab'
+  ]);
+}
 
 requireTokens('iOS workflow', ios, [
   'branches: [main, store-release-prep, zovro-final-deploy]',
