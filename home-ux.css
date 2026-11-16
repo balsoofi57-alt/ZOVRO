@@ -105,3 +105,8 @@ body.z-silver-layout .top .z-notification-bell:focus-visible{outline:3px solid #
 #zHomeTools .z-home-rebook-copy strong{font-size:13px;line-height:1.35;overflow-wrap:anywhere}
 #zHomeTools .z-home-rebook-action{flex:none;min-height:44px;border-radius:10px;background:#e5c881;border:1px solid #d4b166;color:#1d3047;padding:9px 13px;font-size:13px;font-weight:800}
 @media(prefers-reduced-motion:reduce){#zHomeTools *{scroll-behavior:auto!important;animation-duration:0.01ms!important;transition-duration:0.01ms!important}}
+
+/* Real request status clarity: status is informational, never a fabricated ETA. */
+#zHomeTools .z-home-active-heading{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:7px 12px;width:100%}
+#zHomeTools .z-home-active-status{font-size:12px;font-weight:750;color:#203a54;background:#d7e6f2;border-radius:999px;padding:5px 10px}
+#zHomeTools .z-home-active-hint{font-size:12px;line-height:1.45;color:#d0e0ec;flex:1 1 100%}
