@@ -1,0 +1,40 @@
+name: ZOVRO TestFlight Processing Read-Only Check
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - '.github/release-status/**'
+      - '.github/workflows/testflight-processing-status.yml'
+  push:
+    branches: [main]
+    paths:
+      - '.github/release-status/**'
+      - '.github/workflows/testflight-processing-status.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  inspect-apple-builds:
+    name: Inspect Apple build processing without changing account state
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Test read-only status inspection against synthetic data
+        run: node --test .github/release-status/apple-testflight-status.test.js
+      - name: Read Apple build processing state
+        if: github.event_name != 'pull_request'
+        env:
+          ZOVRO_APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.ZOVRO_APP_STORE_CONNECT_API_KEY_ID }}
+          ZOVRO_APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.ZOVRO_APP_STORE_CONNECT_ISSUER_ID }}
+          ZOVRO_APP_STORE_CONNECT_API_PRIVATE_KEY_BASE64: ${{ secrets.ZOVRO_APP_STORE_CONNECT_API_PRIVATE_KEY_BASE64 }}
+        run: node .github/release-status/apple-testflight-status.js
+      - name: Distinguish uploaded builds from available TestFlight tests
+        if: always()
+        run: echo "Build processing status alone does not confirm a TestFlight build is assigned to internal testers." >> "$GITHUB_STEP_SUMMARY"
