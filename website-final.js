@@ -861,58 +861,93 @@
     const requestLocation=document.getElementById('zLocationShortcut');
     if(requestLocation)requestLocation.textContent='Use location for a request  ›';
     const name=city.querySelector('b'),caption=city.querySelector('small');
-    let busy=false,lastAttempt=0;
+    let busy=false,lastAttempt=0,lastFix=null,watchId=null,lastCity='',lastCityAt=0;
     function setCity(text,message){
       name.textContent=text;live.textContent=message;city.setAttribute('aria-label',message);city.title=message;
       logo.title=message;logo.setAttribute('aria-label','ZOVRO location. '+message);
     }
+    function distanceMeters(a,b){
+      const rad=Math.PI/180,dLat=(b.lat-a.lat)*rad,dLng=(b.lng-a.lng)*rad;
+      const x=Math.sin(dLat/2)**2+Math.cos(a.lat*rad)*Math.cos(b.lat*rad)*Math.sin(dLng/2)**2;
+      return 12742000*Math.atan2(Math.sqrt(x),Math.sqrt(1-x));
+    }
+    async function reverseCity(position){
+      const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),9000);
+      try{
+        const params=new URLSearchParams({latitude:String(position.lat),longitude:String(position.lng),localityLanguage:'en'});
+        const response=await fetch('https://api.bigdatacloud.net/data/reverse-geocode-client?'+params,{credentials:'omit',referrerPolicy:'no-referrer',cache:'no-store',signal:controller.signal});
+        if(!response.ok)throw new Error('Primary city lookup failed');
+        const data=await response.json();
+        if(data.lookupSource&&data.lookupSource!=='reverseGeocoding')throw new Error('City lookup is approximate');
+        const cityName=String(data.city||data.locality||'').trim();
+        if(!cityName)throw new Error('City name missing');
+        return cityName;
+      }catch(primaryError){
+        // Independent fallback when the primary reverse-geocoding provider is unavailable.
+        const params=new URLSearchParams({f:'json',location:position.lng+','+position.lat,outFields:'*'});
+        const response=await fetch('https://geocode.arcgis.com/arcgis/rest/services/World/GeocodeServer/reverseGeocode?'+params,{credentials:'omit',referrerPolicy:'no-referrer',cache:'no-store',signal:controller.signal});
+        if(!response.ok)throw primaryError;
+        const data=await response.json();
+        const cityName=String(data.address?.City||data.address?.Subregion||'').trim();
+        if(!cityName)throw primaryError;
+        return cityName;
+      }finally{clearTimeout(timer)}
+    }
+    async function applyPosition(position,interactive=false){
+      if(busy||document.visibilityState==='hidden')return;
+      if(!Number.isFinite(position?.lat)||!Number.isFinite(position?.lng))return;
+      // City detection does not require street-level GPS. Ignore very coarse fixes.
+      if(!Number.isFinite(position.accuracy)||position.accuracy>2000)return;
+      if(lastFix&&distanceMeters(lastFix,position)<750&&Date.now()-lastCityAt<300000)return;
+      busy=true;lastAttempt=Date.now();city.setAttribute('aria-busy','true');
+      if(!lastCity)setCity('Finding city…','Looking up your current city.');
+      try{
+        const result=await reverseCity(position);
+        if(document.visibilityState==='hidden')return;
+        lastFix=position;lastCity=result;lastCityAt=Date.now();
+        caption.textContent='Current city';
+        setCity(result.slice(0,120),'Current city: '+result+'. Updated automatically as you travel.');
+        if(interactive)window.toast?.('Current city: '+result.slice(0,120));
+      }catch(error){
+        if(!lastCity)setCity('City unavailable','City lookup could not finish. Tap to retry or enter a service address.');
+        if(interactive)window.toast?.('City lookup could not finish. Check internet access and try again.');
+      }finally{busy=false;city.setAttribute('aria-busy','false')}
+    }
     async function detect(interactive=false){
       if(busy)return;
       if(!navigator.geolocation||!window.isSecureContext){
-        setCity('Location unavailable','Device location requires a supported browser and HTTPS. You can still type a service address.');
-        if(interactive)window.toast?.('Location is unavailable. You can still enter your service address manually.');return;
+        setCity('Location unavailable','Device location requires HTTPS and location permission.');return;
       }
-      busy=true;lastAttempt=Date.now();city.disabled=true;logo.disabled=true;city.setAttribute('aria-busy','true');
-      caption.textContent='Current city';setCity('Locating…','Finding your city using device location and BigDataCloud.');
       try{
-        const position=await window.gpsRead({enableHighAccuracy:false,maximumAge:0,timeout:10000});
-        const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),8000);
-        let result;
-        try{
-          const url='https://api.bigdatacloud.net/data/reverse-geocode-client?'+new URLSearchParams({latitude:String(position.lat),longitude:String(position.lng),localityLanguage:'en'});
-          const response=await fetch(url,{credentials:'omit',referrerPolicy:'no-referrer',cache:'no-store',signal:controller.signal});
-          if(!response.ok)throw new Error('City lookup unavailable');
-          result=await response.json();
-        }finally{clearTimeout(timer)}
-        if(result.lookupSource&&result.lookupSource!=='reverseGeocoding')throw new Error('Precise city lookup unavailable');
-        const text=String(result.city||result.locality||'').trim();
-        if(!text)throw new Error('City name unavailable');
-        caption.textContent=result.city?'Current city':'Current area';
-        setCity(text.slice(0,120),'Current '+(result.city?'city':'area')+': '+text+'. Tap to refresh device location. City lookup by BigDataCloud.');
-        if(interactive)window.toast?.('Current '+(result.city?'city':'area')+': '+text.slice(0,120));
+        const position=await window.gpsRead({enableHighAccuracy:false,maximumAge:15000,timeout:12000});
+        await applyPosition(position,interactive);
       }catch(error){
-        const denied=Number(error?.code)===1;
-        setCity(denied?'Enable location':'Try location again',denied?'Allow location in browser or device settings to display your city.':'Your city could not be determined. Tap to retry. Manual service addresses still work.');
-        if(interactive)window.toast?.(denied?'Allow location in your browser or device settings, then tap the logo again.':'City lookup could not finish. Check location and internet access, then try again.');
-      }finally{busy=false;city.disabled=false;logo.disabled=false;city.setAttribute('aria-busy','false')}
+        if(!lastCity)setCity(Number(error?.code)===1?'Enable location':'GPS unavailable','Allow location access or enter your service address manually.');
+        if(interactive)window.toast?.('Location unavailable. Check location permission.');
+      }
     }
     logo.onclick=city.onclick=()=>detect(true);
-    // The browser's own permission prompt controls initial access. Do not bypass denial.
+    function stopWatch(){if(watchId!==null&&navigator.geolocation){navigator.geolocation.clearWatch(watchId);watchId=null}}
     async function automatic(){
+      if(document.visibilityState==='hidden'){stopWatch();return}
       try{
-        if(navigator.permissions?.query){
-          const permission=await navigator.permissions.query({name:'geolocation'});
-          if(permission.state==='denied'){setCity('Enable location','Allow location in browser or device settings to display your city.');return}
-          // Opening the Home screen must not prompt for device location.
-          // Refresh silently only if the user has already granted access.
-          if(permission.state!=='granted')return;
-        }else return;
+        if(!navigator.permissions?.query)return;
+        const permission=await navigator.permissions.query({name:'geolocation'});
+        if(permission.state==='denied'){stopWatch();setCity('Enable location','Allow location in browser settings to display your city.');return}
+        if(permission.state!=='granted'){stopWatch();return}
       }catch(_){return}
-      detect();
+      if(watchId===null&&navigator.geolocation){
+        // Only monitor while ZOVRO is visible and permission is already granted.
+        watchId=navigator.geolocation.watchPosition(
+          p=>applyPosition({lat:p.coords.latitude,lng:p.coords.longitude,accuracy:p.coords.accuracy}),
+          ()=>{if(!lastCity)setCity('GPS unavailable','Unable to update city. Tap to retry or enter an address.')},
+          {enableHighAccuracy:false,maximumAge:15000,timeout:20000}
+        );
+      }
+      if(Date.now()-lastAttempt>60000)detect();
     }
-    document.addEventListener('visibilitychange',()=>{
-      if(document.visibilityState==='visible'&&Date.now()-lastAttempt>300000)automatic();
-    });
+    document.addEventListener('visibilitychange',automatic);
+    window.addEventListener('pagehide',stopWatch);
     automatic();
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
