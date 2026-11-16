@@ -40,6 +40,6 @@ assert.equal(battery.warning,'','Routine vehicle help must not trigger an emerge
 assert.match(guide('I smell gas; there may be a gas leak').warning,/911/,'Dangerous gas situations show clear 911 guidance');
 assert.match(guide('water flooding near an electrical outlet').warning,/911/,'Potential electrical danger is flagged');
 assert.equal(guide('something seems wrong').autoService,null,'Ambiguous problems must not force a service choice');
-assert.match(client,/draft\\(\\{details:q,service:guide\\.autoService\\|\\|undefined\\}\\)/,'Prefill only inside the existing reviewable request draft');
-assert.match(css,/\\.z-home-guide-alert/,'Emergency guidance must be legible in the locked design');
+assert.ok(client.includes("draft({details:q,service:guide.autoService||undefined})"),'Prefill only inside the existing reviewable request draft');
+assert.ok(css.includes('.z-home-guide-alert'),'Emergency guidance must be legible in the locked design');
 console.log('Home UX and local request guide: explainable matching, emergency guidance, user review, opt-in GPS, chat, notifications and native parity PASS');
