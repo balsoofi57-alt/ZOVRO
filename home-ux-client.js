@@ -175,6 +175,8 @@
     toggle.onclick=()=>{locationPanel.hidden=!locationPanel.hidden;toggle.setAttribute('aria-expanded',String(!locationPanel.hidden))};
     gps.onclick=()=>{
       customerLocation.mode='gps';customerLocation.manual='';
+      // Clear the previous manual address when switching back to GPS.
+      manual.value='';status.textContent='';
       setLocation('Finding your city…');
       status.textContent='Allow location access if prompted. We will confirm GPS again when you create a request.';
       const legacyCity=byId('zHeaderCity');
@@ -185,6 +187,7 @@
       const value=manual.value.trim();
       if(value.length<8){status.textContent='Please enter a full street address and city.';manual.focus();return}
       customerLocation.mode='manual';customerLocation.manual=value;
+      // A manually entered service address overrides a prior GPS choice.
       setLocation(value);status.textContent='Address saved for your next request on this screen.';
       locationPanel.hidden=true;toggle.setAttribute('aria-expanded','false');
     };
