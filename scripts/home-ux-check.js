@@ -34,6 +34,8 @@ assert.match(client,/setAttribute\('onclick',"nav\('"/,'New bottom tabs should r
 assert.match(client,/originalNav\(messages\?'jobs':id,b\)/,'Messages view derives from authenticated Requests');
 assert.match(client,/call\('openChat',j.id\)/,'Messages must reuse per-job chat');
 assert.match(client,/call\('api','\/notifications'\)/,'Bell must read real notifications');
+assert.match(client,/if\(noticeList\)noticeList\.replaceChildren\(\)/,'Account switch clears cached private notification text');
+assert.match(client,/notifAccount=null;notifLast=0/,'Account switch resets notification polling cache');
 assert.match(client,/call\('api','\/notifications\/read',\{method:'POST'/,'Mark read should use existing API');
 assert.match(css,/nav\.bottom\.z-simple-nav\.z-home-bottom-nav/,'Mobile bottom tabs override old hidden CSS');
 assert.match(css,/grid-template-columns:repeat\(4,minmax\(0,1fr\)\)/,'Exactly four bottom destinations');
