@@ -30,9 +30,11 @@
     if(bell)bell.dataset.unread='';
     if(threads)threads.replaceChildren();
     if(activeCard){activeCard.hidden=true;activeCard.replaceChildren()}
+    if(rebookCard){rebookCard.hidden=true;rebookCard.replaceChildren()}
+    if(searchFeedback)searchFeedback.textContent='';
   }
   let inMessages=false,notifyBusy=false,notifAccount=null,notifLast=0;
-  let searchInput,results,locationTitle,locationPanel,activeCard,threads,noticePanel,noticeList,bell;
+  let searchInput,results,searchFeedback,locationTitle,locationPanel,activeCard,rebookCard,threads,noticePanel,noticeList,bell;
   const tabs=()=>[...document.querySelectorAll('nav.bottom button')];
   const requestNav=()=>tabs()[1]?.click();
   const call=(name,...args)=>typeof window[name]==='function'?window[name](...args):undefined;
@@ -50,23 +52,32 @@
     if(searchInput)searchInput.blur();
     hideSuggestions();
   }
+  // Local service matching: a suggestion, not a confirmed diagnosis or an AI API call.
   function serviceMatches(query){
     const q=String(query||'').trim().toLowerCase();
     if(q.length<2)return [];
     const catalog=window.ZOVRO_CATALOG;
     const all=(catalog?.SERVICE_CATALOG||[]).flatMap(g=>g.services||[]);
-    const names=new Set();
-    const ranked=[];
-    function include(label){
-      if(typeof label!=='string'||!label.trim()||names.has(label))return;
-      names.add(label);ranked.push(label);
+    const matches=new Map();
+    function add(name,score){
+      if(typeof name!=='string'||!name.trim()||name==='Other / I Need Help')return;
+      const prior=matches.get(name);
+      if(!prior||prior.score<score)matches.set(name,{name,score});
     }
-    const matching=all.filter(s=>String(s.label?.en||'').toLowerCase().includes(q));
-    matching.slice(0,5).forEach(s=>include(s.label.en));
-    let semantic=[];
-    try{semantic=typeof catalog?.smartMatch==='function'?catalog.smartMatch(query,{limit:5}):[]}catch{}
-    (Array.isArray(semantic)?semantic:[]).filter(x=>x?.score>=.43).forEach(x=>include(x.service?.label?.en));
-    return ranked.slice(0,5);
+    for(const service of all){
+      const name=String(service.label?.en||'');
+      const normalized=name.toLowerCase();
+      if(normalized===q)add(name,1);
+      else if(normalized.startsWith(q))add(name,.9);
+      else if(normalized.includes(q))add(name,.76);
+    }
+    try{
+      const suggested=typeof catalog?.smartMatch==='function'?catalog.smartMatch(query,{limit:8}):[];
+      for(const item of Array.isArray(suggested)?suggested:[]){
+        if(item?.score>=.48)add(item.service?.label?.en,item.score);
+      }
+    }catch{}
+    return [...matches.values()].sort((a,b)=>b.score-a.score||a.name.localeCompare(b.name)).slice(0,5);
   }
   function hideSuggestions(){
     if(results){results.replaceChildren();results.hidden=true}
@@ -75,14 +86,44 @@
   function suggest(){
     if(!results||!searchInput)return;
     results.replaceChildren();
-    for(const name of serviceMatches(searchInput.value)){
-      const b=make('button','z-home-result',name);
-      b.type='button';b.setAttribute('role','option');
-      b.onclick=()=>draft({details:searchInput.value.trim(),service:name});
+    if(searchFeedback)searchFeedback.textContent='';
+    for(const match of serviceMatches(searchInput.value)){
+      const b=make('button','z-home-result');b.type='button';
+      b.setAttribute('role','option');b.setAttribute('aria-label','Choose '+match.name);
+      b.append(make('strong','',match.name));
+      if(match.score>=.88)b.append(make('small','','Suggested for your description'));
+      b.onclick=()=>draft({details:searchInput.value.trim(),service:match.name});
       results.appendChild(b);
     }
     results.hidden=!results.children.length;
     searchInput.setAttribute('aria-expanded',String(!results.hidden));
+  }
+  function submitSearch(){
+    const q=searchInput?.value.trim();if(!q)return;
+    const matches=serviceMatches(q),top=matches[0],second=matches[1];
+    // Only preselect a service when the match is strong and unambiguous.
+    // Otherwise let the customer choose inside the existing request form.
+    const confident=top&&top.score>=.88&&(!second||top.score-second.score>=.10);
+    draft({details:q,service:confident?top.name:undefined});
+  }
+  function beginVoice(){
+    const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+    if(!SR)return;
+    let recognition;
+    try{
+      recognition=new SR();
+      recognition.lang='en-US';recognition.interimResults=false;
+      recognition.maxAlternatives=1;
+      if(searchFeedback)searchFeedback.textContent='Listening… Speak naturally.';
+      recognition.onresult=event=>{
+        const text=event.results?.[0]?.[0]?.transcript?.trim()||'';
+        if(text&&searchInput){searchInput.value=text;suggest();searchInput.focus()}
+        if(searchFeedback)searchFeedback.textContent=text?'Review the suggestions, then choose a service.':'No speech heard. Try typing instead.';
+      };
+      recognition.onerror=()=>{if(searchFeedback)searchFeedback.textContent='Voice input unavailable. You can still type your problem.'};
+      recognition.onend=()=>{if(searchFeedback?.textContent==='Listening… Speak naturally.')searchFeedback.textContent='No speech heard. Try typing instead.'};
+      recognition.start();
+    }catch{if(searchFeedback)searchFeedback.textContent='Voice input unavailable. You can still type your problem.'}
   }
   function setupSearch(parent){
     const row=make('form','z-home-search');
@@ -92,15 +133,24 @@
     const field=make('div','z-home-search-field');
     const symbol=make('span','z-home-search-symbol');symbol.innerHTML=svg('search');
     searchInput=make('input');searchInput.type='search';searchInput.id='zHomeSearch';
-    searchInput.placeholder='Search a service or describe the problem';
+    searchInput.placeholder='What do you need help with?';
     searchInput.autocomplete='off';searchInput.maxLength=240;
     searchInput.setAttribute('aria-controls','zHomeSearchResults');
     searchInput.setAttribute('aria-expanded','false');
+    searchInput.setAttribute('aria-autocomplete','list');
     searchInput.oninput=suggest;
+    searchInput.onkeydown=e=>{if(e.key==='Escape')hideSuggestions()};
     field.append(symbol,searchInput);
+    if(window.SpeechRecognition||window.webkitSpeechRecognition){
+      const voice=make('button','z-home-voice','🎙');
+      voice.type='button';voice.id='zHomeVoice';
+      voice.setAttribute('aria-label','Describe your problem by voice');
+      voice.title='Voice search';voice.onclick=beginVoice;field.appendChild(voice);
+    }
     results=make('div','z-home-search-results');results.id='zHomeSearchResults';results.hidden=true;results.setAttribute('role','listbox');
-    row.append(label,field,results);
-    row.onsubmit=e=>{e.preventDefault();const q=searchInput.value.trim();if(q)draft({details:q})};
+    searchFeedback=make('p','z-home-search-feedback');searchFeedback.setAttribute('role','status');searchFeedback.setAttribute('aria-live','polite');
+    row.append(label,field,results,searchFeedback);
+    row.onsubmit=e=>{e.preventDefault();submitSearch()};
     parent.appendChild(row);
   }
   function setLocation(text){if(locationTitle)locationTitle.textContent=text}
@@ -169,6 +219,8 @@
     wrap.appendChild(urgent);
     activeCard=make('section','z-home-active-card');activeCard.id='zHomeActiveRequest';activeCard.hidden=true;
     activeCard.setAttribute('role','status');activeCard.setAttribute('aria-live','polite');wrap.appendChild(activeCard);
+    rebookCard=make('section','z-home-rebook-card');rebookCard.id='zHomeRebook';rebookCard.hidden=true;
+    wrap.appendChild(rebookCard);
     categories.before(wrap);
     // An address selected before authentication must survive the sign-in step.
     const resume=window.resumeRequestIntent;
@@ -188,12 +240,34 @@
     const actor=currentUser();
     const open=actor?.role==='customer'?currentJobs().filter(j=>j.customerId===actor.id&&!['Completed','Cancelled'].includes(j.status)):[];
     open.sort((a,b)=>Date.parse(b.createdAt||0)-Date.parse(a.createdAt||0));
-    const row=open[0];
-    if(!row){activeCard.hidden=true;activeCard.replaceChildren();return}
-    activeCard.hidden=false;activeCard.replaceChildren();
-    const label=make('strong','','Current request');
-    const details=make('p','',String(row.service||'Service')+' · '+String(row.status||'Pending'));
-    activeCard.append(label,details);
+    const item=open[0];
+    activeCard.replaceChildren();
+    activeCard.hidden=!item;
+    if(item){
+      activeCard.append(make('strong','','Current request'),
+        make('p','',String(item.service||'Service')+' · '+String(item.status||'Pending')));
+      const go=make('button','z-home-track','View request');
+      go.type='button';go.onclick=requestNav;activeCard.appendChild(go);
+    }
+    renderRebook();
+  }
+  function renderRebook(){
+    if(!rebookCard)return;
+    const actor=currentUser();
+    const history=actor?.role==='customer'?currentJobs().filter(j=>
+      j.customerId===actor.id&&j.status==='Completed'&&typeof j.service==='string'&&j.service.trim()
+    ):[];
+    history.sort((a,b)=>Date.parse(b.createdAt||0)-Date.parse(a.createdAt||0));
+    const last=history[0];
+    rebookCard.replaceChildren();rebookCard.hidden=!last;
+    if(!last)return;
+    const copy=make('div','z-home-rebook-copy');
+    copy.append(make('small','','Save time next time'),make('strong','',last.service));
+    const again=make('button','z-home-rebook-action','Book again');
+    again.type='button';
+    // Never reuse a previous request's address, description or coordinates.
+    again.onclick=()=>draft({service:last.service});
+    rebookCard.append(copy,again);
   }
   function renderThreads(){
     if(!threads)return;
