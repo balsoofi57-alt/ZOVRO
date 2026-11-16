@@ -1,0 +1,47 @@
+name: ZOVRO Authorized Internal TestFlight Follow-up (Nov 16)
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/authorized-testflight-update-20261116.yml'
+
+permissions:
+  contents: read
+  actions: write
+
+concurrency:
+  group: zovro-authorized-testflight-20261116
+  cancel-in-progress: false
+
+jobs:
+  dispatch-internal-only:
+    name: Check Apple agreement and dispatch signed TestFlight update
+    if: "${{ github.ref == 'refs/heads/main' && startsWith(github.event.head_commit.message, 'ZOVRO: authorized internal TestFlight update 2026-11-16') }}"
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify ZOVRO app access and valid Apple agreements before upload
+        env:
+          ZOVRO_APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.ZOVRO_APP_STORE_CONNECT_API_KEY_ID }}
+          ZOVRO_APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.ZOVRO_APP_STORE_CONNECT_ISSUER_ID }}
+          ZOVRO_APP_STORE_CONNECT_API_PRIVATE_KEY_BASE64: ${{ secrets.ZOVRO_APP_STORE_CONNECT_API_PRIVATE_KEY_BASE64 }}
+        run: node scripts/apple-release-preflight.js
+      - name: Request signed TestFlight upload using protected release workflow
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ZOVRO_RELEASE_PLATFORM: ios
+          ZOVRO_RELEASE_UPLOAD: 'true'
+          GITHUB_REF_NAME: ${{ github.ref_name }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+        run: node scripts/dispatch-internal-update.js
+      - name: Record strictly internal scope
+        if: always()
+        run: |
+          echo "This workflow only dispatches the guarded iOS release with TestFlight upload enabled." >> "$GITHUB_STEP_SUMMARY"
+          echo "It does not submit for public App Store review or change production Android." >> "$GITHUB_STEP_SUMMARY"
+          echo "A successful dispatch is not proof of upload acceptance or tester installation." >> "$GITHUB_STEP_SUMMARY"
