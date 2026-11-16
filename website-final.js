@@ -885,7 +885,7 @@
       }catch(primaryError){
         // Independent fallback when the primary reverse-geocoding provider is unavailable.
         const params=new URLSearchParams({f:'json',location:position.lng+','+position.lat,outFields:'*'});
-        const response=await fetch('https://geocode-api.arcgis.com/arcgis/rest/services/World/GeocodeServer/reverseGeocode?'+params,{credentials:'omit',referrerPolicy:'no-referrer',cache:'no-store',signal:controller.signal});
+        const response=await fetch('https://geocode.arcgis.com/arcgis/rest/services/World/GeocodeServer/reverseGeocode?'+params,{credentials:'omit',referrerPolicy:'no-referrer',cache:'no-store',signal:controller.signal});
         if(!response.ok)throw primaryError;
         const data=await response.json();
         const cityName=String(data.address?.City||data.address?.Subregion||'').trim();
