@@ -145,7 +145,7 @@
       const update=()=>{
         if(customerLocation.mode!=='gps')return;
         const v=city.textContent.trim();
-        if(v&&!/locating|enable location|try location|unavailable/i.test(v))setLocation(v);
+        if(v&&!/locating|finding city|enable location|try location|unavailable/i.test(v))setLocation(v);
         else if(/try location|unavailable|enable location/i.test(v))setLocation('GPS unavailable — enter an address');
       };
       new MutationObserver(update).observe(city,{childList:true,characterData:true,subtree:true});
