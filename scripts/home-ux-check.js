@@ -28,6 +28,18 @@ assert.match(css,/#zHomeTools #zStartRequest/,'Urgent button is visible and high
 assert.match(website,/if\(permission\.state!=='granted'\)return/,'Opening the home page cannot newly prompt for location');
 
 let callback;
-vm.runInNewContext(client,{document:{readyState:'loading',addEventListener:(event,fn)=>{if(event==='DOMContentLoaded')callback=fn}}});
+const context={window:{ZOVRO_CATALOG:require('../src/service-catalog.js')},document:{readyState:'loading',addEventListener:(event,fn)=>{if(event==='DOMContentLoaded')callback=fn}}};
+vm.runInNewContext(client,context);
 assert.equal(typeof callback,'function','Home integration boot should defer until the DOM is ready');
-console.log('Home UX integration: unique Help Now, Smart Match, opt-in location, chat, notifications, mobile tabs and native asset parity PASS');
+const guide=context.window.ZOVRO_REQUEST_GUIDE;
+assert.equal(typeof guide,'function','The local request guide must be available to the search UI');
+const battery=guide("My car won't start");
+assert.equal(battery.topName,'Jump Start','Use the existing service catalog for smart suggestions');
+assert.equal(battery.autoService,'Jump Start','Only a high-confidence, clearly leading result may prefill a draft');
+assert.equal(battery.warning,'','Routine vehicle help must not trigger an emergency warning');
+assert.match(guide('I smell gas; there may be a gas leak').warning,/911/,'Dangerous gas situations show clear 911 guidance');
+assert.match(guide('water flooding near an electrical outlet').warning,/911/,'Potential electrical danger is flagged');
+assert.equal(guide('something seems wrong').autoService,null,'Ambiguous problems must not force a service choice');
+assert.match(client,/draft\\(\\{details:q,service:guide\\.autoService\\|\\|undefined\\}\\)/,'Prefill only inside the existing reviewable request draft');
+assert.match(css,/\\.z-home-guide-alert/,'Emergency guidance must be legible in the locked design');
+console.log('Home UX and local request guide: explainable matching, emergency guidance, user review, opt-in GPS, chat, notifications and native parity PASS');
