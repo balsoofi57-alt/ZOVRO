@@ -50,6 +50,33 @@
     if(searchInput)searchInput.blur();
     hideSuggestions();
   }
+  // Local, explainable guidance: do not send typed text to an AI service.
+  // All suggestions are provisional until a customer reviews the request.
+  function problemGuide(query){
+    const q=String(query||'').trim().slice(0,240);
+    if(q.length<2)return {warning:'',hint:'',autoService:null,topName:null};
+    const text=q.toLowerCase();
+    const danger=/\b(?:gas leak|smell(?:ing)? gas|carbon monoxide|fire spreading|house fire|flames?|smoke (?:coming|from|inside)|electric shock|live wire|downed power line|unconscious|severe injury|chest pain)\b/i.test(q)
+      || /\b(?:water|flood|flooding)\b.{0,55}\b(?:electricity|electrical|outlet|live wire|breaker)\b/i.test(q);
+    let hint='Add a few details in the request form to help a professional understand the job.';
+    if(/\b(?:car|vehicle|battery|engine|tire|tyre|roadside)\b/.test(text))hint='For vehicle help, include the vehicle type and what happened. Add only details you are comfortable sharing.';
+    else if(/\b(?:leak|pipe|plumb|drain|flood|water)\b/.test(text))hint='For water issues, describe where you see the problem. Keep clear of electrical hazards.';
+    else if(/\b(?:lock|key|locked)\b/.test(text))hint='Mention whether the lock is on a vehicle, home, or business.';
+    else if(/\b(?:tow|moving|delivery|deliver|transport)\b/.test(text))hint='For transport jobs, you will be asked for pickup and destination addresses.';
+    const catalog=window.ZOVRO_CATALOG;
+    let scored=[];
+    try{scored=Array.isArray(catalog?.smartMatch?.(q,{limit:5}))?catalog.smartMatch(q,{limit:5}):[]}catch{}
+    const valid=scored.filter(x=>x?.service?.id!=='other'&&x?.service?.label?.en&&Number(x.score)>=.65);
+    const first=valid[0],second=valid[1];
+    // High confidence plus a clear lead is required to prefill, never to submit.
+    const autoService=!danger&&first?.score>=.96&&first.score-(second?.score||0)>=.12?first.service.label.en:null;
+    return {
+      warning:danger?'Possible immediate danger: move to safety and call 911 if anyone is at risk. ZOVRO is not an emergency dispatch service.':'',
+      hint:danger?'Do not rely on ZOVRO for emergency dispatch. Use local emergency services first.':hint,
+      autoService,topName:danger?null:(first?.service?.label?.en||null)
+    };
+  }
+  if(typeof window!=='undefined')window.ZOVRO_REQUEST_GUIDE=problemGuide;
   function serviceMatches(query){
     const q=String(query||'').trim().toLowerCase();
     if(q.length<2)return [];
@@ -74,15 +101,30 @@
   }
   function suggest(){
     if(!results||!searchInput)return;
+    const query=searchInput.value.trim();
     results.replaceChildren();
-    for(const name of serviceMatches(searchInput.value)){
-      const b=make('button','z-home-result',name);
-      b.type='button';b.setAttribute('role','option');
-      b.onclick=()=>draft({details:searchInput.value.trim(),service:name});
-      results.appendChild(b);
+    if(query.length<2){hideSuggestions();return}
+    const guide=problemGuide(query),matches=guide.warning?[]:serviceMatches(query);
+    if(guide.warning){
+      const warning=make('p','z-home-guide-alert',guide.warning);
+      warning.setAttribute('role','alert');results.appendChild(warning);
     }
-    results.hidden=!results.children.length;
-    searchInput.setAttribute('aria-expanded',String(!results.hidden));
+    if(matches.length){
+      results.appendChild(make('p','z-home-guide-title','Suggested services · choose one to review'));
+      for(const name of matches){
+        const b=make('button','z-home-result');
+        b.type='button';
+        b.append(make('span','z-home-result-name',name),
+          make('small','z-home-result-caption',name===guide.topName?'Suggested from your description':'Other possible match'));
+        b.onclick=()=>draft({details:query,service:name});
+        results.appendChild(b);
+      }
+    }else if(!guide.warning){
+      results.appendChild(make('p','z-home-guide-empty','No clear match yet. Press Enter to describe the issue and choose a service in the request form.'));
+    }
+    results.appendChild(make('p','z-home-guide-hint',guide.hint+' Suggestions are not a diagnosis or a provider availability promise.'));
+    results.hidden=false;
+    searchInput.setAttribute('aria-expanded','true');
   }
   function setupSearch(parent){
     const row=make('form','z-home-search');
@@ -97,10 +139,14 @@
     searchInput.setAttribute('aria-controls','zHomeSearchResults');
     searchInput.setAttribute('aria-expanded','false');
     searchInput.oninput=suggest;
+    searchInput.addEventListener('keydown',e=>{
+      if(e.key==='Escape')hideSuggestions();
+      if(e.key==='ArrowDown'&&!results?.hidden){const first=results.querySelector('button');if(first){e.preventDefault();first.focus()}}
+    });
     field.append(symbol,searchInput);
-    results=make('div','z-home-search-results');results.id='zHomeSearchResults';results.hidden=true;results.setAttribute('role','listbox');
+    results=make('div','z-home-search-results');results.id='zHomeSearchResults';results.hidden=true;results.setAttribute('role','region');results.setAttribute('aria-label','Service suggestions');
     row.append(label,field,results);
-    row.onsubmit=e=>{e.preventDefault();const q=searchInput.value.trim();if(q)draft({details:q})};
+    row.onsubmit=e=>{e.preventDefault();const q=searchInput.value.trim();if(q){const guide=problemGuide(q);draft({details:q,service:guide.autoService||undefined})}};
     parent.appendChild(row);
   }
   function setLocation(text){if(locationTitle)locationTitle.textContent=text}
