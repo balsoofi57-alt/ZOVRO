@@ -13,6 +13,7 @@ assert.match(client,/const button=byId\('zStartRequest'\)/,'Reuse the existing H
 assert.doesNotMatch(client,/\/api\/requests[^']*',\{method:'POST'/,'No home code may submit service requests directly');
 assert.match(client,/call\('startRequestWithLocation',params\)/,'Always open the original, confirmed request flow');
 assert.match(client,/useLocation:customerLocation.mode==='gps'/,'GPS remains an explicit choice');
+assert.match(client,/manual\.value='';status\.textContent=''/,'Switching to GPS clears a stale manual address from the visible field');
 assert.match(client,/call\('requestAddressTypedManually'\)/,'Manual addresses remove any stale GPS pickup');
 assert.match(client,/typeof resume==='function'/,'Manual address choice remains after login');
 assert.match(client,/ZOVRO_CATALOG/,'Search should reuse the existing catalog');
