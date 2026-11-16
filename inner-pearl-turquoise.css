@@ -152,3 +152,48 @@ body:has(#home.hidden) nav.bottom button.active {
   .z-page-modal .z-page-sheet,
   #profile #zMoreMenu>details.z-more-subpage { background: #def5f2 !important; }
 }
+
+/* Standalone secondary documents: Terms, Privacy, Support, SMS, account removal,
+   and the internal admin page. These do NOT include the main app Home screen. */
+body.z-document,
+body.z-inner-standalone {
+  background: linear-gradient(165deg, #e9fbf8, #c8eeeb) !important;
+  color: var(--z-inner-ink) !important;
+}
+body.z-document :is(.z-doc-header,.z-full-page-header),
+body.z-inner-standalone :is(.z-doc-header,.admin-head) {
+  background: linear-gradient(130deg, #eafffc, #b6e8e4) !important;
+  border-bottom-color: var(--z-inner-stroke) !important;
+}
+body.z-document :is(.z-doc-back,.z-page-back),
+body.z-inner-standalone :is(.z-doc-back,.z-page-back) {
+  color: #17546a !important;
+  border-color: var(--z-inner-stroke) !important;
+  background: #e3f8f5 !important;
+}
+body.z-document :is(.card,article,main .panel),
+body.z-inner-standalone :is(.card,article,.admin-row) {
+  color: var(--z-inner-ink) !important;
+  background: linear-gradient(145deg, #fafffe, #e0f7f4) !important;
+  border-color: var(--z-inner-stroke) !important;
+}
+body.z-document :is(h1,h2,h3,.z-doc-title,.brand),
+body.z-inner-standalone :is(h1,h2,h3,.z-doc-title) {
+  color: var(--z-inner-ink) !important;
+}
+body.z-document :is(p,li,small),
+body.z-inner-standalone :is(p,li,small) {
+  color: #4b6676 !important;
+}
+body.z-document a,
+body.z-inner-standalone a { color: #146d78 !important; }
+body.z-inner-standalone :is(input,select,textarea) {
+  color: var(--z-inner-ink) !important;
+  background: #fbfffe !important;
+  border-color: var(--z-inner-stroke) !important;
+}
+body.z-document :is(a,button):focus-visible,
+body.z-inner-standalone :is(a,button,input):focus-visible {
+  outline: 3px solid #198f96 !important;
+  outline-offset: 2px;
+}
