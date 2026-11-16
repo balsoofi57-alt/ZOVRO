@@ -1,0 +1,154 @@
+/* ZOVRO 2026-11-16 — pearlescent turquoise on ALL secondary views only.
+   The approved Home (#home) and its blue/silver theme remain untouched.
+   Semantic red/danger actions and service illustrations retain their colors. */
+:root {
+  --z-inner-pearl: #e9fbf8;
+  --z-inner-mist: #c5ebe8;
+  --z-inner-accent: #198f96;
+  --z-inner-deep: #0e6471;
+  --z-inner-ink: #15324a;
+  --z-inner-stroke: #9dcfcf;
+}
+
+/* Primary tabs other than Home: no effect while #home is visible. */
+body:has(#home.hidden) {
+  background: linear-gradient(150deg, #eafffc 0%, #d5f3ef 45%, #bfe8e6 100%) !important;
+  color: var(--z-inner-ink) !important;
+}
+body:has(#home.hidden) .top {
+  background: linear-gradient(130deg, #d9f7f3, #aee3e0) !important;
+  border-bottom-color: var(--z-inner-stroke) !important;
+}
+body:has(#home.hidden) :is(#jobs,#nearby,#profile) :is(.card,.feature,.trustItem,.job,.z-home-thread,.z-home-empty),
+body:has(#home.hidden) :is(#jobs,#nearby,#profile) .z-menu-group {
+  background: linear-gradient(135deg, #f9fffe, #daf4f1) !important;
+  border: 1px solid var(--z-inner-stroke) !important;
+  color: var(--z-inner-ink) !important;
+}
+body:has(#home.hidden) :is(#jobs,#nearby,#profile) :is(.sectionHead h2,h2,h3,strong,b,label) {
+  color: var(--z-inner-ink) !important;
+}
+body:has(#home.hidden) :is(#jobs,#nearby,#profile) :is(.muted,.sectionHead p,small) {
+  color: #4b6778 !important;
+}
+body:has(#home.hidden) :is(#jobs,#nearby,#profile) :is(input,select,textarea) {
+  background: #fbfffe !important;
+  border-color: var(--z-inner-stroke) !important;
+  color: var(--z-inner-ink) !important;
+}
+body:has(#home.hidden) nav.bottom.z-home-bottom-nav,
+body:has(#home.hidden) nav.bottom {
+  background: linear-gradient(120deg, #bfeae6, #d9f7f3) !important;
+  border-color: var(--z-inner-stroke) !important;
+}
+body:has(#home.hidden) nav.bottom button {
+  color: #285b6b !important;
+}
+body:has(#home.hidden) nav.bottom button.active {
+  background: #a3d9d7 !important;
+  color: #0c5264 !important;
+}
+
+/* Every full-screen internal page (catalog, request, login, support, chat). */
+:is(.modal.z-page-modal,.z-private-modal.z-page-modal,#authModal.z-page-modal,#zSilverCatalog.z-page-modal) {
+  background: var(--z-inner-pearl) !important;
+}
+:is(.modal.z-page-modal,.z-private-modal.z-page-modal,#authModal.z-page-modal,#zSilverCatalog.z-page-modal) > .z-page-sheet {
+  background: linear-gradient(165deg, #effdfa 0%, #d9f3f0 58%, #c7ebe8 100%) !important;
+  color: var(--z-inner-ink) !important;
+}
+.z-page-modal .z-full-page-header,
+#profile #zMoreMenu>details.z-more-subpage>.z-more-subpage-header {
+  background: linear-gradient(125deg, #edfffc, #b5e6e2 68%, #c9f0ec) !important;
+  border-bottom: 1px solid var(--z-inner-stroke) !important;
+}
+.z-page-sheet .z-full-page-header>h2,
+#profile #zMoreMenu>details.z-more-subpage h2 {
+  color: var(--z-inner-ink) !important;
+}
+.z-page-modal .z-full-page-header :is(.z-page-back,.z-page-close) {
+  background: #e4f8f6 !important;
+  border-color: #96c8ca !important;
+  color: #17546a !important;
+}
+.z-page-modal .z-full-page-body,
+.z-page-modal .z-full-page-body :is(h2,h3,h4,label,b,strong),
+.z-page-modal .z-req-step-title b {
+  color: var(--z-inner-ink) !important;
+}
+.z-page-modal .z-full-page-body :is(.muted,small,.z-req-progress-label),
+.z-page-modal .z-private-note {
+  color: #4d6b7c !important;
+}
+.z-page-modal :is(.card,.z-service-option,.z-catalog-list button,.z-menu-group,.feature,.z-notification-item) {
+  background: linear-gradient(135deg, #fafffe, #dff6f4) !important;
+  border: 1px solid var(--z-inner-stroke) !important;
+  color: var(--z-inner-ink) !important;
+  box-shadow: 0 3px 12px rgba(33,119,122,.06) !important;
+}
+.z-page-modal :is(input:not([type=checkbox]):not([type=radio]),select,textarea),
+.z-page-modal .z-private-field :is(input,textarea) {
+  background: #fcfffe !important;
+  border-color: #9bc9cc !important;
+  color: var(--z-inner-ink) !important;
+}
+.z-page-modal :is(input,select,textarea)::placeholder {
+  color: #65838d !important;
+  opacity: 1;
+}
+.z-page-modal :is(input,select,textarea):focus-visible,
+.z-page-modal button:focus-visible {
+  outline: 3px solid #188d95 !important;
+  outline-offset: 2px;
+}
+.z-page-modal :is(.btn.primary,.primary,.btn.z-next,#zReqNext),
+.z-page-modal .z-req-step-num {
+  background: linear-gradient(145deg, #c5f3e7, #75cbc9) !important;
+  border: 1px solid #4aafb1 !important;
+  color: #103b4b !important;
+  box-shadow: 0 4px 14px rgba(25,143,150,.17) !important;
+}
+.z-page-modal :is(.btn.ghost,.ghost):not(.danger) {
+  background: #ddf4f2 !important;
+  border-color: #94c9c8 !important;
+  color: #174b5c !important;
+}
+.z-page-modal .z-req-progress-track {
+  background: #cfe4e5 !important;
+  border-color: #a1c7cb !important;
+}
+.z-page-modal .z-req-progress-fill {
+  background: linear-gradient(90deg, #82d6cd, #239fa6) !important;
+}
+.z-page-modal .z-route-marker:not(.z-route-marker-to) {
+  background: #d9f4f0 !important;
+  border-color: #8bc8c7 !important;
+  color: #0e6471 !important;
+}
+
+/* Account/More subsections are independently mounted full-page details. */
+#profile #zMoreMenu>details.z-more-subpage {
+  background: linear-gradient(165deg, #e9fbf8, #ccefeb) !important;
+  color: var(--z-inner-ink) !important;
+}
+#profile #zMoreMenu>details.z-more-subpage :is(input,select,textarea) {
+  background: #fbfffe !important;
+  border-color: var(--z-inner-stroke) !important;
+  color: var(--z-inner-ink) !important;
+}
+
+/* Non-full-page dialogs are secondary surfaces too. */
+.modal.open:not(.z-page-modal) .sheet {
+  background: linear-gradient(160deg, #eefdfa, #ccefeb) !important;
+  border-color: var(--z-inner-stroke) !important;
+  color: var(--z-inner-ink) !important;
+}
+.modal.open:not(.z-page-modal) .sheet :is(input,select,textarea) {
+  background: #fcfffe !important;
+  color: var(--z-inner-ink) !important;
+  border-color: var(--z-inner-stroke) !important;
+}
+@media (prefers-reduced-transparency: reduce) {
+  .z-page-modal .z-page-sheet,
+  #profile #zMoreMenu>details.z-more-subpage { background: #def5f2 !important; }
+}
