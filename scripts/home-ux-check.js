@@ -25,7 +25,7 @@ assert.match(client,/call\('api','\/notifications\/read',\{method:'POST'/,'Mark 
 assert.match(css,/nav\.bottom\.z-simple-nav\.z-home-bottom-nav/,'Mobile bottom tabs override old hidden CSS');
 assert.match(css,/grid-template-columns:repeat\(4,minmax\(0,1fr\)\)/,'Exactly four bottom destinations');
 assert.match(css,/#zHomeTools #zStartRequest/,'Urgent button is visible and high contrast');
-assert.match(website,/if\(permission\.state!=='granted'\)return/,'Opening the home page cannot newly prompt for location');
+assert.match(website,/if\(permission\.state!=='granted'\)\{stopWatch\(\);return\}/,'Opening the home page cannot prompt for location; ungranted watch must stop');
 
 let callback;
 const context={window:{ZOVRO_CATALOG:require('../src/service-catalog.js')},document:{readyState:'loading',addEventListener:(event,fn)=>{if(event==='DOMContentLoaded')callback=fn}}};
