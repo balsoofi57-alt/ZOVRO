@@ -85,3 +85,23 @@ body.z-silver-layout .top .z-notification-bell:focus-visible{outline:3px solid #
 }
 @media(max-width:360px){#zHomeTools .z-home-top-actions{grid-template-columns:1fr}#zHomeTools .z-home-help-panel{flex-wrap:wrap}#zHomeTools .z-home-help-panel p{max-width:none}}
 @media(min-width:701px){body.z-silver-layout .top .z-notification-bell{display:grid!important}}
+
+/* Discoverability improvements: one compact search, optional voice and safe repeat booking. */
+#zHomeTools .z-home-search-field:focus-within{border-color:#e2c881;box-shadow:0 0 0 3px #e2c88142}
+#zHomeTools .z-home-voice{flex:none;display:grid;place-items:center;min-width:43px;min-height:43px;border-radius:10px;border:1px solid #a5bdce;background:#d5e2ed;color:#163e61;font-size:19px;cursor:pointer}
+#zHomeTools .z-home-voice:focus-visible{outline:3px solid #d4af62;outline-offset:2px}
+#zHomeTools .z-home-result{display:grid;gap:3px}
+#zHomeTools .z-home-result strong{font-size:13px;font-weight:750}
+#zHomeTools .z-home-result small{font-size:11px;color:#526d86}
+#zHomeTools .z-home-search-feedback{margin:0;font-size:12px;color:#bfcfe0;line-height:1.35}
+#zHomeTools .z-home-search-feedback:empty{display:none}
+#zHomeTools .z-home-active-card{display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px}
+#zHomeTools .z-home-active-card strong,#zHomeTools .z-home-active-card p{flex:1 1 160px}
+#zHomeTools .z-home-track{flex:none;min-height:43px;padding:8px 13px;border-radius:10px;background:#e1eaf3;border:1px solid #8fb0ca;color:#153755;font-size:13px;font-weight:700}
+#zHomeTools .z-home-rebook-card{margin-top:10px;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:13px;border:1px solid #42698c;border-radius:14px;background:#143957;color:#eff6fc}
+#zHomeTools .z-home-rebook-card[hidden]{display:none}
+#zHomeTools .z-home-rebook-copy{display:grid;gap:4px;min-width:0}
+#zHomeTools .z-home-rebook-copy small{font-size:11px;color:#bdd1e1}
+#zHomeTools .z-home-rebook-copy strong{font-size:13px;line-height:1.35;overflow-wrap:anywhere}
+#zHomeTools .z-home-rebook-action{flex:none;min-height:44px;border-radius:10px;background:#e5c881;border:1px solid #d4b166;color:#1d3047;padding:9px 13px;font-size:13px;font-weight:800}
+@media(prefers-reduced-motion:reduce){#zHomeTools *{scroll-behavior:auto!important;animation-duration:0.01ms!important;transition-duration:0.01ms!important}}
