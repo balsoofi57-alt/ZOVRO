@@ -38,6 +38,7 @@ assert.equal(battery.topName,'Jump Start','Use the existing service catalog for 
 assert.equal(battery.autoService,'Jump Start','Only a high-confidence, clearly leading result may prefill a draft');
 assert.equal(battery.warning,'','Routine vehicle help must not trigger an emergency warning');
 assert.match(guide('I smell gas; there may be a gas leak').warning,/911/,'Dangerous gas situations show clear 911 guidance');
+assert.equal(guide('I smell gas; there may be a gas leak').topName,null,'Do not suggest fuel delivery or other services during immediate danger');
 assert.match(guide('water flooding near an electrical outlet').warning,/911/,'Potential electrical danger is flagged');
 assert.equal(guide('something seems wrong').autoService,null,'Ambiguous problems must not force a service choice');
 assert.ok(client.includes("draft({details:q,service:guide.autoService||undefined})"),'Prefill only inside the existing reviewable request draft');
