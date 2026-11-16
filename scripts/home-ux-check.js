@@ -17,6 +17,16 @@ assert.match(client,/call\('requestAddressTypedManually'\)/,'Manual addresses re
 assert.match(client,/typeof resume==='function'/,'Manual address choice remains after login');
 assert.match(client,/ZOVRO_CATALOG/,'Search should reuse the existing catalog');
 assert.match(client,/catalog\.smartMatch/,'Problem descriptions should reuse smart matching');
+assert.match(client,/const confident=top&&top\.score>=\.88/,'Strong, unambiguous suggestion only before selecting a service');
+assert.match(client,/top\.score-second\.score>=\.10/,'Ambiguous matches must not silently preselect a trade');
+assert.match(client,/recognition\.start\(\)/,'Voice input starts only on user interaction');
+assert.match(client,/recognition\.onresult/,'Speech transcript becomes editable search, not auto-submitted order');
+assert.match(client,/again\.onclick=\(\)=>draft\(\{service:last\.service\}\)/,'Rebook opens a new draft without reusing private history');
+assert.match(client,/j\.status==='Completed'/,'Rebooking shows only completed services');
+assert.match(client,/go\.onclick=requestNav/,'Active request provides direct navigation');
+assert.match(css,/\.z-home-rebook-card\[hidden\]/,'Rebooking is not displayed before user-specific data exists');
+assert.match(css,/\.z-home-voice/,'Voice button is styled only when supported');
+
 assert.match(client,/setAttribute\('onclick',"nav\('"/,'New bottom tabs should reuse the existing navigation');
 assert.match(client,/originalNav\(messages\?'jobs':id,b\)/,'Messages view derives from authenticated Requests');
 assert.match(client,/call\('openChat',j.id\)/,'Messages must reuse per-job chat');
