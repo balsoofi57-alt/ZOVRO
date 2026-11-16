@@ -85,3 +85,14 @@ body.z-silver-layout .top .z-notification-bell:focus-visible{outline:3px solid #
 }
 @media(max-width:360px){#zHomeTools .z-home-top-actions{grid-template-columns:1fr}#zHomeTools .z-home-help-panel{flex-wrap:wrap}#zHomeTools .z-home-help-panel p{max-width:none}}
 @media(min-width:701px){body.z-silver-layout .top .z-notification-bell{display:grid!important}}
+
+/* Smart request guidance stays inside the existing search, never a second Help button. */
+#zHomeTools .z-home-search-results{max-height:min(390px,60dvh);overflow-y:auto;overscroll-behavior:contain}
+#zHomeTools .z-home-guide-title{font-size:12px;font-weight:850;color:#1d4565;margin:7px 9px 3px}
+#zHomeTools .z-home-guide-alert{margin:6px;padding:11px 12px;background:#ffe4e4;border-left:4px solid #bd2639;border-radius:8px;color:#802032;font-size:12px;line-height:1.5;font-weight:700}
+#zHomeTools .z-home-guide-empty{margin:6px 9px;color:#294763;font-size:13px;line-height:1.5}
+#zHomeTools .z-home-guide-hint{margin:6px 9px 8px;color:#4b6175;font-size:11px;line-height:1.5}
+#zHomeTools .z-home-result{display:grid;gap:3px}
+#zHomeTools .z-home-result-name{font-weight:750}
+#zHomeTools .z-home-result-caption{font-size:11px;color:#527089}
+#zHomeTools .z-home-result:focus-visible{outline:3px solid #2b6397;outline-offset:-3px}
