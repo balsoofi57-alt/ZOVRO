@@ -19,7 +19,7 @@ if (!html.includes("const API=(window.ZOVRO_CONFIG?.apiBase||'https://zovro-api-
   throw new Error('Mobile parity: web API configuration changed; review native packaging');
 }
 replaceExactly('session bootstrap',
-  "let token='';try{token=localStorage.getItem('zovroToken')||''}catch(_){token=''}",
+  "let token='';try{token=localStorage.getItem('zovroBiometricUnlock')==='1'?'':(localStorage.getItem('zovroToken')||'')}catch(_){token=''}",
   "let token='';");
 replaceExactly('session save',
   'try{localStorage.zovroToken=token}catch(_){}',
