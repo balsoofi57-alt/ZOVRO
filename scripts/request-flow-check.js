@@ -38,7 +38,7 @@ const position=()=>({lat:42,lng:-83,accuracy:12,capturedAt:new Date().toISOStrin
  h=harness();h.c.newRequest();p=h.c.createRequest();h.c.me={id:'other',role:'customer'};h.post().resolve({request:{id:'old-account'}});await p;assert(!h.$('requestSuccessModal').classList.open,'no cross-account success');
  h=harness();h.c.newRequest();p=h.c.detectRequestLocation();h.geo(position());await p;
  assert.equal(h.run('requestLocationMode'),'gps','GPS is used only after explicit opt-in');
- assert.equal(h.$('reqAddress').value,'','GPS selection clears a possibly unrelated address');
+ assert.equal(h.$('reqAddress').value,'GPS location: 42.000000, -83.000000','GPS selection displays coordinates in the address field without retaining the unrelated manual address');
  h.$('reqAddress').value='555 Michigan Avenue, Dearborn, MI';h.c.requestAddressTypedManually();
  assert.equal(h.run('requestLocation'),null,'manual typing removes the previous GPS fix');
  assert.equal(h.run('requestLocationMode'),'manual');
