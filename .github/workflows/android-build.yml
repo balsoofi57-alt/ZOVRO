@@ -112,6 +112,7 @@ jobs:
         working-directory: android
         run: ./gradlew --no-daemon bundleRelease
       - name: Build signed release AAB
+        id: signed_aab
         if: steps.signing.outputs.available == 'true'
         working-directory: android
         env:
@@ -180,6 +181,7 @@ jobs:
           access_token_scopes: https://www.googleapis.com/auth/androidpublisher
 
       - name: Upload signed AAB to Google Play internal draft
+        id: play_draft
         if: steps.play_upload.outputs.available == 'true'
         env:
           GOOGLE_PLAY_ACCESS_TOKEN: ${{ steps.play_auth.outputs.access_token }}
@@ -235,3 +237,30 @@ jobs:
             "$API_ROOT/edits/$EDIT_ID:commit?changesNotSentForReview=true&changesInReviewBehavior=ERROR_IF_IN_REVIEW" >/dev/null
 
           echo "Google Play internal draft validated and prepared for versionCode $UPLOADED_VERSION_CODE."
+
+      - name: Summarize store readiness without confusing build success with publication
+        if: always()
+        env:
+          SIGNING_AVAILABLE: ${{ steps.signing.outputs.available }}
+          SIGNED_BUNDLE_OUTCOME: ${{ steps.signed_aab.outcome }}
+          PLAY_DRAFT_OUTCOME: ${{ steps.play_draft.outcome }}
+          UPLOAD_REQUESTED: ${{ github.event_name == 'workflow_dispatch' && inputs.upload_google_play == true }}
+        run: |
+          {
+            echo "## ZOVRO Android release readiness"
+            if [[ "$SIGNED_BUNDLE_OUTCOME" == "success" ]]; then
+              echo "- Signed release AAB: **created**."
+            else
+              echo "- Signed release AAB: **not confirmed**. A successful debug/unsigned build is not Play-ready."
+            fi
+            if [[ "$PLAY_DRAFT_OUTCOME" == "success" ]]; then
+              echo "- Google Play internal draft: **uploaded and committed** (not a production rollout)."
+            elif [[ "$UPLOAD_REQUESTED" == "true" ]]; then
+              echo "- Google Play internal draft: **requested but not confirmed**. Inspect the failed/skipped upload step."
+            else
+              echo "- Google Play internal draft: **not requested**. This run did not publish a new Play version."
+            fi
+            if [[ "$SIGNING_AVAILABLE" != "true" ]]; then
+              echo "- Blocker: the configured signing credentials were unavailable. Do not submit an unsigned AAB."
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
