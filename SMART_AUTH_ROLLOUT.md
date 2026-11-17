@@ -29,5 +29,11 @@ Status: isolated draft client enhancement and QA checks; NOT deployed. Apple/Goo
 - The new Face ID shortcut is hidden unless the user opted in, a native biometric plugin exists, and native secure storage is present; duplicate legacy shortcuts are suppressed.
 - Apple/Google buttons have registration hooks only and are not shown until a handler is added after backend identity-token verification is available.
 - `npm run auth:smart-check` runs source delivery assertions and a simulated DOM regression suite as part of Full QA.
-- **Release blocker:** existing main-branch session restoration still runs automatically before biometric verification when biometric preference is enabled. The draft fix tracked in PR #201 must be reviewed/integrated and verified on a physical iPhone before Face ID is treated as a secure authentication gate.
+- **Release blocker:** the previously separate session-guard draft PR #201 is now integrated in this draft branch for automation checks; verification on a physical iPhone and production review remain required before release.
 - This branch does not change customer/provider records, passwords, account linking, SMS sending, billing, production configuration, or published store builds.
+
+## Integrated draft biometric session guard (2026-11-17)
+- Brought the isolated biometric session lock from draft PR #201 into the smart-auth test branch, including an opt-in native biometric dependency, iOS Face ID permission text, technical export-compliance review, and regression tests.
+- Index startup now avoids eagerly reading an existing stored token into runtime when biometric unlock was selected. Native packaging's replacement rule was kept in sync so it can continue using secure OS storage.
+- The native session manager holds the saved token until native verification, validates it via /me after success, fails closed on cancellation/expiry, and leaves password sign-in available.
+- This is an *integration under test*, not a production rollout or a verified physical-device security guarantee. Keep PR #240 in draft and Apple/Google/phone OTP unavailable until their independent security gates are complete.
