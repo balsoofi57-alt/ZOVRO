@@ -101,6 +101,8 @@ jobs:
             printf '%s' "$KEYSTORE_BASE64" | base64 --decode > "$KEYSTORE_PATH"
             chmod 600 "$KEYSTORE_PATH"
             keytool -list -keystore "$KEYSTORE_PATH" -storepass "$KEYSTORE_PASSWORD" -alias "$KEY_ALIAS" >/dev/null
+            export KEYSTORE_PATH
+            node scripts/android-upload-cert-guard.js
             echo "available=true" >> "$GITHUB_OUTPUT"
             echo "keystore_path=$KEYSTORE_PATH" >> "$GITHUB_OUTPUT"
           else
