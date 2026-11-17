@@ -19,6 +19,7 @@ const PUBLIC_FILES = new Set([
   "payment-client.js",
   "payment-ui.js",
   "phone-verification-client.js",
+  "smart-auth-client.js",
   "privacy.html",
   "profile-security-client.js",
   "profile-photo-client.js",
