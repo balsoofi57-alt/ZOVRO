@@ -194,9 +194,10 @@ async function detectRequestLocation(showToast=false){
  requestLocationPromise=(async()=>{try{
   const loc=await geo({maxAccuracy:30});if(!current())return null;
   requestLocation=loc;requestLocationMode='gps';
-  // Clearing the previous address is intentional: GPS is now the selected origin.
-  // Entering any address again switches safely back to manual mode.
-  $('reqAddress').value='';
+  // Show the GPS-selected location in the visible address field. This is a
+  // coordinate label, not a reverse-geocoded street address; never invent one.
+  // User input still switches to manual mode and discards device coordinates.
+  $('reqAddress').value=`GPS location: ${loc.lat.toFixed(6)}, ${loc.lng.toFixed(6)}`;
   status.value=`✓ GPS pickup selected · about ${Math.round(loc.accuracy)} m accuracy`;
   help.textContent=`Pickup GPS: ${loc.lat.toFixed(6)}, ${loc.lng.toFixed(6)}. To request help for another person elsewhere, type their address instead.`;
   window.ZOVRO_TRANSPORT?.sync?.();
@@ -258,7 +259,7 @@ async function createRequest(){
   const routeLines=transportLines;
   const requestDetails=routeLines.length?routeLines.join('\n')+'\n'+details:details;
   const clientRequestId=window.crypto?.randomUUID?.()||`${Date.now()}-${Math.random().toString(36).slice(2)}-${Math.random().toString(36).slice(2)}`;
-  requestAttempt={owner,payload:{service,details:requestDetails,serviceSelectionManual:requestServiceManual,address,time:'As soon as possible',urgent:$('reqUrgent').checked,location:loc,transport:transport?.value||undefined,transportEstimateToken:transport?.quoteToken||undefined,clientRequestId}};
+  requestAttempt={owner,payload:{service,details:requestDetails,serviceSelectionManual:requestServiceManual,address:loc?'':address,time:'As soon as possible',urgent:$('reqUrgent').checked,location:loc,transport:transport?.value||undefined,transportEstimateToken:transport?.quoteToken||undefined,clientRequestId}};
  }
  const attempt=requestAttempt;requestSending=true;lockRequestForm(true);button.disabled=true;button.textContent='Sending…';requestMessage('Sending your request…');
  try{
