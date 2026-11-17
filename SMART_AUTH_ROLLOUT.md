@@ -1,6 +1,6 @@
 # ZOVRO smart sign-in rollout
 
-Status: implementation specification; NOT deployed. Preserve all existing users, credentials, sessions, roles, and requests.
+Status: isolated draft client enhancement and QA checks; NOT deployed. Apple/Google sign-in and phone OTP sign-in are not implemented or enabled. Preserve all existing users, credentials, sessions, roles, and requests.
 
 ## Existing behavior confirmed
 - `biometric-client.js` supports native biometric unlocking of a saved secure session, not independent identity verification.
@@ -22,3 +22,12 @@ Status: implementation specification; NOT deployed. Preserve all existing users,
 - Apple/Google provider credentials and callbacks configured.
 - SMS delivery verified; otherwise keep phone OTP sign-in disabled.
 - No forced migration, deletion, automatic merging, or production deployment without validation.
+
+## Current safe progress (2026-11-17)
+- A progressive enhancement is bundled for both web and native shell; existing password and registration forms remain visible.
+- Quick sign-in uses the actual `authMode` state, not a title string that could be translated.
+- The new Face ID shortcut is hidden unless the user opted in, a native biometric plugin exists, and native secure storage is present; duplicate legacy shortcuts are suppressed.
+- Apple/Google buttons have registration hooks only and are not shown until a handler is added after backend identity-token verification is available.
+- `npm run auth:smart-check` runs source delivery assertions and a simulated DOM regression suite as part of Full QA.
+- **Release blocker:** existing main-branch session restoration still runs automatically before biometric verification when biometric preference is enabled. The draft fix tracked in PR #201 must be reviewed/integrated and verified on a physical iPhone before Face ID is treated as a secure authentication gate.
+- This branch does not change customer/provider records, passwords, account linking, SMS sending, billing, production configuration, or published store builds.
