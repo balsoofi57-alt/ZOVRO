@@ -73,6 +73,8 @@ jobs:
           echo "::add-mask::$ANDROID_KEYSTORE_PASSWORD"
           echo "::add-mask::$ANDROID_KEY_PASSWORD"
           keytool -list -keystore "$KEYSTORE_PATH" -storepass "$ANDROID_KEYSTORE_PASSWORD" -alias "$ANDROID_KEY_ALIAS" >/dev/null
+          export KEYSTORE_PATH KEYSTORE_PASSWORD="$ANDROID_KEYSTORE_PASSWORD" KEY_ALIAS="$ANDROID_KEY_ALIAS"
+          node scripts/android-upload-cert-guard.js
           {
             echo "available=true"
             echo "keystore_path=$KEYSTORE_PATH"
