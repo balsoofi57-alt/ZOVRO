@@ -21,7 +21,7 @@ function fingerprint(value) {
 }
 
 function expectedFingerprint(proofText) {
-  const match = String(proofText).match(/^- Certificate SHA-256:\s*([0-9a-f:]+)\s*$/im);
+  const match = String(proofText).match(/^- Certificate SHA-256:\s*`?([0-9a-f:]+)`?\s*$/im);
   if (!match) throw new Error('ANDROID_UPLOAD_CERT_PROOF_MISSING');
   return fingerprint(match[1]);
 }
