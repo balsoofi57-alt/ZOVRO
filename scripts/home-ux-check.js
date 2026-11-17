@@ -43,6 +43,30 @@ assert.match(css,/#zHomeTools #zStartRequest/,'Urgent button is visible and high
 assert.match(website,/if\(permission\.state!=='granted'\)\{stopWatch\(\);return\}/,'Opening home cannot newly prompt for GPS; automatic city watch requires prior permission');
 assert.match(website,/if\(document\.visibilityState==='hidden'\)\{stopWatch\(\);return\}/,'City tracking pauses while the app is not visible');
 
+
+assert.match(client,/function problemGuide\(query\)/,'Search includes explainable local safety guidance');
+assert.match(client,/if\(guide.warning\)\{suggest\(\);return\}/,'Dangerous input cannot auto-open a normal request');
+assert.match(client,/ZOVRO_REQUEST_GUIDE=problemGuide/,'Safety guide is available to synthetic regressions');
+assert.match(client,/if\(e.key==='ArrowDown'/,'Keyboard can move into search suggestions');
+assert.match(css,/\.z-home-guide-alert/,'Safety warning is clearly styled');
+const guideWindow={ZOVRO_CATALOG:{smartMatch:()=>[
+  {service:{id:'tire',label:{en:'Tire Change'}},score:.98},
+  {service:{id:'other',label:{en:'General Repairs'}},score:.72}
+]}};
+vm.runInNewContext(client,{window:guideWindow,document:{readyState:'loading',addEventListener(){}}});
+const guide=guideWindow.ZOVRO_REQUEST_GUIDE;
+assert.equal(typeof guide,'function','Local guide should be testable');
+assert.match(guide('smell gas in my kitchen').warning,/911/,'Gas hazards must point toward emergency services');
+assert.match(guide('water flooding near an electrical outlet').warning,/911/,'Flooding near electricity requires safety warning');
+assert.equal(guide('flat tire on my car').warning,'','Ordinary roadside query is not an emergency');
+assert.equal(guide('flat tire on my car').autoService,'Tire Change','Only strong unique match can be suggested');
+assert.equal(guide('smell gas in my kitchen').autoService,null,'Emergency warnings suppress automatic service choice');
+assert.match(guide('There is a fire in my kitchen').warning,/911/,'Fire inside a home requires urgent guidance');
+assert.match(guide('gas smell in basement').warning,/911/,'Gas-smell phrasing requires urgent guidance');
+assert.match(guide('smoke in my room').warning,/911/,'Smoke inside a room requires urgent guidance');
+assert.match(guide('my house is on fire').warning,/911/,'House fire phrasing requires urgent guidance');
+assert.equal(guide('install a fire alarm').warning,'','Routine fire alarm installation should not be treated as an active fire');
+
 let callback;
 vm.runInNewContext(client,{document:{readyState:'loading',addEventListener:(event,fn)=>{if(event==='DOMContentLoaded')callback=fn}}});
 assert.equal(typeof callback,'function','Home integration boot should defer until the DOM is ready');
