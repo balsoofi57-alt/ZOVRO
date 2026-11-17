@@ -61,6 +61,11 @@ assert.match(guide('water flooding near an electrical outlet').warning,/911/,'Fl
 assert.equal(guide('flat tire on my car').warning,'','Ordinary roadside query is not an emergency');
 assert.equal(guide('flat tire on my car').autoService,'Tire Change','Only strong unique match can be suggested');
 assert.equal(guide('smell gas in my kitchen').autoService,null,'Emergency warnings suppress automatic service choice');
+assert.match(guide('There is a fire in my kitchen').warning,/911/,'Fire inside a home requires urgent guidance');
+assert.match(guide('gas smell in basement').warning,/911/,'Gas-smell phrasing requires urgent guidance');
+assert.match(guide('smoke in my room').warning,/911/,'Smoke inside a room requires urgent guidance');
+assert.match(guide('my house is on fire').warning,/911/,'House fire phrasing requires urgent guidance');
+assert.equal(guide('install a fire alarm').warning,'','Routine fire alarm installation should not be treated as an active fire');
 
 let callback;
 vm.runInNewContext(client,{document:{readyState:'loading',addEventListener:(event,fn)=>{if(event==='DOMContentLoaded')callback=fn}}});
