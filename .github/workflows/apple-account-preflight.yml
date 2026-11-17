@@ -6,6 +6,9 @@ on:
     branches: [main]
     paths:
       - '.github/workflows/apple-account-preflight.yml'
+      - '.github/workflows/ios-release.yml'
+      - '.github/workflows/easy-internal-updates.yml'
+      - 'scripts/apple-release-preflight.js'
 
 permissions:
   contents: read
