@@ -45,3 +45,5 @@ jobs:
           echo "This workflow only dispatches the guarded iOS release with TestFlight upload enabled." >> "$GITHUB_STEP_SUMMARY"
           echo "It does not submit for public App Store review or change production Android." >> "$GITHUB_STEP_SUMMARY"
           echo "A successful dispatch is not proof of upload acceptance or tester installation." >> "$GITHUB_STEP_SUMMARY"
+# Internal tester release request after successful read-only Apple App Store Connect preflight on 2026-11-16.
+# Do not submit to public review; the guarded workflow dispatches only upload_testflight=true.
