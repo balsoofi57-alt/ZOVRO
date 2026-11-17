@@ -57,6 +57,7 @@ requireTokens('Android workflow', android, [
 requireTokens('Android verification workflow', androidVerification, [
   'branches: [main, store-release-prep, zovro-final-deploy]',
   'ZOVRO_ANDROID_KEYSTORE_BASE64',
+  'node scripts/android-upload-cert-guard.js',
   'jarsigner -verify',
   'app-release.aab.sha256',
   'Signing was unavailable. The release candidate is unsigned',
