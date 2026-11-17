@@ -110,3 +110,10 @@ body.z-silver-layout .top .z-notification-bell:focus-visible{outline:3px solid #
 #zHomeTools .z-home-active-heading{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:7px 12px;width:100%}
 #zHomeTools .z-home-active-status{font-size:12px;font-weight:750;color:#203a54;background:#d7e6f2;border-radius:999px;padding:5px 10px}
 #zHomeTools .z-home-active-hint{font-size:12px;line-height:1.45;color:#d0e0ec;flex:1 1 100%}
+
+/* Explainable safety guidance for search; preserve approved royal-navy theme. */
+#zHomeTools .z-home-search-results{max-height:min(390px,60dvh);overflow-y:auto;overscroll-behavior:contain;gap:5px}
+#zHomeTools .z-home-guide-title{padding:5px 9px 0;color:#1c3a58;font-size:12px;font-weight:800;margin:0}
+#zHomeTools .z-home-guide-empty,#zHomeTools .z-home-guide-hint{padding:7px 9px;color:#3c5871;font-size:12px;line-height:1.45;margin:0}
+#zHomeTools .z-home-guide-alert{padding:11px 12px;border:2px solid #b84a44;border-radius:9px;background:#fff0e9;color:#742922;font-size:13px;font-weight:750;line-height:1.45;margin:0}
+#zHomeTools .z-home-search-results button:focus-visible{outline:3px solid #b89246;outline-offset:2px}
