@@ -1,0 +1,16 @@
+'use strict';
+const assert=require('node:assert/strict');
+const fs=require('node:fs');
+const vm=require('node:vm');
+const path=require('node:path');
+const root=path.resolve(__dirname,'..');
+const read=p=>fs.readFileSync(path.join(root,p),'utf8');
+const client=read('smart-auth-client.js'),html=read('index.html'),assets=read('backend/static-assets.js'),mobile=read('scripts/prepare-mobile.js');
+new vm.Script(client,{filename:'smart-auth-client.js'});
+assert.match(html,/<script src="smart-auth-client\.js\?v=/);
+assert.match(assets,/"smart-auth-client\.js"/);
+assert.match(mobile,/'smart-auth-client\.js'/);
+assert.match(client,/form\.hidden=false/,'Existing password login must remain available');
+assert.match(client,/\['Apple','Google'\]/,'Only recognized provider names may register');
+assert.doesNotMatch(client,/\/auth\/login|\/auth\/register|localStorage\.removeItem|deleteAccount/,'Enhancement must not mutate legacy authentication or accounts');
+console.log('Smart sign-in progressive enhancement: syntax, web delivery, mobile bundle, legacy fallback PASS');
