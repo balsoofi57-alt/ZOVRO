@@ -1,0 +1,75 @@
+name: ZOVRO Apple Beta Availability Read-Only
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/apple-beta-availability-readonly.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify internal TestFlight groups and public review state using GET only
+        env:
+          ZOVRO_APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.ZOVRO_APP_STORE_CONNECT_API_KEY_ID }}
+          ZOVRO_APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.ZOVRO_APP_STORE_CONNECT_ISSUER_ID }}
+          ZOVRO_APP_STORE_CONNECT_API_PRIVATE_KEY_BASE64: ${{ secrets.ZOVRO_APP_STORE_CONNECT_API_PRIVATE_KEY_BASE64 }}
+        run: |
+          node <<'NODE'
+          const fs = require('node:fs');
+          const {makeToken} = require('./scripts/apple-release-preflight');
+          const token = makeToken(process.env);
+          async function get(path) {
+            const r = await fetch('https://api.appstoreconnect.apple.com' + path, {
+              method:'GET', headers:{Authorization:'Bearer '+token,Accept:'application/json'}
+            });
+            const v = await r.json().catch(()=>({}));
+            if (!r.ok) throw Error('Apple GET '+path.split('?')[0]+' HTTP '+r.status+' '+String(v?.errors?.[0]?.code||'UNKNOWN').slice(0,80));
+            return v;
+          }
+          (async () => {
+            const apps=await get('/v1/apps?filter%5BbundleId%5D=com.zovro.app&limit=5');
+            const app=apps.data?.find(x=>x.attributes?.bundleId==='com.zovro.app');
+            if(!app?.id) throw Error('ZOVRO APP NOT ACCESSIBLE');
+            const builds=await get('/v1/builds?filter%5Bapp%5D='+encodeURIComponent(app.id)+'&sort=-uploadedDate&limit=1');
+            const b=builds.data?.[0];
+            if(!b?.id) throw Error('NO ZOVRO BUILD VISIBLE');
+            const detail=await get('/v1/builds/'+encodeURIComponent(b.id)+'?include=betaGroups%2CbuildBetaDetail');
+            const included=Array.isArray(detail.included)?detail.included:[];
+            const linked=detail.data?.relationships?.betaGroups?.data;
+            const groups=Array.isArray(linked)?linked:[];
+            const internalIds=new Set(included.filter(i=>i.type==='betaGroups'&&i.attributes?.isInternalGroup===true).map(i=>String(i.id)));
+            const beta=included.find(i=>i.type==='buildBetaDetails')?.attributes||{};
+            const lines=[
+              '## ZOVRO Apple live release verification (read only)','',
+              'Latest build: '+String(b.attributes?.version||'?'),
+              'Processing state: '+String(b.attributes?.processingState||'UNKNOWN'),
+              'Expired: '+Boolean(b.attributes?.expired),
+              'Internal TestFlight state: '+String(beta.internalBuildState||'UNKNOWN'),
+              'External TestFlight state: '+String(beta.externalBuildState||'UNKNOWN'),
+              'Linked beta groups: '+groups.length,
+              'Confirmed internal linked groups: '+groups.filter(g=>internalIds.has(String(g.id))).length,
+              'All linked groups classified: '+groups.every(g=>included.some(i=>i.type==='betaGroups'&&i.id===g.id))
+            ];
+            try {
+              const versions=await get('/v1/apps/'+encodeURIComponent(app.id)+'/appStoreVersions?filter%5Bplatform%5D=IOS&limit=20');
+              const ios=(versions.data||[]).filter(v=>v.attributes?.platform==='IOS');
+              if(!ios.length) lines.push('Public App Store version: none visible');
+              for(const v of ios) lines.push('Public App Store version '+String(v.attributes?.versionString||'?')+': '+String(v.attributes?.appVersionState||v.attributes?.appStoreState||'UNKNOWN'));
+            }catch(error){lines.push('Public App Store state query: '+String(error.message).slice(0,170));}
+            lines.push('','Build processing and group membership do not prove device installation, GPS/push/payment testing or Apple public review. No changes were made.');
+            const output=lines.join('\n')+'\n';
+            process.stdout.write(output);
+            if(process.env.GITHUB_STEP_SUMMARY)fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY,output);
+          })().catch(e=>{console.error('::error::'+String(e.message).slice(0,220));process.exitCode=1});
+          NODE
