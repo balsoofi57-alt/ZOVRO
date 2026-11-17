@@ -62,7 +62,7 @@
     const q=String(query||'').trim().slice(0,240);
     if(q.length<2)return {warning:'',hint:'',autoService:null,topName:null};
     const text=q.toLowerCase();
-    const danger=/\b(?:gas leak|smell(?:ing)? gas|carbon monoxide|fire spreading|house fire|flames?|smoke (?:coming|from|inside)|electric shock|live wire|downed power line|unconscious|severe injury|chest pain)\b/i.test(q)
+    const danger=/\b(?:gas leak|gas smell|smell(?:ing|s)? (?:of |like )?gas|carbon monoxide|fire spreading|house fire|fire (?:in|at|inside|on)|(?:house|car|kitchen|garage|room|building) (?:is )?on fire|flames?|smoke (?:coming|from|inside|in)|electric shock|electrocuted|live wire|downed power line|unconscious|severe injury|chest pain)\b/i.test(q)
       || /\b(?:water|flood|flooding)\b.{0,55}\b(?:electricity|electrical|outlet|live wire|breaker)\b/i.test(q);
     let hint='Add a few details in the request form to help a professional understand the job.';
     if(/\b(?:car|vehicle|battery|engine|tire|tyre|roadside)\b/.test(text))hint='For vehicle help, include the vehicle type and what happened. Add only details you are comfortable sharing.';
@@ -71,7 +71,7 @@
     else if(/\b(?:tow|moving|delivery|deliver|transport)\b/.test(text))hint='For transport jobs, you will be asked for pickup and destination addresses.';
     const catalog=window.ZOVRO_CATALOG;
     let scored=[];
-    try{scored=Array.isArray(catalog?.smartMatch?.(q,{limit:5}))?catalog.smartMatch(q,{limit:5}):[]}catch{}
+    try{const matches=catalog?.smartMatch?.(q,{limit:5});scored=Array.isArray(matches)?matches:[]}catch{}
     const valid=scored.filter(x=>x?.service?.id!=='other'&&x?.service?.label?.en&&Number(x.score)>=.65);
     const first=valid[0],second=valid[1];
     // High confidence plus a clear lead is required to prefill, never to submit.
