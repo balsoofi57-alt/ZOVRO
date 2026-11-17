@@ -22,8 +22,9 @@ assert.match(client,/!\$\('zovroFaceIdLogin'\)/,'Avoid duplicate Face ID actions
 
 function element(tag){
  return {
-  tag,children:[],dataset:{},hidden:false,attributes:{},
+  tag,children:[],dataset:{},hidden:false,attributes:{},style:{},
   appendChild(child){this.children.push(child)},
+  insertBefore(child,before){const index=this.children.indexOf(before);this.children.splice(index<0?this.children.length:index,0,child)},
   insertAdjacentElement(_position,child){this.inserted=child},
   setAttribute(name,value){this.attributes[name]=value},
   focus(){this.focused=true},
@@ -69,6 +70,6 @@ assert.equal(context.window.ZOVRO_SMART_AUTH.registerProvider('Unknown',()=>{}),
 assert.equal(context.window.ZOVRO_SMART_AUTH.registerProvider('Apple',()=>{}),true);
 assert.equal(context.window.ZOVRO_SMART_AUTH.registerProvider('Apple',()=>{}),false,'Duplicate provider buttons must be rejected');
 assert.equal(context.window.ZOVRO_SMART_AUTH.registerProvider('Google',()=>{}),true);
-panel.children[1].onclick();
+panel.children.find(child=>child.textContent==='Use phone and password').onclick();
 assert.equal(phone.focused,true,'Legacy phone and password must remain one tap away');
 console.log('Smart sign-in simulated DOM: login/register state, native biometric gate, provider uniqueness, password fallback PASS');
