@@ -41,6 +41,7 @@ requireTokens('Android workflow', android, [
   'ZOVRO_ANDROID_KEY_ALIAS',
   'ZOVRO_ANDROID_KEY_PASSWORD',
   'ZOVRO_GOOGLE_PLAY_SERVICE_ACCOUNT_JSON',
+  'node scripts/android-upload-cert-guard.js',
   'Android applicationId is not com.zovro.app.',
   'google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093',
   'https://www.googleapis.com/auth/androidpublisher',
