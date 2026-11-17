@@ -8,6 +8,7 @@ const read=p=>fs.readFileSync(path.join(root,p),'utf8');
 const client=read('smart-auth-client.js'),html=read('index.html'),assets=read('backend/static-assets.js'),mobile=read('scripts/prepare-mobile.js');
 new vm.Script(client,{filename:'smart-auth-client.js'});
 assert.match(html,/<script src="smart-auth-client\.js\?v=/);
+assert.match(html,/localStorage\.getItem\('zovroBiometricUnlock'\)==='1'\?'':/,'Page boot must not restore saved token before biometric verification');
 assert.match(assets,/"smart-auth-client\.js"/);
 assert.match(mobile,/'smart-auth-client\.js'/);
 assert.match(client,/form\.hidden=false/,'Existing password login must remain available');
