@@ -865,3 +865,31 @@ jobs:
           path: build/logs/
           if-no-files-found: ignore
           retention-days: 7
+
+      - name: Summarize TestFlight gate separately from iOS build status
+        if: always()
+        env:
+          SIGNING_AVAILABLE: ${{ steps.signing.outputs.available }}
+          IPA_EXPORT_OUTCOME: ${{ steps.ipa.outcome }}
+          TESTFLIGHT_OUTCOME: ${{ steps.testflight.outcome }}
+          UPLOAD_REQUESTED: ${{ github.event_name == 'workflow_dispatch' && inputs.upload_testflight == true }}
+        run: |
+          {
+            echo "## ZOVRO iOS release readiness"
+            if [[ "$IPA_EXPORT_OUTCOME" == "success" ]]; then
+              echo "- Signed IPA export: **successful**."
+            else
+              echo "- Signed IPA export: **not confirmed**. Simulator build success is not an App Store release."
+            fi
+            if [[ "$TESTFLIGHT_OUTCOME" == "success" ]]; then
+              echo "- App Store Connect upload: **submitted successfully**. Apple processing and tester availability require separate verification."
+            elif [[ "$UPLOAD_REQUESTED" == "true" ]]; then
+              echo "- App Store Connect upload: **requested but not confirmed**. Review prerequisites and the TestFlight upload step."
+            else
+              echo "- App Store Connect upload: **not requested**. This run did not send a new build to TestFlight."
+            fi
+            if [[ "$SIGNING_AVAILABLE" != "true" ]]; then
+              echo "- Signing prerequisite: **not confirmed**. Do not present an unsigned simulator build as a TestFlight release."
+            fi
+            echo "- A successful build or upload does not confirm the version is available to internal testers."
+          } >> "$GITHUB_STEP_SUMMARY"
